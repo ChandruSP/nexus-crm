@@ -6,8 +6,8 @@ import { Task, TaskStatus, TaskPriority } from '@/lib/crmTypes';
 const COLUMNS: { status: TaskStatus; label: string; color: string }[] = [
   { status: 'To do',       label: 'To do',       color: 'var(--text3)' },
   { status: 'In progress', label: 'In progress',  color: 'var(--blue)'  },
-  { status: 'Blocked',     label: 'Blocked',      color: 'var(--red)'   },
   { status: 'Done',        label: 'Done',         color: 'var(--green)' },
+  { status: 'Blocked',     label: 'Blocked',      color: 'var(--red)'   },
 ];
 
 const PRIORITY_COLOR: Record<TaskPriority, string> = {
