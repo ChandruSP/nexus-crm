@@ -237,9 +237,9 @@ export function TaskList({ search, fAccount, fPriority, fAssignee }: Props) {
       {/* Sub-toolbar */}
       <div style={{ padding: '8px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
         <span style={{ fontSize: 11, color: 'var(--text3)', marginRight: 2 }}>Group by</span>
-        <button style={groupBtnStyle(groupBy === 'status')}  onClick={() => setGroupBy('status')}>Status</button>
-        <button style={groupBtnStyle(groupBy === 'account')} onClick={() => setGroupBy('account')}>Account</button>
-        <button style={groupBtnStyle(groupBy === 'none')}    onClick={() => setGroupBy('none')}>None</button>
+        <button style={groupBtnStyle(groupBy === 'status')}  onClick={() => { setGroupBy('status');  setCollapsed(new Set(['To do', 'In progress', 'Done', 'Blocked'])); }}>Status</button>
+        <button style={groupBtnStyle(groupBy === 'account')} onClick={() => { setGroupBy('account'); setCollapsed(new Set(state.accounts.map(a => a.name))); }}>Account</button>
+        <button style={groupBtnStyle(groupBy === 'none')}    onClick={() => { setGroupBy('none');    setCollapsed(new Set()); }}>None</button>
         {groupBy !== 'none' && (
           <>
             <span style={{ width: 1, height: 14, background: 'var(--border2)', margin: '0 4px' }} />
