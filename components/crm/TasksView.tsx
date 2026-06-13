@@ -27,6 +27,7 @@ const ListIcon = () => (
 export function TasksView() {
   const { state } = useCrm();
   const [view,      setView]      = useState<ViewMode>('kanban');
+  const [search,    setSearch]    = useState('');
   const [fAccount,  setFAccount]  = useState('');
   const [fPriority, setFPriority] = useState('');
   const [fAssignee, setFAssignee] = useState('');
@@ -35,13 +36,11 @@ export function TasksView() {
     state.accounts.flatMap(a => a.tasks.map(t => t.assignee).filter(Boolean) as string[])
   )].sort();
 
-  const totalFiltered = state.accounts.flatMap(a => a.tasks).filter(t =>
-    (!fAccount  || state.accounts.find(a => a.id === fAccount)?.tasks.includes(t)) &&
-    (!fPriority || t.priority === fPriority) &&
-    (!fAssignee || t.assignee === fAssignee)
-  ).length;
+  const hasFilters = !!(search || fAccount || fPriority || fAssignee);
 
-  const hasFilters = !!(fAccount || fPriority || fAssignee);
+  function clearAll() {
+    setSearch(''); setFAccount(''); setFPriority(''); setFAssignee('');
+  }
 
   const selectStyle: React.CSSProperties = {
     padding: '6px 10px', fontSize: 12, fontWeight: 500,
@@ -62,8 +61,26 @@ export function TasksView() {
       {/* Shared filter bar */}
       <div style={{
         padding: '10px 24px', borderBottom: '1px solid var(--border)',
-        background: 'var(--bg2)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0,
+        background: 'var(--bg2)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap',
       }}>
+        {/* Search */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ position: 'absolute', left: 9, pointerEvents: 'none', color: 'var(--text3)' }}>
+            <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search tasks…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              ...selectStyle, paddingLeft: 28, width: 180,
+              background: 'var(--bg2)',
+            }}
+          />
+        </div>
+
         <select style={selectStyle} value={fAccount} onChange={e => setFAccount(e.target.value)}>
           <option value="">All accounts</option>
           {state.accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -81,13 +98,12 @@ export function TasksView() {
         </select>
 
         {hasFilters && (
-          <button onClick={() => { setFAccount(''); setFPriority(''); setFAssignee(''); }}
+          <button onClick={clearAll}
             style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 2px' }}>
-            Clear
+            Clear all
           </button>
         )}
 
-        {/* Spacer */}
         <div style={{ flex: 1 }} />
 
         {/* View toggle */}
@@ -101,10 +117,9 @@ export function TasksView() {
         </div>
       </div>
 
-      {/* View */}
       {view === 'kanban'
         ? <TaskKanban fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} />
-        : <TaskList   fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} />
+        : <TaskList search={search} fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} />
       }
     </div>
   );
