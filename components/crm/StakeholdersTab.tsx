@@ -38,7 +38,7 @@ export function StakeholdersTab({ account }: { account: Account }) {
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
         <button
           onClick={() => setAdding(a => !a)}
-          style={{ padding: '6px 12px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+          style={{ padding: '6px 12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
         >
           + Add Stakeholder
         </button>
@@ -78,7 +78,7 @@ export function StakeholdersTab({ account }: { account: Account }) {
             </label>
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-            <button type="submit" style={{ padding: '7px 16px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+            <button type="submit" style={{ padding: '7px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
               Add
             </button>
             <button type="button" onClick={() => setAdding(false)} style={{ padding: '7px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 12, cursor: 'pointer' }}>

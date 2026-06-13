@@ -34,7 +34,7 @@ export function AccountSidebar({ onAddAccount }: Props) {
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 1 }}>
             Accounts
           </div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', fontFamily: 'DM Serif Display, serif', lineHeight: 1.2 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>
             {state.accounts.length} Accounts
           </div>
         </div>

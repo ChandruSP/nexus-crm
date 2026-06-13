@@ -56,7 +56,7 @@ export function CrmApp() {
           {/* Topbar */}
           <div style={{ height:48, flexShrink:0, background:'var(--bg2)', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'stretch', padding:'0 20px', gap:0, zIndex:100 }}>
             <div style={{ display:'flex', alignItems:'center', marginRight:24 }}>
-              <span style={{ fontFamily:'DM Serif Display, serif', fontSize:18, color:'var(--text)', fontWeight:700, letterSpacing:'-0.01em' }}>Pulse</span>
+              <span style={{ fontSize:18, color:'var(--text)', fontWeight:700, letterSpacing:'-0.01em' }}>Pulse</span>
             </div>
             <NavTab label="Accounts" active={view === 'accounts'} onClick={() => setView('accounts')} />
             <NavTab label="Tasks"    active={view === 'tasks'}    onClick={() => setView('tasks')} />

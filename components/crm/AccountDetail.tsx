@@ -30,7 +30,6 @@ function InitialAvatar({ name }: { name: string }) {
       background: `hsl(${hue},55%,55%)`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em',
-      fontFamily: 'DM Serif Display, serif',
     }}>
       {initials}
     </div>
@@ -79,7 +78,7 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Name row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', margin: 0, fontFamily: 'DM Serif Display, serif', lineHeight: 1.2 }}>
+              <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', margin: 0, lineHeight: 1.2 }}>
                 {account.name}
               </h1>
               <span style={{ fontSize: 10, fontWeight: 700, color: SEGMENT_COLOR[account.segment], background: SEGMENT_COLOR[account.segment] + '18', borderRadius: 99, padding: '2px 8px', border: `1px solid ${SEGMENT_COLOR[account.segment]}30` }}>

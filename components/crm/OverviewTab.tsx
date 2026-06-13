@@ -68,7 +68,7 @@ export function OverviewTab({ account }: { account: Account }) {
                         {p.status}
                       </span>
                     </div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', flexShrink: 0, fontFamily: 'DM Serif Display, serif' }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', flexShrink: 0 }}>
                       {fmtCurrency(p.revenue)}
                     </span>
                   </div>
@@ -98,7 +98,7 @@ export function OverviewTab({ account }: { account: Account }) {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
             }}>
               <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500 }}>{s.label}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: s.color, fontFamily: 'DM Serif Display, serif', flexShrink: 0 }}>{s.value}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: s.color, flexShrink: 0 }}>{s.value}</div>
             </div>
           ))}
         </div>

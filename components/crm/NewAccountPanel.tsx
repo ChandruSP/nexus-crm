@@ -141,7 +141,7 @@ export function NewAccountPanel({ onDone, onCancel }: Props) {
       <div style={{ padding:'18px 32px', background:'var(--bg2)', borderBottom:'1px solid var(--border)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div>
           <div style={{ fontSize:10, fontWeight:700, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:2 }}>New Account</div>
-          <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:'var(--text)', fontFamily:'DM Serif Display, serif' }}>Add Account Details</h2>
+          <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:'var(--text)', }}>Add Account Details</h2>
         </div>
         <button onClick={onCancel} style={{ background:'none', border:'1px solid var(--border2)', borderRadius:'var(--r-sm)', padding:'6px 14px', fontSize:12, color:'var(--text3)', cursor:'pointer' }}>
           Cancel

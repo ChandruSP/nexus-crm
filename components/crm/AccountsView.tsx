@@ -61,7 +61,6 @@ function AccountCard({ account, onClick }: { account: Account; onClick: () => vo
             background: avatarColor(account.name),
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em',
-            fontFamily: 'DM Serif Display, serif',
           }}>
             {initials(account.name)}
           </div>
@@ -99,7 +98,7 @@ function AccountCard({ account, onClick }: { account: Account; onClick: () => vo
             { label: 'Open tasks',value: openTasks || '—' },
           ].map((s, i) => (
             <div key={s.label} style={{ textAlign: i === 0 ? 'left' : i === 1 ? 'center' : 'right' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', fontFamily: 'DM Serif Display, serif' }}>{s.value}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{s.value}</div>
               <div style={{ fontSize: 9, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 1 }}>{s.label}</div>
             </div>
           ))}
@@ -141,7 +140,7 @@ export function AccountsView() {
       <div style={{ padding: '16px 28px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 1 }}>Accounts</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', fontFamily: 'DM Serif Display, serif', lineHeight: 1.1 }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', lineHeight: 1.1 }}>
             {state.accounts.length} Account{state.accounts.length !== 1 ? 's' : ''}
           </div>
         </div>

@@ -1,84 +1,86 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 /* ── Font utilities ──────────────────────────────────────────── */
-/* Override Tailwind's built-in font-* utilities with our typefaces  */
 @layer utilities {
-  .font-sans  { font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif; }
+  .font-sans  { font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif; }
   .font-mono  { font-family: 'DM Mono', ui-monospace, 'Menlo', monospace; }
-  .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+  .font-serif { font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif; }
 }
 
 /* ── Design tokens — light (default) ────────────────────────── */
 :root {
-  --bg:           #f5f5f7;
+  --bg:           #f5f7f8;
   --bg2:          #ffffff;
-  --bg3:          #f0f0f3;
-  --bg4:          #e8e8ed;
-  --bg5:          #dcdce4;
+  --bg3:          #eef2f4;
+  --bg4:          #e2eaed;
+  --bg5:          #d3dee3;
   --border:       rgba(0,0,0,0.07);
   --border2:      rgba(0,0,0,0.12);
   --border3:      rgba(0,0,0,0.20);
-  --text:         #111118;
-  --text2:        #4a4a5a;
-  --text3:        #9090a8;
-  --accent:       #5b5ef4;
-  --accent2:      #4141cf;
-  --accent-dim:   rgba(91,94,244,0.08);
-  --accent-border:rgba(91,94,244,0.22);
-  --red:          #d93025;
-  --red-dim:      rgba(217,48,37,0.08);
-  --amber:        #b06000;
-  --amber-dim:    rgba(176,96,0,0.08);
-  --blue:         #1a6fc4;
-  --blue-dim:     rgba(26,111,196,0.08);
-  --green:        #1a8a4a;
-  --green-dim:    rgba(26,138,74,0.08);
-  --purple:       #6b3fa0;
-  --purple-dim:   rgba(107,63,160,0.08);
+  --text:         #0d1b22;
+  --text2:        #3a5263;
+  --text3:        #7a9aaa;
+  --accent:       #0d9488;
+  --accent2:      #0f766e;
+  --accent-dim:   rgba(13,148,136,0.08);
+  --accent-border:rgba(13,148,136,0.22);
+  --orange:       #f97316;
+  --orange-dim:   rgba(249,115,22,0.09);
+  --red:          #dc2626;
+  --red-dim:      rgba(220,38,38,0.08);
+  --amber:        #d97706;
+  --amber-dim:    rgba(217,119,6,0.09);
+  --blue:         #2563eb;
+  --blue-dim:     rgba(37,99,235,0.08);
+  --green:        #16a34a;
+  --green-dim:    rgba(22,163,74,0.08);
+  --purple:       #7c3aed;
+  --purple-dim:   rgba(124,58,237,0.08);
   --r:            10px;
-  --r-sm:         6px;
+  --r-sm:         7px;
   --r-xs:         4px;
 }
 
 /* ── Design tokens — dark ────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg:           #0a0a0d;
-  --bg2:          #111116;
-  --bg3:          #18181f;
-  --bg4:          #202029;
-  --bg5:          #28283a;
+  --bg:           #0d1117;
+  --bg2:          #131c23;
+  --bg3:          #192531;
+  --bg4:          #1f2f3d;
+  --bg5:          #273d4e;
   --border:       rgba(255,255,255,0.06);
   --border2:      rgba(255,255,255,0.11);
   --border3:      rgba(255,255,255,0.18);
-  --text:         #eeedf5;
-  --text2:        #9694a8;
-  --text3:        #56546a;
-  --accent:       #8b8cf8;
-  --accent2:      #a5a6fa;
-  --accent-dim:   rgba(139,140,248,0.12);
-  --accent-border:rgba(139,140,248,0.28);
-  --red:          #ff5a5a;
-  --red-dim:      rgba(255,90,90,0.1);
-  --amber:        #ffb547;
-  --amber-dim:    rgba(255,181,71,0.1);
-  --blue:         #6eb5ff;
-  --blue-dim:     rgba(110,181,255,0.1);
-  --green:        #4dd98a;
-  --green-dim:    rgba(77,217,138,0.1);
-  --purple:       #b89cff;
-  --purple-dim:   rgba(184,156,255,0.1);
+  --text:         #e4f0f5;
+  --text2:        #7aacbe;
+  --text3:        #3d6070;
+  --accent:       #2dd4bf;
+  --accent2:      #5eead4;
+  --accent-dim:   rgba(45,212,191,0.10);
+  --accent-border:rgba(45,212,191,0.25);
+  --orange:       #fb923c;
+  --orange-dim:   rgba(251,146,60,0.10);
+  --red:          #f87171;
+  --red-dim:      rgba(248,113,113,0.10);
+  --amber:        #fbbf24;
+  --amber-dim:    rgba(251,191,36,0.10);
+  --blue:         #60a5fa;
+  --blue-dim:     rgba(96,165,250,0.10);
+  --green:        #4ade80;
+  --green-dim:    rgba(74,222,128,0.10);
+  --purple:       #a78bfa;
+  --purple-dim:   rgba(167,139,250,0.10);
 }
 
 /* ── Base ────────────────────────────────────────────────────── */
-/* Put resets in @layer base so they lose to @layer utilities     */
 @layer base {
   html, body { height: 100%; }
 
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -92,8 +94,6 @@
 }
 
 /* ── Component classes ───────────────────────────────────────── */
-/* These are unlayered so they sit above utilities when needed,   */
-/* but they only set properties that don't conflict with spacing.  */
 .item-card { position: relative; overflow: hidden; }
 .item-card::before {
   content: '';
@@ -101,12 +101,12 @@
   left: 0; top: 0; bottom: 0;
   width: 3px;
 }
-.sev-critical::before { background: var(--red);   box-shadow: 0 0 10px rgba(255,90,90,0.5); }
-.sev-high::before     { background: var(--amber);  box-shadow: 0 0 10px rgba(255,181,71,0.4); }
+.sev-critical::before { background: var(--red);   box-shadow: 0 0 10px rgba(248,113,113,0.5); }
+.sev-high::before     { background: var(--amber);  box-shadow: 0 0 10px rgba(251,191,36,0.4); }
 .sev-medium::before   { background: var(--blue); }
 .sev-low::before      { background: var(--green); }
 
-.mx-low { background: rgba(77,217,138,0.1); color: var(--green); }
-.mx-med { background: rgba(255,181,71,0.12); color: var(--amber); }
-.mx-hi  { background: rgba(255,90,90,0.12); color: var(--red); }
+.mx-low { background: var(--green-dim); color: var(--green); }
+.mx-med { background: var(--amber-dim); color: var(--amber); }
+.mx-hi  { background: var(--red-dim);   color: var(--red); }
 .mx-active { outline: 2px solid var(--accent); outline-offset: -2px; }
