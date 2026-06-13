@@ -36,7 +36,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee }: Props) {
   const [sortAsc,   setSortAsc]   = useState(true);
   const [groupBy,   setGroupBy]   = useState<GroupBy>('status');
   const [page,      setPage]      = useState(1);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set(['To do', 'In progress', 'Done', 'Blocked']));
 
   const allTasks = useMemo(() =>
     state.accounts.flatMap(acc =>
@@ -91,7 +91,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee }: Props) {
 
   const groups = useMemo(() => {
     if (groupBy === 'status') {
-      return (['In progress', 'Blocked', 'To do', 'Done'] as TaskStatus[])
+      return (['To do', 'In progress', 'Done', 'Blocked'] as TaskStatus[])
         .map(s => ({
           key: s, label: s, color: STATUS_COLOR[s],
           allTasks: sorted.filter(t => t.status === s),
@@ -248,7 +248,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee }: Props) {
               Expand all
             </button>
             <button onClick={() => setCollapsed(new Set(
-                groupBy === 'status' ? ['In progress', 'Blocked', 'To do', 'Done'] : state.accounts.map(a => a.name)
+                groupBy === 'status' ? ['To do', 'In progress', 'Done', 'Blocked'] : state.accounts.map(a => a.name)
               ))}
               style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 4px' }}>
               Collapse all
