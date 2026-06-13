@@ -10,6 +10,7 @@ interface CrmState {
 
 type Action =
   | { type: 'SELECT_ACCOUNT'; id: string | null }
+  | { type: 'ADD_ACCOUNT'; account: Account }
   | { type: 'ADD_TASK'; accountId: string; task: Task }
   | { type: 'UPDATE_TASK'; accountId: string; task: Task }
   | { type: 'DELETE_TASK'; accountId: string; taskId: string }
@@ -22,6 +23,13 @@ function reducer(state: CrmState, action: Action): CrmState {
   switch (action.type) {
     case 'SELECT_ACCOUNT':
       return { ...state, selectedAccountId: action.id };
+
+    case 'ADD_ACCOUNT':
+      return {
+        ...state,
+        accounts: [...state.accounts, action.account],
+        selectedAccountId: action.account.id,
+      };
 
     case 'ADD_TASK':
       return {
