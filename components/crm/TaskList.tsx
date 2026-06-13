@@ -240,21 +240,20 @@ export function TaskList({ search, fAccount, fPriority, fAssignee }: Props) {
         <button style={groupBtnStyle(groupBy === 'status')}  onClick={() => { setGroupBy('status');  setCollapsed(new Set(['To do', 'In progress', 'Done', 'Blocked'])); }}>Status</button>
         <button style={groupBtnStyle(groupBy === 'account')} onClick={() => { setGroupBy('account'); setCollapsed(new Set(state.accounts.map(a => a.name))); }}>Account</button>
         <button style={groupBtnStyle(groupBy === 'none')}    onClick={() => { setGroupBy('none');    setCollapsed(new Set()); }}>None</button>
-        {groupBy !== 'none' && (
-          <>
-            <span style={{ width: 1, height: 14, background: 'var(--border2)', margin: '0 4px' }} />
-            <button onClick={() => setCollapsed(new Set())}
-              style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 4px' }}>
-              Expand all
-            </button>
-            <button onClick={() => setCollapsed(new Set(
-                groupBy === 'status' ? ['To do', 'In progress', 'Done', 'Blocked'] : state.accounts.map(a => a.name)
-              ))}
-              style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 4px' }}>
-              Collapse all
-            </button>
-          </>
-        )}
+        {groupBy !== 'none' && (() => {
+          const allKeys = groupBy === 'status' ? ['To do', 'In progress', 'Done', 'Blocked'] : state.accounts.map(a => a.name);
+          const allCollapsed = allKeys.every(k => collapsed.has(k));
+          return (
+            <>
+              <span style={{ width: 1, height: 14, background: 'var(--border2)', margin: '0 4px' }} />
+              <button
+                onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(allKeys))}
+                style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 4px' }}>
+                {allCollapsed ? 'Expand all' : 'Collapse all'}
+              </button>
+            </>
+          );
+        })()}
         <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text3)' }}>
           {sorted.length > 0
             ? `${pageStart + 1}–${Math.min(pageEnd, sorted.length)} of ${sorted.length} task${sorted.length !== 1 ? 's' : ''}`
