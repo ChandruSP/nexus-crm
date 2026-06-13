@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { CrmProvider } from '@/context/CrmContext';
 import { AccountSidebar } from './crm/AccountSidebar';
 import { AccountDetail } from './crm/AccountDetail';
-import { TaskKanban } from './crm/TaskKanban';
+import { TasksView } from './crm/TasksView';
 
 type AppView = 'accounts' | 'tasks';
 
@@ -111,7 +111,7 @@ export function CrmApp() {
               <AccountDetail />
             </>
           )}
-          {view === 'tasks' && <TaskKanban />}
+          {view === 'tasks' && <TasksView />}
         </div>
 
       </div>

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useCrm } from '@/context/CrmContext';
 import { Task, TaskStatus, TaskPriority } from '@/lib/crmTypes';
 
@@ -37,12 +37,10 @@ interface DropTarget {
   insertBeforeId: string | null; // null = end of column
 }
 
-export function TaskKanban() {
-  const { state, dispatch } = useCrm();
+interface KanbanProps { fAccount: string; fPriority: string; fAssignee: string; }
 
-  const [fAccount,  setFAccount]  = useState('');
-  const [fPriority, setFPriority] = useState('');
-  const [fAssignee, setFAssignee] = useState('');
+export function TaskKanban({ fAccount, fPriority, fAssignee }: KanbanProps) {
+  const { state, dispatch } = useCrm();
 
   // Flat list of all tasks across all accounts
   const allTasks = useMemo<FlatTask[]>(() =>
@@ -69,10 +67,6 @@ export function TaskKanban() {
       return [...prev.filter(id => allTasks.some(t => t.id === id)), ...newIds];
     });
   }, [allTasks]);
-
-  const assignees = useMemo(() =>
-    [...new Set(allTasks.map(t => t.assignee).filter(Boolean) as string[])].sort(),
-    [allTasks]);
 
   const filtered = useMemo(() =>
     allTasks.filter(t =>
@@ -160,43 +154,8 @@ export function TaskKanban() {
     setDropTarget(null);
   }
 
-  // ── Styles ──────────────────────────────────────────────────────
-  const selectStyle: React.CSSProperties = {
-    padding: '6px 10px', fontSize: 12, fontWeight: 500,
-    background: 'var(--bg2)', border: '1px solid var(--border2)',
-    borderRadius: 'var(--r-sm)', color: 'var(--text2)', cursor: 'pointer', outline: 'none',
-  };
-
-  const hasFilters = !!(fAccount || fPriority || fAssignee);
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      {/* Filter bar */}
-      <div style={{ padding: '12px 24px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
-        <select style={selectStyle} value={fAccount} onChange={e => setFAccount(e.target.value)}>
-          <option value="">All accounts</option>
-          {state.accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-        </select>
-        <select style={selectStyle} value={fPriority} onChange={e => setFPriority(e.target.value)}>
-          <option value="">All priorities</option>
-          {(['Critical', 'High', 'Medium', 'Low'] as TaskPriority[]).map(p =>
-            <option key={p} value={p}>{p}</option>)}
-        </select>
-        <select style={selectStyle} value={fAssignee} onChange={e => setFAssignee(e.target.value)}>
-          <option value="">All assignees</option>
-          {assignees.map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
-        {hasFilters && (
-          <button onClick={() => { setFAccount(''); setFPriority(''); setFAssignee(''); }}
-            style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
-            Clear
-          </button>
-        )}
-        <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text3)' }}>
-          {filtered.length} task{filtered.length !== 1 ? 's' : ''}
-        </div>
-      </div>
-
       {/* Columns */}
       <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: 0, padding: '20px 24px', background: 'var(--bg)' }}>
         {COLUMNS.map(col => {
