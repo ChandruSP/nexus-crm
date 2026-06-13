@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { CrmProvider } from '@/context/CrmContext';
 import { ConfigProvider } from '@/context/ConfigContext';
+import { ToastProvider } from '@/context/ToastContext';
+import { ToastContainer } from './Toast';
 import { AccountsView } from './crm/AccountsView';
 import { TasksView } from './crm/TasksView';
 import { ConfigView } from './crm/ConfigView';
@@ -49,6 +51,7 @@ export function CrmApp() {
   const [view, setView] = useState<AppView>('tasks');
 
   return (
+    <ToastProvider>
     <ConfigProvider>
       <CrmProvider>
         <div style={{ display:'flex', flexDirection:'column', height:'100vh', background:'var(--bg)', fontFamily:'Instrument Sans, sans-serif', overflow:'hidden' }}>
@@ -84,5 +87,7 @@ export function CrmApp() {
         </div>
       </CrmProvider>
     </ConfigProvider>
+    <ToastContainer />
+    </ToastProvider>
   );
 }

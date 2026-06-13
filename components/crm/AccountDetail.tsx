@@ -1,22 +1,24 @@
 'use client';
 import { useState } from 'react';
 import { useCrm } from '@/context/CrmContext';
+import { useToast } from '@/context/ToastContext';
 import { OverviewTab } from './OverviewTab';
 import { TasksTab } from './TasksTab';
 import { StakeholdersTab } from './StakeholdersTab';
 import { OpportunitiesTab } from './OpportunitiesTab';
+import { EditAccountPanel } from './EditAccountPanel';
 
 type Tab = 'overview' | 'tasks' | 'stakeholders' | 'opportunities';
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'tasks',         label: 'Tasks' },
   { key: 'overview',      label: 'Overview' },
+  { key: 'tasks',         label: 'Tasks' },
   { key: 'stakeholders',  label: 'Stakeholders' },
   { key: 'opportunities', label: 'Opportunities' },
 ];
 
 const SEGMENT_COLOR: Record<string, string> = {
-  Enterprise:  'var(--purple)',
+  Enterprise:   'var(--purple)',
   'Mid-Market': 'var(--blue)',
   SMB:          'var(--green)',
 };
@@ -37,32 +39,54 @@ function InitialAvatar({ name }: { name: string }) {
 }
 
 export function AccountDetail({ onBack }: { onBack?: () => void }) {
-  const { state } = useCrm();
-  const [tab, setTab] = useState<Tab>('tasks');
+  const { state, dispatch } = useCrm();
+  const { toast } = useToast();
+  const [tab, setTab]           = useState<Tab>('overview');
+  const [editing, setEditing]   = useState(false);
+  const [delConfirm, setDelConfirm] = useState(false);
 
   const account = state.accounts.find(a => a.id === state.selectedAccountId);
 
-  if (!account) {
-    return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)', fontSize: 14 }}>
-        Select an account from the left
-      </div>
-    );
-  }
+  if (!account) return (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)', fontSize: 14 }}>
+      Select an account
+    </div>
+  );
+
+  if (editing) return (
+    <EditAccountPanel
+      account={account}
+      onDone={() => { setEditing(false); toast('Account updated'); }}
+      onCancel={() => setEditing(false)}
+    />
+  );
 
   const openTasks = account.tasks.filter(t => t.status !== 'Done').length;
   const critTasks = account.tasks.filter(t => t.priority === 'Critical' && t.status !== 'Done').length;
-
   const tabCount: Partial<Record<Tab, number>> = {
     tasks:         openTasks,
     stakeholders:  account.stakeholders.length,
     opportunities: account.opportunities.length,
   };
 
+  function handleDelete() {
+    dispatch({ type: 'DELETE_ACCOUNT', accountId: account!.id });
+    toast('Account deleted', 'info');
+    setDelConfirm(false);
+    onBack?.();
+  }
+
+  const iconBtn: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 5,
+    padding: '5px 10px', borderRadius: 'var(--r-sm)',
+    border: '1px solid var(--border2)', background: 'transparent',
+    fontSize: 12, cursor: 'pointer', color: 'var(--text2)', fontWeight: 500,
+  };
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-      {/* ── Header ──────────────────────────────────────────────── */}
+      {/* ── Header ── */}
       <div style={{ padding: '20px 28px 0', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
 
         {onBack && (
@@ -74,13 +98,9 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 16 }}>
           <InitialAvatar name={account.name} />
-
           <div style={{ flex: 1, minWidth: 0 }}>
-            {/* Name row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', margin: 0, lineHeight: 1.2 }}>
-                {account.name}
-              </h1>
+              <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', margin: 0, lineHeight: 1.2 }}>{account.name}</h1>
               <span style={{ fontSize: 10, fontWeight: 700, color: SEGMENT_COLOR[account.segment], background: SEGMENT_COLOR[account.segment] + '18', borderRadius: 99, padding: '2px 8px', border: `1px solid ${SEGMENT_COLOR[account.segment]}30` }}>
                 {account.segment}
               </span>
@@ -90,29 +110,31 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
                 </span>
               )}
             </div>
-
-            {/* Meta row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap' }}>
-              {[
-                account.industry,
-                account.location,
-                account.owner ? `Owner: ${account.owner}` : null,
-              ].filter(Boolean).map((item, i, arr) => (
+              {[account.industry, account.location, account.owner ? `Owner: ${account.owner}` : null].filter(Boolean).map((item, i, arr) => (
                 <span key={i} style={{ display: 'flex', alignItems: 'center' }}>
                   <span style={{ fontSize: 12, color: 'var(--text3)' }}>{item}</span>
                   {i < arr.length - 1 && <span style={{ margin: '0 8px', color: 'var(--border3)', fontSize: 10 }}>·</span>}
                 </span>
               ))}
               {account.website && (
-                <>
-                  <span style={{ margin: '0 8px', color: 'var(--border3)', fontSize: 10 }}>·</span>
-                  <a href={`https://${account.website}`} target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
-                    {account.website} ↗
-                  </a>
+                <><span style={{ margin: '0 8px', color: 'var(--border3)', fontSize: 10 }}>·</span>
+                  <a href={`https://${account.website}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>{account.website} ↗</a>
                 </>
               )}
             </div>
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignSelf: 'flex-start' }}>
+            <button style={iconBtn} onClick={() => setEditing(true)}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2L4 10H2V8L8.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Edit
+            </button>
+            <button style={{ ...iconBtn, color: 'var(--red)', borderColor: 'var(--red-dim)' }} onClick={() => setDelConfirm(true)}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 3v7h4V3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Delete
+            </button>
           </div>
         </div>
 
@@ -131,13 +153,7 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
               }}>
                 {t.label}
                 {count !== undefined && count > 0 && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, minWidth: 16, height: 16,
-                    borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    background: active ? 'var(--accent)' : 'var(--bg4)',
-                    color: active ? '#fff' : 'var(--text3)',
-                    padding: '0 4px',
-                  }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, minWidth: 16, height: 16, borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: active ? 'var(--accent)' : 'var(--bg4)', color: active ? '#fff' : 'var(--text3)', padding: '0 4px' }}>
                     {count}
                   </span>
                 )}
@@ -147,13 +163,29 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
         </div>
       </div>
 
-      {/* ── Content ─────────────────────────────────────────────── */}
+      {/* ── Content ── */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
         {tab === 'overview'      && <OverviewTab      account={account} />}
         {tab === 'tasks'         && <TasksTab         account={account} />}
         {tab === 'stakeholders'  && <StakeholdersTab  account={account} />}
         {tab === 'opportunities' && <OpportunitiesTab account={account} />}
       </div>
+
+      {/* Delete confirmation modal */}
+      {delConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setDelConfirm(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 380, boxShadow: '0 12px 40px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Delete account?</div>
+            <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>
+              <strong style={{ color: 'var(--text)' }}>{account.name}</strong> and all its tasks, stakeholders, and opportunities will be permanently deleted.
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={() => setDelConfirm(false)} style={{ padding: '7px 16px', fontSize: 13, cursor: 'pointer', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)' }}>Cancel</button>
+              <button onClick={handleDelete} style={{ padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: 'var(--red)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)' }}>Delete Account</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

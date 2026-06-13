@@ -15,6 +15,7 @@ export interface Stakeholder {
   role: string;
   email: string;
   phone?: string;
+  whatsapp?: boolean;
   notes?: string;
   isPrimary?: boolean;
 }

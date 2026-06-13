@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useCrm } from '@/context/CrmContext';
+import { useToast } from '@/context/ToastContext';
 import { Account } from '@/lib/crmTypes';
 import { AccountDetail } from './AccountDetail';
 import { NewAccountPanel } from './NewAccountPanel';
@@ -110,6 +111,7 @@ function AccountCard({ account, onClick }: { account: Account; onClick: () => vo
 
 export function AccountsView() {
   const { state, dispatch } = useCrm();
+  const { toast } = useToast();
   const [mode,   setMode]   = useState<Mode>('grid');
   const [search, setSearch] = useState('');
 
@@ -126,7 +128,7 @@ export function AccountsView() {
   }
 
   if (mode === 'new') {
-    return <NewAccountPanel onDone={() => setMode('detail')} onCancel={() => setMode('grid')} />;
+    return <NewAccountPanel onDone={() => { toast('Account created'); setMode('detail'); }} onCancel={() => setMode('grid')} />;
   }
 
   if (mode === 'detail') {
