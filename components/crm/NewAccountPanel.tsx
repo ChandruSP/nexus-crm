@@ -200,7 +200,7 @@ export function NewAccountPanel({ onDone, onCancel }: Props) {
                 <div><Label t="Role / Title" /><input style={inp()} value={s.role} onChange={e => setSK(i,'role',e.target.value)} placeholder="e.g. CTO" /></div>
                 <div><Label t="Email" /><input style={inp()} type="email" value={s.email} onChange={e => setSK(i,'email',e.target.value)} placeholder="email@company.com" /></div>
                 <div><Label t="Phone" /><input style={inp()} value={s.phone} onChange={e => setSK(i,'phone',e.target.value)} placeholder="+91 98765 43210" /></div>
-                <div style={{ gridColumn:'1/-1' }}><Label t="Notes" /><input style={inp()} value={s.notes} onChange={e => setSK(i,'notes',e.target.value)} placeholder="Relationship notes, preferences…" /></div>
+                <div style={{ gridColumn:'1/-1' }}><Label t="Notes" /><textarea style={area()} value={s.notes} onChange={e => setSK(i,'notes',e.target.value)} placeholder="Relationship notes, preferences…" /></div>
                 <div style={{ gridColumn:'1/-1', display:'flex', alignItems:'center', gap:8 }}>
                   <input type="checkbox" id={`sk-primary-${i}`} checked={s.isPrimary} onChange={e => setSK(i,'isPrimary',e.target.checked)} style={{ accentColor:'var(--accent)', width:14, height:14 }} />
                   <label htmlFor={`sk-primary-${i}`} style={{ fontSize:12, color:'var(--text2)', cursor:'pointer' }}>Primary contact</label>
@@ -230,7 +230,7 @@ export function NewAccountPanel({ onDone, onCancel }: Props) {
                   <Label t="Revenue (₹ Lakhs)" />
                   <input style={inp()} type="number" min="0" step="0.1" value={p.revenue} onChange={e => setPR(i,'revenue',e.target.value)} placeholder="e.g. 48" />
                 </div>
-                <div style={{ gridColumn:'1/-1' }}><Label t="Description" /><input style={inp()} value={p.description} onChange={e => setPR(i,'description',e.target.value)} placeholder="Brief description of the project" /></div>
+                <div style={{ gridColumn:'1/-1' }}><Label t="Description" /><textarea style={area()} value={p.description} onChange={e => setPR(i,'description',e.target.value)} placeholder="Brief description of the project" /></div>
               </div>
             </CardWrap>
           ))}
@@ -260,7 +260,7 @@ export function NewAccountPanel({ onDone, onCancel }: Props) {
                   <Label t="Close Date" />
                   <input style={inp()} type="date" value={o.closeDate} onChange={e => setOP(i,'closeDate',e.target.value)} />
                 </div>
-                <div style={{ gridColumn:'1/-1' }}><Label t="Description" /><input style={inp()} value={o.description} onChange={e => setOP(i,'description',e.target.value)} placeholder="Key context, risks, next steps…" /></div>
+                <div style={{ gridColumn:'1/-1' }}><Label t="Description" /><textarea style={area()} value={o.description} onChange={e => setOP(i,'description',e.target.value)} placeholder="Key context, risks, next steps…" /></div>
               </div>
             </CardWrap>
           ))}
