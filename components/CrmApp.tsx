@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { CrmProvider } from '@/context/CrmContext';
 import { AccountSidebar } from './crm/AccountSidebar';
 import { AccountDetail } from './crm/AccountDetail';
+import { NewAccountPanel } from './crm/NewAccountPanel';
 import { TasksView } from './crm/TasksView';
 
 type AppView = 'accounts' | 'tasks';
@@ -72,7 +73,8 @@ function NavTab({ label, active, onClick }: { label: string; active: boolean; on
 }
 
 export function CrmApp() {
-  const [view, setView] = useState<AppView>('accounts');
+  const [view,           setView]           = useState<AppView>('accounts');
+  const [addingAccount,  setAddingAccount]  = useState(false);
 
   return (
     <CrmProvider>
@@ -107,8 +109,11 @@ export function CrmApp() {
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {view === 'accounts' && (
             <>
-              <AccountSidebar />
-              <AccountDetail />
+              <AccountSidebar onAddAccount={() => setAddingAccount(true)} />
+              {addingAccount
+                ? <NewAccountPanel onDone={() => setAddingAccount(false)} />
+                : <AccountDetail />
+              }
             </>
           )}
           {view === 'tasks' && <TasksView />}
