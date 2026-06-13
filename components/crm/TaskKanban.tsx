@@ -37,9 +37,10 @@ interface DropTarget {
   insertBeforeId: string | null; // null = end of column
 }
 
-interface KanbanProps { fAccount: string; fPriority: string; fAssignee: string; }
+import { DrawerTask } from './TaskDetailDrawer';
+interface KanbanProps { fAccount: string; fPriority: string; fAssignee: string; onTaskClick?: (t: DrawerTask) => void; }
 
-export function TaskKanban({ fAccount, fPriority, fAssignee }: KanbanProps) {
+export function TaskKanban({ fAccount, fPriority, fAssignee, onTaskClick }: KanbanProps) {
   const { state, dispatch } = useCrm();
 
   // Flat list of all tasks across all accounts
@@ -208,6 +209,12 @@ export function TaskKanban({ fAccount, fPriority, fAssignee }: KanbanProps) {
                       <div
                         data-card
                         draggable
+                        onClick={() => {
+                          if (onTaskClick) {
+                            const acc = allTasks.find(t => t.id === task.id);
+                            if (acc) onTaskClick(acc as DrawerTask);
+                          }
+                        }}
                         onDragStart={e => onDragStart(e, task.id)}
                         onDragOver={e => { e.stopPropagation(); onDragOverCard(e, task.id, col.status); }}
                         onDragEnd={onDragEnd}

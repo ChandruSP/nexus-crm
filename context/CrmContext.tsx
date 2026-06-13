@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { Account, Task, Opportunity, Stakeholder, PastProject } from '@/lib/crmTypes';
+import { Account, Task, Opportunity, Stakeholder, Comment } from '@/lib/crmTypes';
 import { SAMPLE_ACCOUNTS } from '@/lib/crmData';
 
 interface CrmState {
@@ -17,7 +17,8 @@ type Action =
   | { type: 'ADD_STAKEHOLDER'; accountId: string; stakeholder: Stakeholder }
   | { type: 'ADD_OPPORTUNITY'; accountId: string; opportunity: Opportunity }
   | { type: 'UPDATE_OPPORTUNITY'; accountId: string; opportunity: Opportunity }
-  | { type: 'UPDATE_ACCOUNT_DESC'; accountId: string; description: string };
+  | { type: 'UPDATE_ACCOUNT_DESC'; accountId: string; description: string }
+  | { type: 'ADD_COMMENT'; accountId: string; taskId: string; comment: Comment };
 
 function reducer(state: CrmState, action: Action): CrmState {
   switch (action.type) {
@@ -96,6 +97,20 @@ function reducer(state: CrmState, action: Action): CrmState {
         ...state,
         accounts: state.accounts.map(a =>
           a.id === action.accountId ? { ...a, description: action.description } : a
+        ),
+      };
+
+    case 'ADD_COMMENT':
+      return {
+        ...state,
+        accounts: state.accounts.map(a =>
+          a.id === action.accountId
+            ? { ...a, tasks: a.tasks.map(t =>
+                t.id === action.taskId
+                  ? { ...t, comments: [...(t.comments ?? []), action.comment] }
+                  : t
+              )}
+            : a
         ),
       };
 

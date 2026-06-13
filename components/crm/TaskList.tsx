@@ -27,9 +27,10 @@ function isOverdue(iso?: string, status?: TaskStatus) {
   return new Date(iso) < new Date();
 }
 
-interface Props { search: string; fAccount: string; fPriority: string; fAssignee: string; }
+import { DrawerTask } from './TaskDetailDrawer';
+interface Props { search: string; fAccount: string; fPriority: string; fAssignee: string; onTaskClick?: (t: DrawerTask) => void; }
 
-export function TaskList({ search, fAccount, fPriority, fAssignee }: Props) {
+export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }: Props) {
   const { state, dispatch } = useCrm();
 
   const [sortKey,   setSortKey]   = useState<SortKey>('priority');
@@ -157,11 +158,12 @@ export function TaskList({ search, fAccount, fPriority, fAssignee }: Props) {
     const overdue = isOverdue(task.dueDate, task.status);
     const done    = task.status === 'Done';
     return (
-      <tr key={task.id} style={{ borderBottom: '1px solid var(--border)' }}
+      <tr key={task.id} style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+        onClick={() => onTaskClick?.(task as DrawerTask)}
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg3)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
         <td style={{ padding: '10px 12px', width: 36 }}>
-          <button onClick={() => cycleStatus(task)} title={`${task.status} — click to advance`}
+          <button onClick={e => { e.stopPropagation(); cycleStatus(task); }} title={`${task.status} — click to advance`}
             style={{ width: 14, height: 14, borderRadius: '50%', cursor: 'pointer', padding: 0,
               background: done ? 'var(--green)' : 'transparent',
               border: `2px solid ${STATUS_COLOR[task.status]}` }} />

@@ -1,6 +1,13 @@
-export type TaskStatus = 'To do' | 'In progress' | 'Done' | 'Blocked';
+export type TaskStatus   = 'To do' | 'In progress' | 'Done' | 'Blocked';
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
-export type OppStage = 'Prospecting' | 'Qualified' | 'Proposal' | 'Negotiation' | 'Closed Won' | 'Closed Lost';
+export type OppStage     = string; // configurable — default values in ConfigContext
+
+export interface Comment {
+  id: string;
+  text: string;
+  author: string;
+  createdAt: number;
+}
 
 export interface Stakeholder {
   id: string;
@@ -16,7 +23,7 @@ export interface PastProject {
   id: string;
   name: string;
   year: number;
-  revenue: number; // in USD
+  revenue: number;
   status: 'Completed' | 'Ongoing' | 'Cancelled';
   description?: string;
 }
@@ -24,11 +31,11 @@ export interface PastProject {
 export interface Opportunity {
   id: string;
   name: string;
-  value: number; // in USD
+  value: number;
   stage: OppStage;
-  closeDate: string; // ISO date
+  closeDate: string;
   description?: string;
-  probability: number; // 0-100
+  probability: number;
 }
 
 export interface Task {
@@ -37,10 +44,11 @@ export interface Task {
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
-  dueDate?: string; // ISO date
+  dueDate?: string;
   assignee?: string;
-  opportunityId?: string; // if linked to an opp, else general
+  opportunityId?: string;
   createdAt: number;
+  comments: Comment[];
 }
 
 export interface Account {
@@ -51,7 +59,7 @@ export interface Account {
   description: string;
   website?: string;
   location?: string;
-  owner: string; // account owner
+  owner: string;
   stakeholders: Stakeholder[];
   pastProjects: PastProject[];
   opportunities: Opportunity[];

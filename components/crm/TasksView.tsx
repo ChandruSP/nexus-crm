@@ -4,6 +4,7 @@ import { useCrm } from '@/context/CrmContext';
 import { TaskPriority } from '@/lib/crmTypes';
 import { TaskKanban } from './TaskKanban';
 import { TaskList } from './TaskList';
+import { TaskDetailDrawer, DrawerTask } from './TaskDetailDrawer';
 
 type ViewMode = 'kanban' | 'list';
 
@@ -26,9 +27,10 @@ const ListIcon = () => (
 
 export function TasksView() {
   const { state } = useCrm();
-  const [view,      setView]      = useState<ViewMode>('kanban');
-  const [search,    setSearch]    = useState('');
-  const [fAccount,  setFAccount]  = useState('');
+  const [view,       setView]       = useState<ViewMode>('kanban');
+  const [search,     setSearch]     = useState('');
+  const [fAccount,   setFAccount]   = useState('');
+  const [drawerTask, setDrawerTask] = useState<DrawerTask | null>(null);
   const [fPriority, setFPriority] = useState('');
   const [fAssignee, setFAssignee] = useState('');
 
@@ -118,9 +120,11 @@ export function TasksView() {
       </div>
 
       {view === 'kanban'
-        ? <TaskKanban fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} />
-        : <TaskList search={search} fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} />
+        ? <TaskKanban fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} onTaskClick={setDrawerTask} />
+        : <TaskList search={search} fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} onTaskClick={setDrawerTask} />
       }
+
+      {drawerTask && <TaskDetailDrawer task={drawerTask} onClose={() => setDrawerTask(null)} />}
     </div>
   );
 }

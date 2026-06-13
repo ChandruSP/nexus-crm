@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Account, Task, TaskStatus, TaskPriority } from '@/lib/crmTypes';
 import { useCrm } from '@/context/CrmContext';
+import { TaskDetailDrawer, DrawerTask } from './TaskDetailDrawer';
 
 const STATUS_COLOR: Record<TaskStatus, string> = {
   'To do': 'var(--text3)',
@@ -146,8 +147,14 @@ function AddTaskForm({ account, onClose }: AddTaskFormProps) {
 
 export function TasksTab({ account }: { account: Account }) {
   const { dispatch } = useCrm();
-  const [adding, setAdding] = useState(false);
-  const [filter, setFilter] = useState<'All' | TaskStatus>('All');
+  const [adding,      setAdding]      = useState(false);
+  const [filter,      setFilter]      = useState<'All' | TaskStatus>('All');
+  const [drawerTask,  setDrawerTask]  = useState<DrawerTask | null>(null);
+
+  function openDrawer(task: Task) {
+    const opp = task.opportunityId ? account.opportunities.find(o => o.id === task.opportunityId) : undefined;
+    setDrawerTask({ ...task, accountId: account.id, accountName: account.name, opportunityName: opp?.name });
+  }
 
   const tasks = account.tasks
     .filter(t => filter === 'All' || t.status === filter)
@@ -171,19 +178,25 @@ export function TasksTab({ account }: { account: Account }) {
   function renderTask(task: Task) {
     const overdue = isOverdue(task.dueDate, task.status);
     return (
-      <div key={task.id} style={{
-        padding: '10px 12px',
-        background: 'var(--bg3)',
-        borderRadius: 'var(--r-sm)',
-        border: '1px solid var(--border)',
-        marginBottom: 6,
-        display: 'flex',
-        gap: 10,
-        alignItems: 'flex-start',
-      }}>
+      <div key={task.id}
+        onClick={() => openDrawer(task)}
+        style={{
+          padding: '10px 12px',
+          background: 'var(--bg3)',
+          borderRadius: 'var(--r-sm)',
+          border: '1px solid var(--border)',
+          marginBottom: 6,
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+          cursor: 'pointer',
+        }}
+        onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border2)'}
+        onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
+      >
         {/* status dot / click to cycle */}
         <button
-          onClick={() => cycleStatus(task)}
+          onClick={e => { e.stopPropagation(); cycleStatus(task); }}
           title={`Status: ${task.status} — click to advance`}
           style={{
             width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: 2,
@@ -281,6 +294,13 @@ export function TasksTab({ account }: { account: Account }) {
           </div>
           {general.map(renderTask)}
         </div>
+      )}
+
+      {drawerTask && (
+        <TaskDetailDrawer
+          task={drawerTask}
+          onClose={() => setDrawerTask(null)}
+        />
       )}
     </div>
   );

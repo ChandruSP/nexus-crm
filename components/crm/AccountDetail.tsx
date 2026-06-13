@@ -9,8 +9,8 @@ import { OpportunitiesTab } from './OpportunitiesTab';
 type Tab = 'overview' | 'tasks' | 'stakeholders' | 'opportunities';
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'overview',      label: 'Overview' },
   { key: 'tasks',         label: 'Tasks' },
+  { key: 'overview',      label: 'Overview' },
   { key: 'stakeholders',  label: 'Stakeholders' },
   { key: 'opportunities', label: 'Opportunities' },
 ];
@@ -39,7 +39,7 @@ function InitialAvatar({ name }: { name: string }) {
 
 export function AccountDetail({ onBack }: { onBack?: () => void }) {
   const { state } = useCrm();
-  const [tab, setTab] = useState<Tab>('overview');
+  const [tab, setTab] = useState<Tab>('tasks');
 
   const account = state.accounts.find(a => a.id === state.selectedAccountId);
 
