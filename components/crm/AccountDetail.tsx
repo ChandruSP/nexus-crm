@@ -37,7 +37,7 @@ function InitialAvatar({ name }: { name: string }) {
   );
 }
 
-export function AccountDetail() {
+export function AccountDetail({ onBack }: { onBack?: () => void }) {
   const { state } = useCrm();
   const [tab, setTab] = useState<Tab>('overview');
 
@@ -65,6 +65,13 @@ export function AccountDetail() {
 
       {/* ── Header ──────────────────────────────────────────────── */}
       <div style={{ padding: '20px 28px 0', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+
+        {onBack && (
+          <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 12, padding: '0 0 14px 0', fontWeight: 500 }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            All Accounts
+          </button>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 16 }}>
           <InitialAvatar name={account.name} />
