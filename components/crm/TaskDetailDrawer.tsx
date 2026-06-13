@@ -32,6 +32,7 @@ const AUTHOR_KEY = 'pulse-comment-author';
 export function TaskDetailDrawer({ task, onClose }: Props) {
   const { dispatch } = useCrm();
   const [author,      setAuthor]      = useState(() => localStorage.getItem(AUTHOR_KEY) ?? '');
+  const [editingName, setEditingName] = useState(false);
   const [commentText, setCommentText] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -165,7 +166,30 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
 
         {/* Add comment */}
         <form onSubmit={submitComment} style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <input style={inp} value={author} onChange={e => setAuthor(e.target.value)} placeholder="Your name" />
+          {/* Author row — shows name chip if set, inline edit if not or editing */}
+          {author && !editingName ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                background: `hsl(${author.split('').reduce((n, ch) => n + ch.charCodeAt(0), 0) % 360},50%,48%)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 9, fontWeight: 700, color: '#fff',
+              }}>
+                {author.slice(0, 2).toUpperCase()}
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{author}</span>
+              <button type="button" onClick={() => setEditingName(true)}
+                style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 2 }}>
+                change
+              </button>
+            </div>
+          ) : (
+            <input style={inp} value={author} autoFocus={editingName}
+              onChange={e => setAuthor(e.target.value)}
+              onBlur={() => { if (author.trim()) setEditingName(false); }}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (author.trim()) setEditingName(false); } }}
+              placeholder="Your name" />
+          )}
           <textarea style={{ ...inp, resize: 'none', minHeight: 72, lineHeight: 1.55 }}
             value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Add a comment…"
             onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitComment(e as any); }} />

@@ -46,7 +46,7 @@ function NavTab({ label, active, onClick }: { label: string; active: boolean; on
 }
 
 export function CrmApp() {
-  const [view, setView] = useState<AppView>('accounts');
+  const [view, setView] = useState<AppView>('tasks');
 
   return (
     <ConfigProvider>
@@ -58,8 +58,8 @@ export function CrmApp() {
             <div style={{ display:'flex', alignItems:'center', marginRight:24 }}>
               <span style={{ fontSize:18, color:'var(--text)', fontWeight:700, letterSpacing:'-0.01em' }}>Pulse</span>
             </div>
-            <NavTab label="Accounts" active={view === 'accounts'} onClick={() => setView('accounts')} />
             <NavTab label="Tasks"    active={view === 'tasks'}    onClick={() => setView('tasks')} />
+            <NavTab label="Accounts" active={view === 'accounts'} onClick={() => setView('accounts')} />
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:4 }}>
               <button onClick={() => setView('config')} title="Settings"
                 style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
