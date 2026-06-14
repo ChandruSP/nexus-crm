@@ -1,10 +1,71 @@
 'use client';
 import { useState } from 'react';
 import { useCrm } from '@/context/CrmContext';
-import { TaskPriority } from '@/lib/crmTypes';
+import { useConfig } from '@/context/ConfigContext';
+import { useToast } from '@/context/ToastContext';
+import { TaskPriority, TaskStatus } from '@/lib/crmTypes';
 import { TaskKanban } from './TaskKanban';
 import { TaskList } from './TaskList';
 import { TaskDetailDrawer, DrawerTask } from './TaskDetailDrawer';
+
+const STATUS_ORDER: TaskStatus[] = ['To do', 'In progress', 'Done', 'Blocked'];
+
+function NewTaskModal({ onClose }: { onClose: () => void }) {
+  const { state, dispatch } = useCrm();
+  const { config } = useConfig();
+  const { toast } = useToast();
+  const [form, setForm] = useState({ accountId: '', title: '', description: '', status: 'To do' as TaskStatus, priority: 'Medium' as TaskPriority, dueDate: '', assignee: '' });
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 'var(--r-sm)', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
+  const lbl: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--text3)', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' };
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.accountId || !form.title.trim()) return;
+    dispatch({ type: 'ADD_TASK', accountId: form.accountId, task: { id: `t-${Date.now()}`, title: form.title.trim(), description: form.description.trim() || undefined, status: form.status, priority: form.priority, dueDate: form.dueDate || undefined, assignee: form.assignee || undefined, createdAt: Date.now(), comments: [] } });
+    toast('Task added');
+    onClose();
+  }
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 500 }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 501, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 480, maxWidth: '90vw', boxShadow: '0 16px 48px rgba(0,0,0,0.18)' }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>New Task</div>
+        <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
+          <div><label style={lbl}>Account *</label>
+            <select style={{ ...inp, cursor: 'pointer' }} value={form.accountId} onChange={e => setForm(f => ({ ...f, accountId: e.target.value }))} autoFocus>
+              <option value="">Select account…</option>
+              {state.accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </div>
+          <div><label style={lbl}>Title *</label><input style={inp} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="What needs to be done?" /></div>
+          <div><label style={lbl}>Description</label><textarea style={{ ...inp, minHeight: 56, resize: 'vertical' }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div><label style={lbl}>Priority</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}>
+                {(['Low','Medium','High','Critical'] as TaskPriority[]).map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Status</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as TaskStatus }))}>
+                {STATUS_ORDER.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
+            <div><label style={lbl}>Assignee</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
+                <option value="">Unassigned</option>
+                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button type="submit" style={{ padding: '8px 18px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Add Task</button>
+            <button type="button" onClick={onClose} style={{ padding: '8px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </>
+  );
+}
 
 type ViewMode = 'kanban' | 'list';
 
@@ -28,6 +89,7 @@ const ListIcon = () => (
 export function TasksView() {
   const { state } = useCrm();
   const [view,       setView]       = useState<ViewMode>('kanban');
+  const [newTask,    setNewTask]    = useState(false);
   const [search,     setSearch]     = useState('');
   const [fAccount,   setFAccount]   = useState('');
   const [drawerTask, setDrawerTask] = useState<DrawerTask | null>(null);
@@ -108,6 +170,10 @@ export function TasksView() {
 
         <div style={{ flex: 1 }} />
 
+        <button onClick={() => setNewTask(true)} style={{ padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <span style={{ fontSize: 16, fontWeight: 300, lineHeight: 1 }}>+</span> New Task
+        </button>
+
         {/* View toggle */}
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <button style={viewBtnStyle(view === 'kanban')} onClick={() => setView('kanban')} title="Kanban view">
@@ -125,6 +191,7 @@ export function TasksView() {
       }
 
       {drawerTask && <TaskDetailDrawer task={drawerTask} onClose={() => setDrawerTask(null)} />}
+      {newTask && <NewTaskModal onClose={() => setNewTask(false)} />}
     </div>
   );
 }

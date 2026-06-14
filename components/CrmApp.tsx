@@ -7,13 +7,14 @@ import { ToastContainer } from './Toast';
 import { AccountsView } from './crm/AccountsView';
 import { TasksView } from './crm/TasksView';
 import { ConfigView } from './crm/ConfigView';
+import { SplashScreen } from './SplashScreen';
 
 type AppView = 'accounts' | 'tasks' | 'config';
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
-    const saved = localStorage.getItem('pulse-theme');
+    const saved = localStorage.getItem('nexus-theme');
     const isDark = saved === 'dark';
     setDark(isDark);
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -23,7 +24,7 @@ function ThemeToggle() {
     setDark(next);
     const theme = next ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('pulse-theme', theme);
+    localStorage.setItem('nexus-theme', theme);
   }
   return (
     <button onClick={toggle} title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -49,9 +50,11 @@ function NavTab({ label, active, onClick }: { label: string; active: boolean; on
 
 export function CrmApp() {
   const [view, setView] = useState<AppView>('tasks');
+  const [splash, setSplash] = useState(true);
 
   return (
     <ToastProvider>
+    {splash && <SplashScreen onDone={() => setSplash(false)} />}
     <ConfigProvider>
       <CrmProvider>
         <div style={{ display:'flex', flexDirection:'column', height:'100vh', background:'var(--bg)', fontFamily:'Instrument Sans, sans-serif', overflow:'hidden' }}>
@@ -59,7 +62,7 @@ export function CrmApp() {
           {/* Topbar */}
           <div style={{ height:48, flexShrink:0, background:'var(--bg2)', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'stretch', padding:'0 20px', gap:0, zIndex:100 }}>
             <div style={{ display:'flex', alignItems:'center', marginRight:24 }}>
-              <span style={{ fontSize:18, color:'var(--text)', fontWeight:700, letterSpacing:'-0.01em' }}>Pulse</span>
+              <span style={{ fontSize:18, color:'var(--accent)', fontWeight:800, letterSpacing:'0.08em', fontFamily: 'Poppins, sans-serif' }}>NEXUS</span>
             </div>
             <NavTab label="Tasks"    active={view === 'tasks'}    onClick={() => setView('tasks')} />
             <NavTab label="Accounts" active={view === 'accounts'} onClick={() => setView('accounts')} />

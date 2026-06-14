@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useCrm } from '@/context/CrmContext';
+import { useConfig } from '@/context/ConfigContext';
 import { useToast } from '@/context/ToastContext';
 import { Task, TaskStatus, TaskPriority, Comment } from '@/lib/crmTypes';
 
@@ -27,11 +28,13 @@ export interface DrawerTask extends Task {
 
 interface Props { task: DrawerTask; onClose: () => void; }
 
-const AUTHOR_KEY = 'pulse-comment-author';
+const AUTHOR_KEY = 'nexus-comment-author';
 
 export function TaskDetailDrawer({ task, onClose }: Props) {
-  const { dispatch } = useCrm();
+  const { state, dispatch } = useCrm();
+  const { config } = useConfig();
   const { toast }    = useToast();
+  const liveTask = state.accounts.find(a => a.id === task.accountId)?.tasks.find(t => t.id === task.id);
   const [author,      setAuthor]      = useState(() => localStorage.getItem(AUTHOR_KEY) ?? '');
   const [editingName, setEditingName] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -81,7 +84,7 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
   };
   const lbl: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3, display: 'block' };
 
-  const comments = task.comments ?? [];
+  const comments = (liveTask ?? task).comments ?? [];
 
   return (
     <>
@@ -131,7 +134,10 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
               </div>
               <div>
                 <span style={lbl}>Assignee</span>
-                <input style={inp} value={editForm.assignee} onChange={e => setEditForm(f => ({ ...f, assignee: e.target.value }))} placeholder="Name" />
+                <select style={{ ...inp, cursor: 'pointer' }} value={editForm.assignee} onChange={e => setEditForm(f => ({ ...f, assignee: e.target.value }))}>
+                  <option value="">Unassigned</option>
+                  {config.teamMembers.map(m => <option key={m}>{m}</option>)}
+                </select>
               </div>
               <div>
                 <span style={lbl}>Description</span>

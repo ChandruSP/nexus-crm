@@ -110,3 +110,45 @@
 .mx-med { background: var(--amber-dim); color: var(--amber); }
 .mx-hi  { background: var(--red-dim);   color: var(--red); }
 .mx-active { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Topbar */
+  .nexus-topbar { padding: 0 12px !important; }
+  .nexus-topbar-logo { font-size: 15px !important; }
+
+  /* Account grid */
+  .accounts-grid { grid-template-columns: 1fr !important; }
+
+  /* Kanban — horizontal scroll */
+  .kanban-board { flex-wrap: nowrap !important; overflow-x: auto; padding-bottom: 16px; }
+  .kanban-col   { min-width: 260px !important; flex: 0 0 260px !important; }
+
+  /* Detail drawer — full screen */
+  .task-drawer  { width: 100% !important; }
+
+  /* Forms — single column */
+  .form-grid-2  { grid-template-columns: 1fr !important; }
+  .form-grid-3  { grid-template-columns: 1fr !important; }
+
+  /* Account detail header */
+  .account-header-actions { display: none !important; }
+
+  /* Table → card-list */
+  .task-table thead { display: none; }
+  .task-table tr { display: flex; flex-direction: column; margin-bottom: 8px; background: var(--bg3); border-radius: var(--r-sm); padding: 10px 12px; }
+  .task-table td { border: none !important; padding: 2px 0 !important; font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  /* Stack topbar nav */
+  .nexus-nav { gap: 0 !important; }
+  .nexus-nav button { padding: 0 10px !important; font-size: 12px !important; }
+
+  /* Reduce padding throughout */
+  .content-pad { padding: 16px !important; }
+  .card-pad { padding: 12px 14px !important; }
+
+  /* New task / account modal */
+  .modal-body { padding: 16px !important; }
+}

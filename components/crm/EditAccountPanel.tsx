@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useCrm } from '@/context/CrmContext';
+import { useConfig } from '@/context/ConfigContext';
 import { Account, OppStage } from '@/lib/crmTypes';
 
 const STAGES: OppStage[] = ['Prospecting','Qualified','Proposal','Negotiation','Closed Won','Closed Lost'];
@@ -9,6 +10,7 @@ interface Props { account: Account; onDone: () => void; onCancel: () => void; }
 
 export function EditAccountPanel({ account, onDone, onCancel }: Props) {
   const { dispatch } = useCrm();
+  const { config } = useConfig();
 
   const [basic, setBasic] = useState({
     name: account.name, industry: account.industry,
@@ -83,7 +85,10 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
             </div>
             <div>
               <Label t="Industry" req />
-              <input style={inp(!!errors.industry)} value={basic.industry} onChange={e => setB('industry', e.target.value)} />
+              <select style={inp(!!errors.industry)} value={basic.industry} onChange={e => setB('industry', e.target.value)}>
+                <option value="">Select industry…</option>
+                {config.industries.map(i => <option key={i}>{i}</option>)}
+              </select>
               {errors.industry && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 3 }}>{errors.industry}</div>}
             </div>
             <div>
@@ -94,7 +99,10 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
             </div>
             <div>
               <Label t="Account Owner" req />
-              <input style={inp(!!errors.owner)} value={basic.owner} onChange={e => setB('owner', e.target.value)} />
+              <select style={inp(!!errors.owner)} value={basic.owner} onChange={e => setB('owner', e.target.value)}>
+                <option value="">Select owner…</option>
+                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
+              </select>
               {errors.owner && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 3 }}>{errors.owner}</div>}
             </div>
             <div>

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Pulse — Account Management',
+  title: 'NEXUS — Account Management',
   description: 'Sales & Key Account Management workspace.',
 };
 

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Account, Task, TaskStatus, TaskPriority } from '@/lib/crmTypes';
 import { useCrm } from '@/context/CrmContext';
+import { useConfig } from '@/context/ConfigContext';
 import { useToast } from '@/context/ToastContext';
 import { TaskDetailDrawer, DrawerTask } from './TaskDetailDrawer';
 
@@ -24,6 +25,7 @@ function isOverdue(iso?: string, status?: TaskStatus) {
 
 function AddTaskForm({ account, onClose }: { account: Account; onClose: () => void }) {
   const { dispatch } = useCrm();
+  const { config } = useConfig();
   const { toast } = useToast();
   const [form, setForm] = useState({ title: '', description: '', status: 'To do' as TaskStatus, priority: 'Medium' as TaskPriority, dueDate: '', assignee: '', opportunityId: '' });
   const inp: React.CSSProperties = { width: '100%', background: 'var(--bg3)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', color: 'var(--text)', fontSize: 13, padding: '8px 10px', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
@@ -53,7 +55,12 @@ function AddTaskForm({ account, onClose }: { account: Account; onClose: () => vo
             </select>
           </div>
           <div><label style={lbl}>Due date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
-          <div><label style={lbl}>Assignee</label><input style={inp} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))} placeholder="Name" /></div>
+          <div><label style={lbl}>Assignee</label>
+            <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
+              <option value="">Unassigned</option>
+              {config.teamMembers.map(m => <option key={m}>{m}</option>)}
+            </select>
+          </div>
         </div>
         {account.opportunities.length > 0 && (
           <div><label style={lbl}>Link to Opportunity</label>
@@ -216,7 +223,7 @@ export function TasksTab({ account }: { account: Account }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', gap: 4 }}>
-          {(['All', 'To do', 'In progress', 'Blocked', 'Done'] as const).map(s => (
+          {viewMode === 'list' && (['All', 'To do', 'In progress', 'Blocked', 'Done'] as const).map(s => (
             <button key={s} style={filterBtnStyle(filter === s)} onClick={() => setFilter(s)}>{s}</button>
           ))}
         </div>
