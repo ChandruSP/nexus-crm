@@ -38,44 +38,50 @@ function AddTaskForm({ account, onClose }: { account: Account; onClose: () => vo
     onClose();
   }
   return (
-    <form onSubmit={submit} style={{ padding: '16px', background: 'var(--bg3)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', marginBottom: 16 }}>
-      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', marginBottom: 12 }}>New Task</div>
-      <div style={{ display: 'grid', gap: 10 }}>
-        <div><label style={lbl}>Title *</label><input style={inp} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="What needs to be done?" autoFocus /></div>
-        <div><label style={lbl}>Description</label><textarea style={{ ...inp, minHeight: 56, resize: 'vertical' }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional context…" /></div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <div><label style={lbl}>Priority</label>
-            <select style={{ ...inp, cursor: 'pointer' }} value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}>
-              {(['Low','Medium','High','Critical'] as TaskPriority[]).map(p => <option key={p}>{p}</option>)}
-            </select>
-          </div>
-          <div><label style={lbl}>Status</label>
-            <select style={{ ...inp, cursor: 'pointer' }} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as TaskStatus }))}>
-              {STATUS_ORDER.map(s => <option key={s}>{s}</option>)}
-            </select>
-          </div>
-          <div><label style={lbl}>Due date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
-          <div><label style={lbl}>Assignee</label>
-            <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
-              <option value="">Unassigned</option>
-              {config.teamMembers.map(m => <option key={m}>{m}</option>)}
-            </select>
-          </div>
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 500 }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 501, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 500, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>New Task</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
         </div>
-        {account.opportunities.length > 0 && (
-          <div><label style={lbl}>Link to Opportunity</label>
-            <select style={{ ...inp, cursor: 'pointer' }} value={form.opportunityId} onChange={e => setForm(f => ({ ...f, opportunityId: e.target.value }))}>
-              <option value="">General (no opportunity)</option>
-              {account.opportunities.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-            </select>
+        <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
+          <div><label style={lbl}>Title *</label><input style={inp} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="What needs to be done?" autoFocus /></div>
+          <div><label style={lbl}>Description</label><textarea style={{ ...inp, minHeight: 64, resize: 'vertical' }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional context…" /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div><label style={lbl}>Priority</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}>
+                {(['Low','Medium','High','Critical'] as TaskPriority[]).map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Status</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as TaskStatus }))}>
+                {STATUS_ORDER.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Due date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
+            <div><label style={lbl}>Assignee</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
+                <option value="">Unassigned</option>
+                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
+              </select>
+            </div>
           </div>
-        )}
+          {account.opportunities.length > 0 && (
+            <div><label style={lbl}>Link to Opportunity</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.opportunityId} onChange={e => setForm(f => ({ ...f, opportunityId: e.target.value }))}>
+                <option value="">No opportunity</option>
+                {account.opportunities.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+              </select>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button type="submit" style={{ padding: '8px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Add Task</button>
+            <button type="button" onClick={onClose} style={{ padding: '8px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </form>
       </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-        <button type="submit" style={{ padding: '7px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Add Task</button>
-        <button type="button" onClick={onClose} style={{ padding: '7px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-      </div>
-    </form>
+    </>
   );
 }
 
@@ -187,7 +193,7 @@ export function TasksTab({ account }: { account: Account }) {
   const { dispatch } = useCrm();
   const { toast } = useToast();
   const [adding, setAdding]         = useState(false);
-  const [viewMode, setViewMode]     = useState<'list' | 'kanban'>('list');
+  const [viewMode, setViewMode]     = useState<'list' | 'kanban'>('kanban');
   const [filter, setFilter]         = useState<'All' | TaskStatus>('All');
   const [drawerTask, setDrawerTask] = useState<DrawerTask | null>(null);
   const [delTaskId, setDelTaskId]   = useState<string | null>(null);
@@ -298,12 +304,7 @@ export function TasksTab({ account }: { account: Account }) {
               {oppTasks.map(renderTask)}
             </div>
           ))}
-          {general.length > 0 && (
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>General</div>
-              {general.map(renderTask)}
-            </div>
-          )}
+          {general.map(renderTask)}
         </>
       )}
 

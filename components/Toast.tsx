@@ -22,7 +22,7 @@ export function ToastContainer() {
   if (toasts.length === 0) return null;
   return (
     <div style={{
-      position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+      position: 'fixed', top: 60, right: 24, zIndex: 9999,
       display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none',
     }}>
       {toasts.map(t => (
@@ -32,7 +32,7 @@ export function ToastContainer() {
           background: 'var(--bg2)', border: `1px solid ${KIND_COLOR[t.kind]}40`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.14)',
           minWidth: 240, maxWidth: 360,
-          animation: 'slideUp 0.2s ease',
+          animation: 'slideDown 0.2s ease',
         }}>
           <span style={{
             width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
@@ -45,7 +45,7 @@ export function ToastContainer() {
           <span style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>{t.message}</span>
         </div>
       ))}
-      <style>{`@keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }`}</style>
+      <style>{`@keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }`}</style>
     </div>
   );
 }

@@ -22,25 +22,32 @@ function ProjectForm({ initial, onSave, onCancel, title }: { initial: PRForm; on
   const [form, setForm] = useState(initial);
   const set = (k: keyof PRForm, v: string) => setForm(f => ({ ...f, [k]: v }));
   return (
-    <form onSubmit={e => { e.preventDefault(); if (!form.name.trim()) return; onSave(form); }}
-      style={{ padding: 14, background: 'var(--bg3)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', marginBottom: 12 }}>
-      <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text)', marginBottom: 10 }}>{title}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px 14px' }}>
-        <div style={{ gridColumn: '1/-1' }}><span style={lbl}>Project Name *</span><input style={inp} value={form.name} onChange={e => set('name', e.target.value)} autoFocus /></div>
-        <div><span style={lbl}>Year</span><input type="number" style={inp} min="2000" max="2100" value={form.year} onChange={e => set('year', e.target.value)} /></div>
-        <div><span style={lbl}>Status</span>
-          <select style={{ ...inp, cursor: 'pointer' }} value={form.status} onChange={e => set('status', e.target.value as PRForm['status'])}>
-            <option>Completed</option><option>Ongoing</option><option>Cancelled</option>
-          </select>
+    <>
+      <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 500 }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 501, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 480, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
         </div>
-        <div><span style={lbl}>Revenue (₹ Lakhs)</span><input type="number" style={inp} min="0" step="0.1" value={form.revenue} onChange={e => set('revenue', e.target.value)} placeholder="e.g. 48" /></div>
-        <div style={{ gridColumn: '1/-1' }}><span style={lbl}>Description</span><textarea style={{ ...inp, resize: 'vertical', minHeight: 55, lineHeight: 1.5 }} value={form.description} onChange={e => set('description', e.target.value)} /></div>
+        <form onSubmit={e => { e.preventDefault(); if (!form.name.trim()) return; onSave(form); }} style={{ display: 'grid', gap: 12 }}>
+          <div><span style={lbl}>Project Name *</span><input style={inp} value={form.name} onChange={e => set('name', e.target.value)} autoFocus /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div><span style={lbl}>Year</span><input type="number" style={inp} min="2000" max="2100" value={form.year} onChange={e => set('year', e.target.value)} /></div>
+            <div><span style={lbl}>Status</span>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.status} onChange={e => set('status', e.target.value as PRForm['status'])}>
+                <option>Completed</option><option>Ongoing</option><option>Cancelled</option>
+              </select>
+            </div>
+            <div><span style={lbl}>Revenue (₹ Lakhs)</span><input type="number" style={inp} min="0" step="0.1" value={form.revenue} onChange={e => set('revenue', e.target.value)} placeholder="e.g. 48" /></div>
+          </div>
+          <div><span style={lbl}>Description</span><textarea style={{ ...inp, resize: 'vertical', minHeight: 68, lineHeight: 1.5 }} value={form.description} onChange={e => set('description', e.target.value)} /></div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button type="submit" style={{ padding: '8px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Save</button>
+            <button type="button" onClick={onCancel} style={{ padding: '8px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </form>
       </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-        <button type="submit" style={{ padding: '6px 14px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Save</button>
-        <button type="button" onClick={onCancel} style={{ padding: '6px 12px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-      </div>
-    </form>
+    </>
   );
 }
 

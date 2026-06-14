@@ -26,37 +26,41 @@ function StakeholderForm({ initial, onSave, onCancel, title }: { initial: BlankF
   const [form, setForm] = useState(initial);
   const set = (k: keyof BlankForm, v: string | boolean) => setForm(f => ({ ...f, [k]: v }));
   return (
-    <form onSubmit={e => { e.preventDefault(); if (!form.name.trim() || !form.role.trim()) return; onSave(form); }}
-      style={{ padding: 16, background: 'var(--bg3)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', marginBottom: 16 }}>
-      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', marginBottom: 12 }}>{title}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 16px' }}>
-        <div><span style={label}>Name *</span><input style={inp} value={form.name} onChange={e => set('name', e.target.value)} autoFocus placeholder="Full name" /></div>
-        <div><span style={label}>Role / Title *</span><input style={inp} value={form.role} onChange={e => set('role', e.target.value)} placeholder="e.g. CTO" /></div>
-        <div><span style={label}>Email</span><input type="email" style={inp} value={form.email} onChange={e => set('email', e.target.value)} placeholder="email@company.com" /></div>
-        <div>
-          <span style={label}>Phone</span>
-          <input style={inp} value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+91 98765 43210" />
+    <>
+      <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 500 }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 501, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 520, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
         </div>
-        <div style={{ gridColumn: '1/-1', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: 'var(--text2)' }}>
-            <input type="checkbox" checked={form.whatsapp} onChange={e => set('whatsapp', e.target.checked)} style={{ accentColor: 'var(--green)', width: 14, height: 14 }} />
-            Reachable on WhatsApp
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: 'var(--text2)' }}>
-            <input type="checkbox" checked={form.isPrimary} onChange={e => set('isPrimary', e.target.checked)} style={{ accentColor: 'var(--accent)', width: 14, height: 14 }} />
-            Primary contact
-          </label>
-        </div>
-        <div style={{ gridColumn: '1/-1' }}>
-          <span style={label}>Notes</span>
-          <textarea style={{ ...inp, minHeight: 60, resize: 'vertical', lineHeight: 1.6 }} value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Relationship notes, preferences…" />
-        </div>
+        <form onSubmit={e => { e.preventDefault(); if (!form.name.trim() || !form.role.trim()) return; onSave(form); }} style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px' }}>
+            <div><span style={label}>Name *</span><input style={inp} value={form.name} onChange={e => set('name', e.target.value)} autoFocus placeholder="Full name" /></div>
+            <div><span style={label}>Role / Title *</span><input style={inp} value={form.role} onChange={e => set('role', e.target.value)} placeholder="e.g. CTO" /></div>
+            <div><span style={label}>Email</span><input type="email" style={inp} value={form.email} onChange={e => set('email', e.target.value)} placeholder="email@company.com" /></div>
+            <div><span style={label}>Phone</span><input style={inp} value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+91 98765 43210" /></div>
+            <div style={{ gridColumn: '1/-1', display: 'flex', alignItems: 'center', gap: 20, padding: '4px 0' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--text2)' }}>
+                <input type="checkbox" checked={form.whatsapp} onChange={e => set('whatsapp', e.target.checked)} style={{ accentColor: 'var(--green)', width: 14, height: 14 }} />
+                Reachable on WhatsApp
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: 'var(--text2)' }}>
+                <input type="checkbox" checked={form.isPrimary} onChange={e => set('isPrimary', e.target.checked)} style={{ accentColor: 'var(--accent)', width: 14, height: 14 }} />
+                Primary contact
+              </label>
+            </div>
+            <div style={{ gridColumn: '1/-1' }}>
+              <span style={label}>Notes</span>
+              <textarea style={{ ...inp, minHeight: 72, resize: 'vertical', lineHeight: 1.6 }} value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Relationship notes, preferences…" />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button type="submit" style={{ padding: '8px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Save</button>
+            <button type="button" onClick={onCancel} style={{ padding: '8px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </form>
       </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-        <button type="submit" style={{ padding: '7px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Save</button>
-        <button type="button" onClick={onCancel} style={{ padding: '7px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-      </div>
-    </form>
+    </>
   );
 }
 

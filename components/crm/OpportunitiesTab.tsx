@@ -90,27 +90,33 @@ export function OpportunitiesTab({ account }: { account: Account }) {
       </div>
 
       {adding && (
-        <form onSubmit={submit} style={{ padding: 16, background: 'var(--bg3)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', marginBottom: 12 }}>{editId ? 'Edit Opportunity' : 'New Opportunity'}</div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            <div><label style={labelStyle}>Name *</label><input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} autoFocus /></div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-              <div><label style={labelStyle}>Value (₹)</label><input type="number" style={inputStyle} value={form.value} onChange={e => setForm(f => ({ ...f, value: Number(e.target.value) }))} /></div>
-              <div><label style={labelStyle}>Stage</label>
-                <select style={inputStyle} value={form.stage} onChange={e => setForm(f => ({ ...f, stage: e.target.value as OppStage }))}>
-                  {STAGES.map(s => <option key={s}>{s}</option>)}
-                </select>
-              </div>
-              <div><label style={labelStyle}>Probability %</label><input type="number" min={0} max={100} style={inputStyle} value={form.probability} onChange={e => setForm(f => ({ ...f, probability: Number(e.target.value) }))} /></div>
+        <>
+          <div onClick={() => { setAdding(false); setEditId(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 500 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 501, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 520, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{editId ? 'Edit Opportunity' : 'New Opportunity'}</div>
+              <button onClick={() => { setAdding(false); setEditId(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
             </div>
-            <div><label style={labelStyle}>Expected Close Date</label><input type="date" style={inputStyle} value={form.closeDate} onChange={e => setForm(f => ({ ...f, closeDate: e.target.value }))} /></div>
-            <div><label style={labelStyle}>Description</label><textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
+            <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
+              <div><label style={labelStyle}>Name *</label><input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} autoFocus /></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div><label style={labelStyle}>Value (₹)</label><input type="number" style={inputStyle} value={form.value} onChange={e => setForm(f => ({ ...f, value: Number(e.target.value) }))} /></div>
+                <div><label style={labelStyle}>Stage</label>
+                  <select style={inputStyle} value={form.stage} onChange={e => setForm(f => ({ ...f, stage: e.target.value as OppStage }))}>
+                    {STAGES.map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Probability %</label><input type="number" min={0} max={100} style={inputStyle} value={form.probability} onChange={e => setForm(f => ({ ...f, probability: Number(e.target.value) }))} /></div>
+              </div>
+              <div><label style={labelStyle}>Expected Close Date</label><input type="date" style={inputStyle} value={form.closeDate} onChange={e => setForm(f => ({ ...f, closeDate: e.target.value }))} /></div>
+              <div><label style={labelStyle}>Description</label><textarea style={{ ...inputStyle, minHeight: 68, resize: 'vertical' }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <button type="submit" style={{ padding: '8px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{editId ? 'Update' : 'Add'}</button>
+                <button type="button" onClick={() => { setAdding(false); setEditId(null); }} style={{ padding: '8px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              </div>
+            </form>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-            <button type="submit" style={{ padding: '7px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>{editId ? 'Update' : 'Add'}</button>
-            <button type="button" onClick={() => { setAdding(false); setEditId(null); }} style={{ padding: '7px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-          </div>
-        </form>
+        </>
       )}
 
       <div style={{ display: 'grid', gap: 10 }}>
