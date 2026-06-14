@@ -2,10 +2,33 @@
 import { useState } from 'react';
 import { useConfig, ConfigState } from '@/context/ConfigContext';
 
-const SECTIONS: { key: keyof ConfigState; label: string; icon: string; desc: string }[] = [
-  { key: 'industries',  label: 'Industries',        icon: '🏭', desc: 'Available industry options when creating or editing accounts.' },
-  { key: 'teamMembers', label: 'Team Members',       icon: '👤', desc: 'People that can be assigned to tasks and opportunities.' },
-  { key: 'oppStages',   label: 'Opportunity Stages', icon: '📊', desc: 'Pipeline stages for opportunities. Order here controls the kanban column order.' },
+const IndustriesIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect x="1" y="9" width="4" height="6" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+    <rect x="6" y="5" width="4" height="10" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+    <rect x="11" y="2" width="4" height="13" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+  </svg>
+);
+
+const TeamIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <circle cx="6" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.4"/>
+    <path d="M1.5 13.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <circle cx="11.5" cy="5" r="2" stroke="currentColor" strokeWidth="1.3"/>
+    <path d="M13.5 13.5c0-1.933-1.12-3.6-2.75-4.34" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+);
+
+const StagesIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M1.5 8h13M8 1.5l6.5 6.5-6.5 6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const SECTIONS: { key: keyof ConfigState; label: string; Icon: React.FC; desc: string }[] = [
+  { key: 'industries',  label: 'Industries',        Icon: IndustriesIcon, desc: 'Available industry options when creating or editing accounts.' },
+  { key: 'teamMembers', label: 'Team Members',       Icon: TeamIcon,       desc: 'People that can be assigned to tasks and opportunities.' },
+  { key: 'oppStages',   label: 'Opportunity Stages', Icon: StagesIcon,     desc: 'Pipeline stages for opportunities. Order here controls the kanban column order.' },
 ];
 
 interface ConfirmState { item: string; list: keyof ConfigState }
@@ -50,21 +73,29 @@ function PicklistSection({ sectionKey, desc }: { sectionKey: keyof ConfigState; 
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {sectionKey === 'oppStages' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <button disabled={i === 0} onClick={() => dispatch({ type: 'MOVE_ITEM', list: sectionKey, from: i, to: i - 1 })}
-                    style={{ background: 'none', border: 'none', cursor: i === 0 ? 'default' : 'pointer', color: 'var(--text3)', fontSize: 9, padding: 0, opacity: i === 0 ? 0.3 : 1, lineHeight: 1 }}>▲</button>
+                    style={{ background: 'none', border: 'none', cursor: i === 0 ? 'default' : 'pointer', color: 'var(--text3)', padding: 0, opacity: i === 0 ? 0.25 : 1, lineHeight: 1, display: 'flex', alignItems: 'center', transition: 'color 0.12s' }}
+                    onMouseEnter={e => { if (i !== 0) (e.currentTarget as HTMLElement).style.color = 'var(--text)'; }}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text3)'}>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 8l4-4 4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
                   <button disabled={i === items.length - 1} onClick={() => dispatch({ type: 'MOVE_ITEM', list: sectionKey, from: i, to: i + 1 })}
-                    style={{ background: 'none', border: 'none', cursor: i === items.length - 1 ? 'default' : 'pointer', color: 'var(--text3)', fontSize: 9, padding: 0, opacity: i === items.length - 1 ? 0.3 : 1, lineHeight: 1 }}>▼</button>
+                    style={{ background: 'none', border: 'none', cursor: i === items.length - 1 ? 'default' : 'pointer', color: 'var(--text3)', padding: 0, opacity: i === items.length - 1 ? 0.25 : 1, lineHeight: 1, display: 'flex', alignItems: 'center', transition: 'color 0.12s' }}
+                    onMouseEnter={e => { if (i !== items.length - 1) (e.currentTarget as HTMLElement).style.color = 'var(--text)'; }}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text3)'}>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
                 </div>
               )}
               <span style={{ fontSize: 13, color: 'var(--text)' }}>{item}</span>
             </div>
             <button onClick={() => requestDelete(item)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16, lineHeight: 1, padding: '0 4px', transition: 'color 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--red)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text3)')}
-              title={`Remove ${item}`}>
-              ×
+              title={`Remove ${item}`}
+              style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)', flexShrink: 0, transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--red)'; b.style.borderColor = 'var(--red)'; b.style.background = 'var(--red-dim)'; }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'transparent'; }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 4h9M6 4V2.5h2V4M5 4v8h4V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
         ))}
@@ -144,8 +175,11 @@ export function ConfigView() {
                 color: active ? 'var(--accent)' : 'var(--text2)',
                 fontWeight: active ? 600 : 400, fontSize: 13,
                 transition: 'background 0.15s, color 0.15s',
-              }}>
-                <span style={{ fontSize: 16 }}>{s.icon}</span>
+              }}
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'var(--bg3)'; }}
+                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                <s.Icon />
                 {s.label}
               </button>
             );
@@ -155,8 +189,9 @@ export function ConfigView() {
         {/* Right content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '28px 36px' }}>
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>
-              {section.icon} {section.label}
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ color: 'var(--accent)' }}><section.Icon /></span>
+              {section.label}
             </div>
           </div>
           <PicklistSection key={section.key} sectionKey={section.key} desc={section.desc} />
