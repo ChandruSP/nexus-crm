@@ -293,6 +293,14 @@ export function TasksTab({ account }: { account: Account }) {
     color: active ? 'var(--text)' : 'var(--text3)',
   });
 
+  const thStyle: React.CSSProperties = {
+    padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700,
+    color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em',
+    background: 'var(--bg2)', borderBottom: '1px solid var(--border)',
+    whiteSpace: 'nowrap', userSelect: 'none',
+    position: 'sticky', top: 0, zIndex: 1,
+  };
+
   function renderTaskRow(task: Task) {
     const overdue = isOverdue(task.dueDate, task.status);
     return (
@@ -301,29 +309,9 @@ export function TasksTab({ account }: { account: Account }) {
         style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg3)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-        <td style={{ padding: '10px 12px', minWidth: 200 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{task.title}</div>
-          {task.description && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 300 }}>{task.description}</div>}
-        </td>
-        <td style={{ padding: '10px 8px' }}>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, color: PRIORITY_COLOR[task.priority], background: PRIORITY_BG[task.priority] }}>{task.priority}</span>
-        </td>
-        <td style={{ padding: '6px 8px' }} onClick={e => e.stopPropagation()}>
-          <select className="select-badge" value={task.status}
-            onChange={e => { dispatch({ type: 'UPDATE_TASK', accountId: account.id, task: { ...task, status: e.target.value as TaskStatus } }); toast(`Moved to ${e.target.value}`, 'info'); }}
-            style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99, border: `1px solid ${STATUS_COLOR[task.status]}40`, background: STATUS_COLOR[task.status] + '18', color: STATUS_COLOR[task.status], cursor: 'pointer', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'inherit' }}>
-            {STATUS_ORDER.map(s => <option key={s} value={s} style={{ background: 'var(--bg2)', color: 'var(--text)' }}>{s}</option>)}
-          </select>
-        </td>
-        <td style={{ padding: '10px 8px', fontSize: 12, color: overdue ? 'var(--red)' : 'var(--text3)', whiteSpace: 'nowrap', fontWeight: overdue ? 700 : 400 }}>
-          {overdue ? '⚠ ' : ''}{task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—'}
-        </td>
-        <td style={{ padding: '10px 8px', fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap' }}>{task.assignee ?? '—'}</td>
-        <td style={{ padding: '10px 8px', maxWidth: 200 }}>
-          {task.opportunityId && <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>● {account.opportunities.find(o => o.id === task.opportunityId)?.name ?? ''}</span>}
-        </td>
-        <td style={{ padding: '6px 8px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-          <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+        {/* Actions — first column, same as global TaskList */}
+        <td style={{ padding: '6px 8px', width: 68, whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: 'flex', gap: 4 }}>
             <button onClick={e => { e.stopPropagation(); setEditTaskItem(task); }} title="Edit"
               style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text2)', transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}
               onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--accent)'; b.style.borderColor = 'var(--accent)'; b.style.background = 'var(--accent-dim)'; }}
@@ -337,6 +325,27 @@ export function TasksTab({ account }: { account: Account }) {
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 4h9M6 4V2.5h2V4M5 4v8h4V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
+        </td>
+        <td style={{ padding: '10px 8px', minWidth: 200 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{task.title}</div>
+          {task.description && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 300 }}>{task.description}</div>}
+        </td>
+        <td style={{ padding: '10px 8px' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, color: PRIORITY_COLOR[task.priority], background: PRIORITY_BG[task.priority], border: `1px solid ${PRIORITY_COLOR[task.priority]}33` }}>{task.priority}</span>
+        </td>
+        <td style={{ padding: '6px 8px' }} onClick={e => e.stopPropagation()}>
+          <select className="select-badge" value={task.status}
+            onChange={e => { dispatch({ type: 'UPDATE_TASK', accountId: account.id, task: { ...task, status: e.target.value as TaskStatus } }); toast(`Moved to ${e.target.value}`, 'info'); }}
+            style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 99, border: `1px solid ${STATUS_COLOR[task.status]}40`, background: STATUS_COLOR[task.status] + '18', color: STATUS_COLOR[task.status], cursor: 'pointer', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'inherit' }}>
+            {STATUS_ORDER.map(s => <option key={s} value={s} style={{ background: 'var(--bg2)', color: 'var(--text)' }}>{s}</option>)}
+          </select>
+        </td>
+        <td style={{ padding: '10px 8px', fontSize: 12, color: overdue ? 'var(--red)' : 'var(--text3)', whiteSpace: 'nowrap', fontWeight: overdue ? 700 : 400 }}>
+          {overdue ? '⚠ ' : ''}{task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—'}
+        </td>
+        <td style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap' }}>{task.assignee ?? '—'}</td>
+        <td style={{ padding: '10px 8px', maxWidth: 200 }}>
+          {task.opportunityId && <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>● {account.opportunities.find(o => o.id === task.opportunityId)?.name ?? ''}</span>}
         </td>
       </tr>
     );
@@ -373,25 +382,28 @@ export function TasksTab({ account }: { account: Account }) {
             <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text3)', fontSize: 13 }}>No tasks match this filter.</div>
           )}
           {tasks.length > 0 && (
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: 'var(--bg3)', borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Task</th>
-                  <th style={{ padding: '8px 8px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', width: 90 }}>Priority</th>
-                  <th style={{ padding: '8px 8px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', width: 110 }}>Status</th>
-                  <th style={{ padding: '8px 8px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', width: 90 }}>Due</th>
-                  <th style={{ padding: '8px 8px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', width: 120 }}>Assignee</th>
-                  <th style={{ padding: '8px 8px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Opportunity</th>
-                  <th style={{ padding: '8px 8px', width: 72 }} />
+                <tr>
+                  <th style={{ ...thStyle, width: 68, cursor: 'default' }} />
+                  <th style={thStyle}>Task</th>
+                  <th style={{ ...thStyle, width: 90 }}>Priority</th>
+                  <th style={{ ...thStyle, width: 110 }}>Status</th>
+                  <th style={{ ...thStyle, width: 90 }}>Due</th>
+                  <th style={{ ...thStyle, width: 120 }}>Assignee</th>
+                  <th style={thStyle}>Opportunity</th>
                 </tr>
               </thead>
               <tbody>
                 {byOpp.map(({ opp, tasks: oppTasks }) => (
                   <>
                     <tr key={opp.id + '-hdr'}>
-                      <td colSpan={7} style={{ padding: '8px 12px', background: 'var(--bg3)', borderBottom: '1px solid var(--border)', borderTop: '1px solid var(--border)' }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>● {opp.name}</span>
-                        <span style={{ fontSize: 10, color: 'var(--text3)', marginLeft: 8, fontWeight: 400 }}>{oppTasks.length} task{oppTasks.length !== 1 ? 's' : ''}</span>
+                      <td colSpan={7} style={{ padding: 0, background: 'var(--bg3)', borderBottom: '1px solid var(--border)', borderTop: '1px solid var(--border)' }}>
+                        <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
+                          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{opp.name}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text3)' }}>{oppTasks.length} task{oppTasks.length !== 1 ? 's' : ''}</span>
+                        </div>
                       </td>
                     </tr>
                     {oppTasks.map(renderTaskRow)}

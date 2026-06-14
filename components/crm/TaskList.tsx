@@ -95,6 +95,7 @@ type FlatTask = { id: string; accountId: string; accountName: string; title: str
 export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }: Props) {
   const { state, dispatch } = useCrm();
   const [editTask, setEditTask] = useState<FlatTask | null>(null);
+  const [delTask,  setDelTask]  = useState<FlatTask | null>(null);
 
   const [sortKey,   setSortKey]   = useState<SortKey>('priority');
   const [sortAsc,   setSortAsc]   = useState(true);
@@ -224,16 +225,22 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         onClick={() => onTaskClick?.(task as DrawerTask)}
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg3)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-        {/* Edit button */}
-        <td style={{ padding: '6px 8px', width: 36, textAlign: 'center' }}>
-          <button
-            onClick={e => { e.stopPropagation(); setEditTask(task); }}
-            title="Edit task"
-            style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text2)', flexShrink: 0, transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}
-            onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--accent)'; b.style.borderColor = 'var(--accent)'; b.style.background = 'var(--accent-dim)'; }}
-            onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text2)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'transparent'; }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L5 12H2V9L9.5 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </button>
+        {/* Edit + Delete — first column */}
+        <td style={{ padding: '6px 8px', width: 68, whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button onClick={e => { e.stopPropagation(); setEditTask(task); }} title="Edit task"
+              style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text2)', transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--accent)'; b.style.borderColor = 'var(--accent)'; b.style.background = 'var(--accent-dim)'; }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text2)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'transparent'; }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L5 12H2V9L9.5 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <button onClick={e => { e.stopPropagation(); setDelTask(task); }} title="Delete task"
+              style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)', transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--red)'; b.style.borderColor = 'var(--red)'; b.style.background = 'var(--red-dim)'; }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'transparent'; }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 4h9M6 4V2.5h2V4M5 4v8h4V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          </div>
         </td>
         <td style={{ padding: '10px 8px', minWidth: 200 }}>
           <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
@@ -365,7 +372,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th style={{ ...thStyle, width: 36, cursor: 'default', textAlign: 'center' }} title="Edit" />
+              <th style={{ ...thStyle, width: 68, cursor: 'default' }} />
               <th style={thStyle} onClick={() => changeSort('title')}>Task <SortArrow k="title" /></th>
               <th style={thStyle} onClick={() => changeSort('account')}>Account <SortArrow k="account" /></th>
               <th style={thStyle} onClick={() => changeSort('priority')}>Priority <SortArrow k="priority" /></th>
@@ -396,6 +403,19 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
       </div>
 
       {editTask && <EditTaskModal task={editTask} onClose={() => setEditTask(null)} />}
+
+      {delTask && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setDelTask(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 360, boxShadow: '0 12px 40px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Delete task?</div>
+            <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}><strong style={{ color: 'var(--text)' }}>"{delTask.title}"</strong> will be permanently deleted.</div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={() => setDelTask(null)} style={{ padding: '7px 16px', fontSize: 13, cursor: 'pointer', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)' }}>Cancel</button>
+              <button onClick={() => { dispatch({ type: 'DELETE_TASK', accountId: delTask.accountId, taskId: delTask.id }); setDelTask(null); }} style={{ padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: 'var(--red)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)' }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
