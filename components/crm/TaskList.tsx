@@ -1,6 +1,8 @@
 'use client';
 import { useState, useMemo, useEffect, Fragment } from 'react';
 import { useCrm } from '@/context/CrmContext';
+import { useConfig } from '@/context/ConfigContext';
+import { useToast } from '@/context/ToastContext';
 import { TaskStatus, TaskPriority } from '@/lib/crmTypes';
 
 const STATUS_COLOR: Record<TaskStatus, string> = {
@@ -28,10 +30,71 @@ function isOverdue(iso?: string, status?: TaskStatus) {
 }
 
 import { DrawerTask } from './TaskDetailDrawer';
+
+const STATUSES: TaskStatus[] = ['To do', 'In progress', 'Done', 'Blocked'];
+const PRIORITIES: TaskPriority[] = ['Low', 'Medium', 'High', 'Critical'];
+
+function EditTaskModal({ task, onClose }: { task: FlatTask; onClose: () => void }) {
+  const { dispatch } = useCrm();
+  const { config } = useConfig();
+  const { toast } = useToast();
+  const [form, setForm] = useState({ title: task.title, description: task.description ?? '', status: task.status, priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' });
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 'var(--r-sm)', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
+  const lbl: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4, display: 'block' };
+  function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title.trim()) return;
+    dispatch({ type: 'UPDATE_TASK', accountId: task.accountId, task: { id: task.id, createdAt: task.createdAt, comments: task.comments, opportunityId: task.opportunityId, title: form.title.trim(), description: form.description.trim() || undefined, status: form.status, priority: form.priority, dueDate: form.dueDate || undefined, assignee: form.assignee || undefined } });
+    toast('Task updated');
+    onClose();
+  }
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 800 }} />
+      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 801, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 480, maxWidth: '92vw', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.22)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Edit Task</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
+        </div>
+        <form onSubmit={save} style={{ display: 'grid', gap: 12 }}>
+          <div><label style={lbl}>Title *</label><input style={{ ...inp, fontWeight: 600 }} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} autoFocus /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div><label style={lbl}>Status</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as TaskStatus }))}>
+                {STATUSES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Priority</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}>
+                {PRIORITIES.map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
+            <div><label style={lbl}>Assignee</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
+                <option value="">Unassigned</option>
+                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
+              </select>
+            </div>
+          </div>
+          <div><label style={lbl}>Description</label><textarea style={{ ...inp, resize: 'vertical', minHeight: 72, lineHeight: 1.55 }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button type="submit" style={{ padding: '8px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Save</button>
+            <button type="button" onClick={onClose} style={{ padding: '8px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </>
+  );
+}
+
 interface Props { search: string; fAccount: string; fPriority: string; fAssignee: string; onTaskClick?: (t: DrawerTask) => void; }
+
+type FlatTask = { id: string; accountId: string; accountName: string; title: string; description?: string; status: TaskStatus; priority: TaskPriority; dueDate?: string; assignee?: string; opportunityId?: string; opportunityName?: string; comments: import('@/lib/crmTypes').Comment[]; createdAt: number; };
 
 export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }: Props) {
   const { state, dispatch } = useCrm();
+  const [editTask, setEditTask] = useState<FlatTask | null>(null);
 
   const [sortKey,   setSortKey]   = useState<SortKey>('priority');
   const [sortAsc,   setSortAsc]   = useState(true);
@@ -39,7 +102,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
   const [page,      setPage]      = useState(1);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set(['To do', 'In progress', 'Done', 'Blocked']));
 
-  const allTasks = useMemo(() =>
+  const allTasks = useMemo<FlatTask[]>(() =>
     state.accounts.flatMap(acc =>
       acc.tasks.map(t => ({
         ...t,
@@ -119,10 +182,10 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
   function toggleGroup(label: string) {
     setCollapsed(prev => { const n = new Set(prev); n.has(label) ? n.delete(label) : n.add(label); return n; });
   }
-  function cycleStatus(task: typeof allTasks[0]) {
+  function cycleStatus(task: FlatTask) {
     const order: TaskStatus[] = ['To do', 'In progress', 'Blocked', 'Done'];
     const next = order[(order.indexOf(task.status) + 1) % order.length];
-    dispatch({ type: 'UPDATE_TASK', accountId: task.accountId, task: { ...task, status: next } });
+    dispatch({ type: 'UPDATE_TASK', accountId: task.accountId, task: { id: task.id, createdAt: task.createdAt, comments: task.comments, opportunityId: task.opportunityId, title: task.title, description: task.description, status: next, priority: task.priority, dueDate: task.dueDate, assignee: task.assignee } });
   }
 
   // ── Shared styles ────────────────────────────────────────────────
@@ -154,14 +217,24 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
   });
 
   // ── Inline row renderer (plain function returning JSX, not a component) ──
-  function rowJsx(task: typeof allTasks[0]) {
+  function rowJsx(task: FlatTask) {
     const overdue = isOverdue(task.dueDate, task.status);
-    const done    = task.status === 'Done';
     return (
       <tr key={task.id} style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
         onClick={() => onTaskClick?.(task as DrawerTask)}
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg3)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+        {/* Edit button */}
+        <td style={{ padding: '6px 8px', width: 36, textAlign: 'center' }}>
+          <button
+            onClick={e => { e.stopPropagation(); setEditTask(task); }}
+            title="Edit task"
+            style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)', flexShrink: 0 }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)'; (e.currentTarget as HTMLElement).style.color = 'var(--accent)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border2)'; (e.currentTarget as HTMLElement).style.color = 'var(--text3)'; }}>
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2L4 10H2V8L8.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        </td>
         <td style={{ padding: '10px 8px', minWidth: 200 }}>
           <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
             {task.title}
@@ -178,11 +251,13 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
             {task.priority}
           </span>
         </td>
-        <td style={{ padding: '10px 8px' }}>
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99,
-            color: STATUS_COLOR[task.status], background: STATUS_COLOR[task.status] + '18' }}>
-            {task.status}
-          </span>
+        <td style={{ padding: '6px 8px' }} onClick={e => e.stopPropagation()}>
+          <select
+            value={task.status}
+            onChange={e => dispatch({ type: 'UPDATE_TASK', accountId: task.accountId, task: { id: task.id, createdAt: task.createdAt, comments: task.comments, opportunityId: task.opportunityId, title: task.title, description: task.description, status: e.target.value as TaskStatus, priority: task.priority, dueDate: task.dueDate, assignee: task.assignee } })}
+            style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 99, border: `1px solid ${STATUS_COLOR[task.status]}40`, background: STATUS_COLOR[task.status] + '18', color: STATUS_COLOR[task.status], cursor: 'pointer', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'inherit' }}>
+            {STATUSES.map(s => <option key={s} value={s} style={{ background: 'var(--bg2)', color: 'var(--text)' }}>{s}</option>)}
+          </select>
         </td>
         <td style={{ padding: '10px 8px', fontSize: 12, whiteSpace: 'nowrap',
           color: overdue ? 'var(--red)' : 'var(--text3)', fontWeight: overdue ? 700 : 400 }}>
@@ -226,7 +301,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
     const isCollapsed = collapsed.has(g.label);
     return (
       <tr key={g.key + '-hdr'}>
-        <td colSpan={8} style={{ padding: 0, background: 'var(--bg3)', borderBottom: '1px solid var(--border)', borderTop: '1px solid var(--border)' }}>
+        <td colSpan={9} style={{ padding: 0, background: 'var(--bg3)', borderBottom: '1px solid var(--border)', borderTop: '1px solid var(--border)' }}>
           <button onClick={() => toggleGroup(g.label)}
             style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
@@ -289,7 +364,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th style={{ ...thStyle, width: 36, cursor: 'default' }} />
+              <th style={{ ...thStyle, width: 36, cursor: 'default', textAlign: 'center' }} title="Edit" />
               <th style={thStyle} onClick={() => changeSort('title')}>Task <SortArrow k="title" /></th>
               <th style={thStyle} onClick={() => changeSort('account')}>Account <SortArrow k="account" /></th>
               <th style={thStyle} onClick={() => changeSort('priority')}>Priority <SortArrow k="priority" /></th>
@@ -318,6 +393,8 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
           </div>
         )}
       </div>
+
+      {editTask && <EditTaskModal task={editTask} onClose={() => setEditTask(null)} />}
 
       {/* Pagination */}
       {totalPages > 1 && (

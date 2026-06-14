@@ -6,6 +6,63 @@ import { useConfig } from '@/context/ConfigContext';
 import { useToast } from '@/context/ToastContext';
 import { TaskDetailDrawer, DrawerTask } from './TaskDetailDrawer';
 
+const STATUSES: TaskStatus[] = ['To do', 'In progress', 'Done', 'Blocked'];
+const PRIORITIES_LIST: TaskPriority[] = ['Low', 'Medium', 'High', 'Critical'];
+
+function EditTaskModal({ task, accountId, onClose }: { task: Task; accountId: string; onClose: () => void }) {
+  const { dispatch } = useCrm();
+  const { config } = useConfig();
+  const { toast } = useToast();
+  const [form, setForm] = useState({ title: task.title, description: task.description ?? '', status: task.status, priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' });
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 'var(--r-sm)', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
+  const lbl: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4, display: 'block' };
+  function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title.trim()) return;
+    dispatch({ type: 'UPDATE_TASK', accountId, task: { ...task, title: form.title.trim(), description: form.description.trim() || undefined, status: form.status, priority: form.priority, dueDate: form.dueDate || undefined, assignee: form.assignee || undefined } });
+    toast('Task updated');
+    onClose();
+  }
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 600 }} />
+      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 601, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 480, maxWidth: '92vw', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.22)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Edit Task</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
+        </div>
+        <form onSubmit={save} style={{ display: 'grid', gap: 12 }}>
+          <div><label style={lbl}>Title *</label><input style={{ ...inp, fontWeight: 600 }} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} autoFocus /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div><label style={lbl}>Status</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as TaskStatus }))}>
+                {STATUSES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Priority</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}>
+                {PRIORITIES_LIST.map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
+            <div><label style={lbl}>Assignee</label>
+              <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
+                <option value="">Unassigned</option>
+                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
+              </select>
+            </div>
+          </div>
+          <div><label style={lbl}>Description</label><textarea style={{ ...inp, resize: 'vertical', minHeight: 72, lineHeight: 1.55 }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button type="submit" style={{ padding: '8px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Save</button>
+            <button type="button" onClick={onClose} style={{ padding: '8px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </>
+  );
+}
+
 const STATUS_COLOR: Record<TaskStatus, string> = {
   'To do': 'var(--text3)', 'In progress': 'var(--blue)', 'Done': 'var(--green)', 'Blocked': 'var(--red)',
 };
@@ -194,6 +251,7 @@ export function TasksTab({ account }: { account: Account }) {
   const [viewMode, setViewMode]     = useState<'list' | 'kanban'>('kanban');
   const [filter, setFilter]         = useState<'All' | TaskStatus>('All');
   const [drawerTask, setDrawerTask] = useState<DrawerTask | null>(null);
+  const [editTaskItem, setEditTaskItem] = useState<Task | null>(null);
   const [delTaskId, setDelTaskId]   = useState<string | null>(null);
 
   function openDrawer(task: Task) {
@@ -247,12 +305,27 @@ export function TasksTab({ account }: { account: Account }) {
           {task.description && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4 }}>{task.description}</div>}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 99, color: PRIORITY_COLOR[task.priority], background: PRIORITY_BG[task.priority] }}>{task.priority}</span>
-            <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 99, color: STATUS_COLOR[task.status], background: STATUS_COLOR[task.status] + '18' }}>{task.status}</span>
+            {/* Inline status select */}
+            <select
+              value={task.status}
+              onClick={e => e.stopPropagation()}
+              onChange={e => { e.stopPropagation(); dispatch({ type: 'UPDATE_TASK', accountId: account.id, task: { ...task, status: e.target.value as TaskStatus } }); toast(`Moved to ${e.target.value}`, 'info'); }}
+              style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 99, border: `1px solid ${STATUS_COLOR[task.status]}40`, background: STATUS_COLOR[task.status] + '18', color: STATUS_COLOR[task.status], cursor: 'pointer', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'inherit' }}>
+              {STATUS_ORDER.map(s => <option key={s} value={s} style={{ background: 'var(--bg2)', color: 'var(--text)' }}>{s}</option>)}
+            </select>
             {task.dueDate && <span style={{ fontSize: 11, color: overdue ? 'var(--red)' : 'var(--text3)' }}>{overdue ? '⚠ ' : ''}{fmt(task.dueDate)}</span>}
             {task.assignee && <span style={{ fontSize: 11, color: 'var(--text3)' }}>→ {task.assignee}</span>}
             {task.comments?.length > 0 && <span style={{ fontSize: 11, color: 'var(--text3)' }}>💬 {task.comments.length}</span>}
           </div>
         </div>
+        {/* Edit icon */}
+        <button onClick={e => { e.stopPropagation(); setEditTaskItem(task); }}
+          title="Edit task"
+          style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)', flexShrink: 0 }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)'; (e.currentTarget as HTMLElement).style.color = 'var(--accent)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border2)'; (e.currentTarget as HTMLElement).style.color = 'var(--text3)'; }}>
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2L4 10H2V8L8.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
         <button onClick={e => { e.stopPropagation(); setDelTaskId(task.id); }}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 14, padding: '0 2px', lineHeight: 1, flexShrink: 0 }}
           onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--red)'}
@@ -305,6 +378,7 @@ export function TasksTab({ account }: { account: Account }) {
       )}
 
       {drawerTask && <TaskDetailDrawer task={drawerTask} onClose={() => setDrawerTask(null)} />}
+      {editTaskItem && <EditTaskModal task={editTaskItem} accountId={account.id} onClose={() => setEditTaskItem(null)} />}
 
       {/* Delete task modal */}
       {delTarget && (

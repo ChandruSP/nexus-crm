@@ -46,12 +46,12 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
   const [commentText, setCommentText] = useState('');
   const [editing,     setEditing]     = useState(false);
   const [delConfirm,  setDelConfirm]  = useState(false);
-  const [editForm,    setEditForm]    = useState({ title: task.title, description: task.description ?? '', priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' });
+  const [editForm,    setEditForm]    = useState({ title: task.title, description: task.description ?? '', status: task.status, priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' });
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [comments.length]);
   // Sync editForm when task changes externally
-  useEffect(() => { setEditForm({ title: task.title, description: task.description ?? '', priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' }); }, [task.id]);
+  useEffect(() => { setEditForm({ title: task.title, description: task.description ?? '', status: task.status, priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' }); }, [task.id]);
 
   function cycleStatus() {
     const next = STATUS_ORDER[(STATUS_ORDER.indexOf(task.status) + 1) % STATUS_ORDER.length];
@@ -61,7 +61,7 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
 
   function saveEdit() {
     if (!editForm.title.trim()) return;
-    dispatch({ type: 'UPDATE_TASK', accountId: task.accountId, task: { ...task, title: editForm.title.trim(), description: editForm.description.trim() || undefined, priority: editForm.priority, dueDate: editForm.dueDate || undefined, assignee: editForm.assignee.trim() || undefined } });
+    dispatch({ type: 'UPDATE_TASK', accountId: task.accountId, task: { ...task, title: editForm.title.trim(), description: editForm.description.trim() || undefined, status: editForm.status, priority: editForm.priority, dueDate: editForm.dueDate || undefined, assignee: editForm.assignee.trim() || undefined } });
     toast('Task updated');
     setEditing(false);
   }
@@ -193,6 +193,12 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
                   <input style={{ ...inp, fontSize: 14, fontWeight: 600 }} value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} autoFocus />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <span style={lbl}>Status</span>
+                    <select style={{ ...inp, cursor: 'pointer' }} value={editForm.status} onChange={e => setEditForm(f => ({ ...f, status: e.target.value as TaskStatus }))}>
+                      {STATUS_ORDER.map(s => <option key={s}>{s}</option>)}
+                    </select>
+                  </div>
                   <div>
                     <span style={lbl}>Priority</span>
                     <select style={{ ...inp, cursor: 'pointer' }} value={editForm.priority} onChange={e => setEditForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}>
