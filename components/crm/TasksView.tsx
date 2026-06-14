@@ -121,7 +121,7 @@ export function TasksView() {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Shared filter bar */}
       <div style={{
         padding: '10px 24px', borderBottom: '1px solid var(--border)',
