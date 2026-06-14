@@ -307,6 +307,7 @@ export function TasksTab({ account }: { account: Account }) {
             <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 99, color: PRIORITY_COLOR[task.priority], background: PRIORITY_BG[task.priority] }}>{task.priority}</span>
             {/* Inline status select */}
             <select
+              className="select-badge"
               value={task.status}
               onClick={e => e.stopPropagation()}
               onChange={e => { e.stopPropagation(); dispatch({ type: 'UPDATE_TASK', accountId: account.id, task: { ...task, status: e.target.value as TaskStatus } }); toast(`Moved to ${e.target.value}`, 'info'); }}

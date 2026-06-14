@@ -253,6 +253,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         </td>
         <td style={{ padding: '6px 8px' }} onClick={e => e.stopPropagation()}>
           <select
+            className="select-badge"
             value={task.status}
             onChange={e => dispatch({ type: 'UPDATE_TASK', accountId: task.accountId, task: { id: task.id, createdAt: task.createdAt, comments: task.comments, opportunityId: task.opportunityId, title: task.title, description: task.description, status: e.target.value as TaskStatus, priority: task.priority, dueDate: task.dueDate, assignee: task.assignee } })}
             style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 99, border: `1px solid ${STATUS_COLOR[task.status]}40`, background: STATUS_COLOR[task.status] + '18', color: STATUS_COLOR[task.status], cursor: 'pointer', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'inherit' }}>
