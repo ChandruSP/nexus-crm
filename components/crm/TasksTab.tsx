@@ -361,11 +361,11 @@ export function TasksTab({ account }: { account: Account }) {
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {/* View toggle */}
-          <button style={iconBtnStyle(viewMode === 'list')} onClick={() => setViewMode('list')} title="List view">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M2 7h10M2 10.5h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-          </button>
           <button style={iconBtnStyle(viewMode === 'kanban')} onClick={() => setViewMode('kanban')} title="Kanban view">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="3.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.4"/><rect x="5.25" y="1" width="3.5" height="8" rx="1" stroke="currentColor" strokeWidth="1.4"/><rect x="9.5" y="1" width="3.5" height="10" rx="1" stroke="currentColor" strokeWidth="1.4"/></svg>
+          </button>
+          <button style={iconBtnStyle(viewMode === 'list')} onClick={() => setViewMode('list')} title="List view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M2 7h10M2 10.5h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
           </button>
           <div style={{ width: 1, height: 18, background: 'var(--border2)' }} />
           <button onClick={() => setAdding(a => !a)} style={{ padding: '6px 12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>+ Add Task</button>
