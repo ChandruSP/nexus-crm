@@ -84,38 +84,74 @@ function AccountKanban({ account }: { account: Account }) {
   const { dispatch } = useCrm();
   const { toast } = useToast();
   const [drawerTask, setDrawerTask] = useState<DrawerTask | null>(null);
+  const [dragId,     setDragId]     = useState<string | null>(null);
+  const [dragOver,   setDragOver]   = useState<TaskStatus | null>(null);
 
-  function cycleStatus(task: Task) {
+  function moveToStatus(taskId: string, status: TaskStatus) {
+    const task = account.tasks.find(t => t.id === taskId);
+    if (!task || task.status === status) return;
+    dispatch({ type: 'UPDATE_TASK', accountId: account.id, task: { ...task, status } });
+    toast(`Moved to ${status}`, 'info');
+  }
+
+  function cycleStatus(task: Task, e: React.MouseEvent) {
+    e.stopPropagation();
     const next = STATUS_ORDER[(STATUS_ORDER.indexOf(task.status) + 1) % STATUS_ORDER.length];
     dispatch({ type: 'UPDATE_TASK', accountId: account.id, task: { ...task, status: next } });
     toast(`Moved to ${next}`, 'info');
   }
 
   return (
-    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
+    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, minHeight: 200 }}>
       {STATUS_ORDER.map(status => {
         const cards = account.tasks
           .filter(t => t.status === status)
           .sort((a, b) => PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority));
         const col = STATUS_COLOR[status];
+        const isDropTarget = dragOver === status && dragId && account.tasks.find(t => t.id === dragId)?.status !== status;
         return (
-          <div key={status} style={{ minWidth: 220, flex: '1 1 0' }}>
+          <div key={status}
+            style={{ minWidth: 220, flex: '1 1 0', display: 'flex', flexDirection: 'column' }}
+            onDragOver={e => { e.preventDefault(); setDragOver(status); }}
+            onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null); }}
+            onDrop={e => { e.preventDefault(); if (dragId) moveToStatus(dragId, status); setDragId(null); setDragOver(null); }}>
+
+            {/* Column header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: col, flexShrink: 0 }} />
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{status}</span>
               <span style={{ fontSize: 10, fontWeight: 700, borderRadius: 99, padding: '0 5px', color: cards.length ? col : 'var(--text3)', background: cards.length ? col + '18' : 'transparent' }}>{cards.length}</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+            {/* Drop zone */}
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column', gap: 8,
+              borderRadius: 'var(--r)', padding: '6px',
+              border: isDropTarget ? `2px solid ${col}` : '2px solid transparent',
+              background: isDropTarget ? col + '08' : 'transparent',
+              transition: 'border-color 0.12s, background 0.12s',
+            }}>
               {cards.map(task => {
                 const overdue = isOverdue(task.dueDate, task.status);
+                const isDragging = dragId === task.id;
                 return (
-                  <div key={task.id} onClick={() => setDrawerTask({ ...task, accountId: account.id, accountName: account.name, opportunityName: task.opportunityId ? account.opportunities.find(o => o.id === task.opportunityId)?.name : undefined })}
-                    style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '10px 12px', cursor: 'pointer', transition: 'border-color 0.12s' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border2)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}>
+                  <div key={task.id}
+                    draggable
+                    onDragStart={() => setDragId(task.id)}
+                    onDragEnd={() => { setDragId(null); setDragOver(null); }}
+                    onClick={() => !dragId && setDrawerTask({ ...task, accountId: account.id, accountName: account.name, opportunityName: task.opportunityId ? account.opportunities.find(o => o.id === task.opportunityId)?.name : undefined })}
+                    style={{
+                      background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 'var(--r)',
+                      padding: '10px 12px', cursor: isDragging ? 'grabbing' : 'grab',
+                      opacity: isDragging ? 0.45 : 1,
+                      transition: 'opacity 0.12s, border-color 0.12s, box-shadow 0.12s',
+                      userSelect: 'none',
+                    }}
+                    onMouseEnter={e => { if (!dragId) (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'; }}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = 'none'}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 99, color: PRIORITY_COLOR[task.priority], background: PRIORITY_BG[task.priority] }}>{task.priority}</span>
-                      <button onClick={e => { e.stopPropagation(); cycleStatus(task); }} title="Click to advance status"
+                      <button onClick={e => cycleStatus(task, e)} title="Advance status"
                         style={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, background: status === 'Done' ? 'var(--green)' : 'transparent', border: `2px solid ${col}`, cursor: 'pointer', padding: 0 }} />
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: task.status === 'Done' ? 'var(--text3)' : 'var(--text)', lineHeight: 1.4, textDecoration: task.status === 'Done' ? 'line-through' : 'none', marginBottom: 4 }}>{task.title}</div>
@@ -132,7 +168,11 @@ function AccountKanban({ account }: { account: Account }) {
                   </div>
                 );
               })}
-              {cards.length === 0 && <div style={{ border: '1.5px dashed var(--border2)', borderRadius: 'var(--r)', padding: '20px 0', textAlign: 'center', fontSize: 11, color: 'var(--text3)' }}>Empty</div>}
+              {cards.length === 0 && (
+                <div style={{ border: `1.5px dashed ${isDropTarget ? col : 'var(--border2)'}`, borderRadius: 'var(--r)', padding: '24px 0', textAlign: 'center', fontSize: 11, color: isDropTarget ? col : 'var(--text3)', transition: 'all 0.12s' }}>
+                  {isDropTarget ? 'Drop here' : 'Empty'}
+                </div>
+              )}
             </div>
           </div>
         );
@@ -195,7 +235,7 @@ export function TasksTab({ account }: { account: Account }) {
     const overdue = isOverdue(task.dueDate, task.status);
     return (
       <div key={task.id} onClick={() => openDrawer(task)}
-        style={{ padding: '10px 12px', background: 'var(--bg3)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', marginBottom: 6, display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}
+        style={{ padding: '10px 12px', background: 'var(--bg3)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', marginBottom: 6, display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }}
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border2)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}>
         <button onClick={e => { e.stopPropagation(); cycleStatus(task); }} title={`Status: ${task.status}`}
@@ -220,8 +260,8 @@ export function TasksTab({ account }: { account: Account }) {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+    <div style={{ width: '100%', minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
         <div style={{ display: 'flex', gap: 4 }}>
           {viewMode === 'list' && (['All', 'To do', 'In progress', 'Blocked', 'Done'] as const).map(s => (
             <button key={s} style={filterBtnStyle(filter === s)} onClick={() => setFilter(s)}>{s}</button>

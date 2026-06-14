@@ -52,6 +52,15 @@ export interface Task {
   comments: Comment[];
 }
 
+export interface Attachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  dataUrl: string;
+  uploadedAt: number;
+}
+
 export interface Account {
   id: string;
   name: string;
@@ -65,5 +74,6 @@ export interface Account {
   pastProjects: PastProject[];
   opportunities: Opportunity[];
   tasks: Task[];
+  attachments?: Attachment[];
   createdAt: number;
 }

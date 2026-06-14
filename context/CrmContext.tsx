@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { Account, Task, Opportunity, Stakeholder, PastProject, Comment } from '@/lib/crmTypes';
+import { Account, Task, Opportunity, Stakeholder, PastProject, Comment, Attachment } from '@/lib/crmTypes';
 import { SAMPLE_ACCOUNTS } from '@/lib/crmData';
 
 interface CrmState {
@@ -26,7 +26,9 @@ type Action =
   | { type: 'UPDATE_OPPORTUNITY'; accountId: string; opportunity: Opportunity }
   | { type: 'DELETE_OPPORTUNITY'; accountId: string; opportunityId: string }
   | { type: 'UPDATE_ACCOUNT_DESC'; accountId: string; description: string }
-  | { type: 'ADD_COMMENT'; accountId: string; taskId: string; comment: Comment };
+  | { type: 'ADD_COMMENT'; accountId: string; taskId: string; comment: Comment }
+  | { type: 'ADD_ATTACHMENT'; accountId: string; attachment: Attachment }
+  | { type: 'DELETE_ATTACHMENT'; accountId: string; attachmentId: string };
 
 function patchAccount(state: CrmState, accountId: string, patch: (a: Account) => Account): CrmState {
   return { ...state, accounts: state.accounts.map(a => a.id === accountId ? patch(a) : a) };
@@ -95,6 +97,12 @@ function reducer(state: CrmState, action: Action): CrmState {
           : t
         ),
       }));
+
+    case 'ADD_ATTACHMENT':
+      return patchAccount(state, action.accountId, a => ({ ...a, attachments: [...(a.attachments ?? []), action.attachment] }));
+
+    case 'DELETE_ATTACHMENT':
+      return patchAccount(state, action.accountId, a => ({ ...a, attachments: (a.attachments ?? []).filter(at => at.id !== action.attachmentId) }));
 
     default:
       return state;

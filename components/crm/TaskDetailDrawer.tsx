@@ -30,21 +30,26 @@ interface Props { task: DrawerTask; onClose: () => void; }
 
 const AUTHOR_KEY = 'nexus-comment-author';
 
+function detectAuthor(): string {
+  const stored = localStorage.getItem(AUTHOR_KEY);
+  if (stored) return stored;
+  return 'You';
+}
+
 export function TaskDetailDrawer({ task, onClose }: Props) {
   const { state, dispatch } = useCrm();
   const { config } = useConfig();
   const { toast }    = useToast();
   const liveTask = state.accounts.find(a => a.id === task.accountId)?.tasks.find(t => t.id === task.id);
-  const [author,      setAuthor]      = useState(() => localStorage.getItem(AUTHOR_KEY) ?? '');
-  const [editingName, setEditingName] = useState(false);
+  const comments = (liveTask ?? task).comments ?? [];
+  const author = detectAuthor();
   const [commentText, setCommentText] = useState('');
   const [editing,     setEditing]     = useState(false);
   const [delConfirm,  setDelConfirm]  = useState(false);
   const [editForm,    setEditForm]    = useState({ title: task.title, description: task.description ?? '', priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' });
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { if (author) localStorage.setItem(AUTHOR_KEY, author); }, [author]);
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [task.comments?.length]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [comments.length]);
   // Sync editForm when task changes externally
   useEffect(() => { setEditForm({ title: task.title, description: task.description ?? '', priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' }); }, [task.id]);
 
@@ -83,8 +88,6 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
     outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
   };
   const lbl: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3, display: 'block' };
-
-  const comments = (liveTask ?? task).comments ?? [];
 
   return (
     <>
@@ -198,21 +201,12 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
 
         {/* Add comment */}
         <form onSubmit={submitComment} style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {author && !editingName ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: `hsl(${author.split('').reduce((n, ch) => n + ch.charCodeAt(0), 0) % 360},50%,48%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff' }}>
-                {author.slice(0, 2).toUpperCase()}
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{author}</span>
-              <button type="button" onClick={() => setEditingName(true)} style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 2 }}>change</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: `hsl(${author.split('').reduce((n, ch) => n + ch.charCodeAt(0), 0) % 360},50%,48%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff' }}>
+              {author.slice(0, 2).toUpperCase()}
             </div>
-          ) : (
-            <input style={inp} value={author} autoFocus={editingName}
-              onChange={e => setAuthor(e.target.value)}
-              onBlur={() => { if (author.trim()) setEditingName(false); }}
-              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (author.trim()) setEditingName(false); } }}
-              placeholder="Your name" />
-          )}
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{author}</span>
+          </div>
           <textarea style={{ ...inp, resize: 'none', minHeight: 72, lineHeight: 1.55 }}
             value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Add a comment…"
             onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitComment(e as any); }} />

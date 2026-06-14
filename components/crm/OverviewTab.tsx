@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { Account, PastProject } from '@/lib/crmTypes';
+import { useState, useRef } from 'react';
+import { Account, PastProject, Attachment } from '@/lib/crmTypes';
 import { useCrm } from '@/context/CrmContext';
 import { useToast } from '@/context/ToastContext';
 
@@ -44,12 +44,29 @@ function ProjectForm({ initial, onSave, onCancel, title }: { initial: PRForm; on
   );
 }
 
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileIcon(type: string) {
+  if (type.startsWith('image/')) return '🖼';
+  if (type === 'application/pdf') return '📄';
+  if (type.includes('word') || type.includes('document')) return '📝';
+  if (type.includes('sheet') || type.includes('excel')) return '📊';
+  if (type.includes('presentation') || type.includes('powerpoint')) return '📑';
+  return '📎';
+}
+
 export function OverviewTab({ account }: { account: Account }) {
   const { dispatch } = useCrm();
   const { toast }    = useToast();
   const [addingPR, setAddingPR] = useState(false);
   const [editPRId, setEditPRId] = useState<string | null>(null);
   const [delPRId, setDelPRId]   = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const totalRevenue  = account.pastProjects.reduce((s, p) => s + p.revenue, 0);
   const openOpp       = account.opportunities.filter(o => o.stage !== 'Closed Won' && o.stage !== 'Closed Lost');
@@ -80,6 +97,25 @@ export function OverviewTab({ account }: { account: Account }) {
 
   const delPRTarget = delPRId ? account.pastProjects.find(p => p.id === delPRId) : null;
   const sortedProjects = [...account.pastProjects].sort((a, b) => b.year - a.year);
+
+  function handleFiles(files: FileList | null) {
+    if (!files) return;
+    Array.from(files).forEach(file => {
+      if (file.size > 10 * 1024 * 1024) { toast(`${file.name} is too large (max 10 MB)`, 'error'); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const att: Attachment = { id: `att-${Date.now()}-${Math.random().toString(36).slice(2)}`, name: file.name, size: file.size, type: file.type, dataUrl: reader.result as string, uploadedAt: Date.now() };
+        dispatch({ type: 'ADD_ATTACHMENT', accountId: account.id, attachment: att });
+        toast(`${file.name} uploaded`);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function deleteAttachment(id: string, name: string) {
+    dispatch({ type: 'DELETE_ATTACHMENT', accountId: account.id, attachmentId: id });
+    toast(`${name} removed`, 'info');
+  }
 
   return (
     <div style={{ display: 'flex', gap: 28, alignItems: 'flex-start' }}>
@@ -142,6 +178,70 @@ export function OverviewTab({ account }: { account: Account }) {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* ── Attachments ── */}
+        <div style={{ marginTop: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Attachments {(account.attachments?.length ?? 0) > 0 && <span style={{ fontWeight: 400, color: 'var(--text3)' }}>({account.attachments!.length})</span>}
+            </div>
+            <button onClick={() => fileInputRef.current?.click()}
+              style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px dashed var(--accent-border)', borderRadius: 'var(--r-xs)', cursor: 'pointer' }}>
+              + Upload
+            </button>
+          </div>
+
+          <input ref={fileInputRef} type="file" multiple style={{ display: 'none' }}
+            onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} />
+
+          {/* Drop zone */}
+          <div
+            onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={e => { e.preventDefault(); setDragActive(false); handleFiles(e.dataTransfer.files); }}
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              border: `2px dashed ${dragActive ? 'var(--accent)' : 'var(--border2)'}`,
+              borderRadius: 'var(--r)', padding: '16px', textAlign: 'center', cursor: 'pointer',
+              background: dragActive ? 'var(--accent-dim)' : 'transparent',
+              transition: 'all 0.15s', marginBottom: (account.attachments?.length ?? 0) > 0 ? 12 : 0,
+              display: (account.attachments?.length ?? 0) > 0 ? 'none' : 'block',
+            }}>
+            <div style={{ fontSize: 20, marginBottom: 4 }}>📎</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)' }}>Drop files here or click to upload</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, opacity: 0.7 }}>Max 10 MB per file</div>
+          </div>
+
+          {(account.attachments?.length ?? 0) > 0 && (
+            <div>
+              {/* Drop hint when files exist */}
+              <div
+                onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={e => { e.preventDefault(); setDragActive(false); handleFiles(e.dataTransfer.files); }}
+                style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {account.attachments!.map(att => (
+                  <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg3)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{fileIcon(att.type)}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.name}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 1 }}>{formatSize(att.size)} · {new Date(att.uploadedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}</div>
+                    </div>
+                    <a href={att.dataUrl} download={att.name}
+                      style={{ padding: '3px 8px', fontSize: 11, color: 'var(--accent)', background: 'var(--accent-dim)', border: 'none', borderRadius: 'var(--r-xs)', cursor: 'pointer', textDecoration: 'none', flexShrink: 0, fontWeight: 600 }}
+                      onClick={e => e.stopPropagation()}>
+                      ↓
+                    </a>
+                    <button onClick={() => deleteAttachment(att.id, att.name)}
+                      style={{ padding: '3px 8px', fontSize: 11, color: 'var(--red)', background: 'transparent', border: '1px solid var(--red-dim)', borderRadius: 'var(--r-xs)', cursor: 'pointer', flexShrink: 0 }}>
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
