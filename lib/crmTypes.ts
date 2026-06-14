@@ -75,5 +75,6 @@ export interface Account {
   opportunities: Opportunity[];
   tasks: Task[];
   attachments?: Attachment[];
+  group?: string;
   createdAt: number;
 }

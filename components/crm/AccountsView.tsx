@@ -109,11 +109,15 @@ function AccountCard({ account, onClick }: { account: Account; onClick: () => vo
   );
 }
 
+const GRID: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 };
+
 export function AccountsView() {
   const { state, dispatch } = useCrm();
   const { toast } = useToast();
-  const [mode,   setMode]   = useState<Mode>('grid');
-  const [search, setSearch] = useState('');
+  const [mode,      setMode]      = useState<Mode>('grid');
+  const [search,    setSearch]    = useState('');
+  const [viewMode,  setViewMode]  = useState<'flat' | 'grouped'>('flat');
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const filtered = state.accounts.filter(a =>
     !search ||
@@ -122,10 +126,32 @@ export function AccountsView() {
     a.owner.toLowerCase().includes(search.toLowerCase())
   );
 
+  // accounts that belong to a group (for grouped view)
+  const grouped = filtered.reduce<Record<string, Account[]>>((acc, a) => {
+    const key = a.group ?? '';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(a);
+    return acc;
+  }, {});
+  const groupNames   = Object.keys(grouped).filter(k => k !== '').sort();
+  const ungrouped    = grouped[''] ?? [];
+  const hasAnyGroups = state.accounts.some(a => a.group);
+
+  function toggleCollapse(name: string) {
+    setCollapsed(prev => { const n = new Set(prev); n.has(name) ? n.delete(name) : n.add(name); return n; });
+  }
+
   function openAccount(id: string) {
     dispatch({ type: 'SELECT_ACCOUNT', id });
     setMode('detail');
   }
+
+  const viewBtnStyle = (active: boolean): React.CSSProperties => ({
+    padding: '4px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', borderRadius: 99,
+    background: active ? 'var(--bg4)' : 'transparent',
+    border: active ? '1px solid var(--border2)' : '1px solid transparent',
+    color: active ? 'var(--text)' : 'var(--text3)',
+  });
 
   if (mode === 'detail') {
     return <AccountDetail onBack={() => setMode('grid')} />;
@@ -161,6 +187,14 @@ export function AccountsView() {
             />
           </div>
 
+          {/* Flat / Grouped toggle — only shown when groups exist */}
+          {hasAnyGroups && (
+            <div style={{ display: 'flex', gap: 2, background: 'var(--bg3)', borderRadius: 99, padding: 2 }}>
+              <button style={viewBtnStyle(viewMode === 'flat')}    onClick={() => setViewMode('flat')}>Flat</button>
+              <button style={viewBtnStyle(viewMode === 'grouped')} onClick={() => setViewMode('grouped')}>Grouped</button>
+            </div>
+          )}
+
           <button onClick={() => setMode('new')} style={{
             padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
             background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)',
@@ -177,11 +211,60 @@ export function AccountsView() {
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text3)', fontSize: 13 }}>
             {search ? 'No accounts match your search.' : 'No accounts yet — add one to get started.'}
           </div>
+        ) : viewMode === 'flat' || !hasAnyGroups ? (
+          <div style={GRID}>
+            {filtered.map(acc => <AccountCard key={acc.id} account={acc} onClick={() => openAccount(acc.id)} />)}
+          </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-            {filtered.map(acc => (
-              <AccountCard key={acc.id} account={acc} onClick={() => openAccount(acc.id)} />
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+            {/* Named groups */}
+            {groupNames.map(name => {
+              const members  = grouped[name] ?? [];
+              const isCollapsed = collapsed.has(name);
+              const totalOpp = members.reduce((s, a) => s + a.opportunities.filter(o => o.stage !== 'Closed Won' && o.stage !== 'Closed Lost').reduce((ss, o) => ss + o.value * (o.probability / 100), 0), 0);
+              const openTasks = members.reduce((s, a) => s + a.tasks.filter(t => t.status !== 'Done').length, 0);
+              return (
+                <div key={name}>
+                  {/* Group header */}
+                  <button onClick={() => toggleCollapse(name)} style={{
+                    width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 10, marginBottom: isCollapsed ? 0 : 12,
+                    padding: '8px 0',
+                  }}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
+                      style={{ color: 'var(--text3)', flexShrink: 0, transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                      <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{name}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500 }}>{members.length} account{members.length !== 1 ? 's' : ''}</span>
+                    {openTasks > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--amber)', background: 'var(--amber-dim)', borderRadius: 99, padding: '1px 7px' }}>{openTasks} open tasks</span>}
+                    {totalOpp > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-dim)', borderRadius: 99, padding: '1px 7px' }}>
+                      ₹{totalOpp >= 10000000 ? `${(totalOpp / 10000000).toFixed(1)}Cr` : `${(totalOpp / 100000).toFixed(1)}L`} pipeline
+                    </span>}
+                    <div style={{ flex: 1, height: 1, background: 'var(--border)', marginLeft: 4 }} />
+                  </button>
+                  {!isCollapsed && (
+                    <div style={{ ...GRID, paddingLeft: 20, borderLeft: '2px solid var(--border2)' }}>
+                      {members.map(acc => <AccountCard key={acc.id} account={acc} onClick={() => openAccount(acc.id)} />)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Ungrouped accounts */}
+            {ungrouped.length > 0 && (
+              <div>
+                {groupNames.length > 0 && (
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--border)' }}>
+                    Other Accounts
+                  </div>
+                )}
+                <div style={GRID}>
+                  {ungrouped.map(acc => <AccountCard key={acc.id} account={acc} onClick={() => openAccount(acc.id)} />)}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -16,7 +16,7 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
     name: account.name, industry: account.industry,
     segment: account.segment, owner: account.owner,
     location: account.location ?? '', website: account.website ?? '',
-    description: account.description,
+    description: account.description, group: account.group ?? '',
   });
   const setB = (k: string, v: string) => setBasic(f => ({ ...f, [k]: v }));
 
@@ -45,6 +45,7 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
         location: basic.location.trim() || '—',
         website: basic.website.trim() || undefined,
         description: basic.description.trim(),
+        group: basic.group.trim() || undefined,
       },
     });
     onDone();
@@ -112,6 +113,13 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
             <div>
               <Label t="Website" />
               <input style={inp()} value={basic.website} onChange={e => setB('website', e.target.value)} placeholder="e.g. acme.com" />
+            </div>
+            <div>
+              <Label t="Account Group" />
+              <select style={sel()} value={basic.group} onChange={e => setB('group', e.target.value)}>
+                <option value="">No group</option>
+                {config.accountGroups.map(g => <option key={g}>{g}</option>)}
+              </select>
             </div>
           </div>
           <div style={{ marginTop: 14 }}>

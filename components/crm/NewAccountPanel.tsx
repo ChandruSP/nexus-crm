@@ -22,7 +22,7 @@ export function NewAccountPanel({ onDone, onCancel }: Props) {
   const { config } = useConfig();
 
   /* basic */
-  const [basic, setBasic] = useState({ name:'', industry:'', segment:'Enterprise', owner:'', location:'', website:'', description:'' });
+  const [basic, setBasic] = useState({ name:'', industry:'', segment:'Enterprise', owner:'', location:'', website:'', description:'', group:'' });
   const setB = (k: string, v: string) => setBasic(f => ({ ...f, [k]: v }));
 
   /* stakeholders */
@@ -67,6 +67,7 @@ export function NewAccountPanel({ onDone, onCancel }: Props) {
       location: basic.location.trim() || '—',
       website: basic.website.trim() || undefined,
       description: basic.description.trim(),
+      group: basic.group.trim() || undefined,
       createdAt: Date.now(),
       stakeholders: stakeholders.filter(s => s.name.trim()).map((s, i) => ({
         id: `sk-${Date.now()}-${i}`,
@@ -196,6 +197,13 @@ export function NewAccountPanel({ onDone, onCancel }: Props) {
             <div>
               <Label t="Website" />
               <input style={inp()} value={basic.website} onChange={e => setB('website',e.target.value)} placeholder="e.g. acme.com" />
+            </div>
+            <div>
+              <Label t="Account Group" />
+              <select style={sel()} value={basic.group} onChange={e => setB('group',e.target.value)}>
+                <option value="">No group</option>
+                {config.accountGroups.map(g => <option key={g}>{g}</option>)}
+              </select>
             </div>
           </div>
           <div style={{ marginTop:14 }}>

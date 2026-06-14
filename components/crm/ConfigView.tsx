@@ -25,10 +25,20 @@ const StagesIcon = () => (
   </svg>
 );
 
+const GroupsIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+    <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+    <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+    <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+  </svg>
+);
+
 const SECTIONS: { key: keyof ConfigState; label: string; Icon: React.FC; desc: string }[] = [
-  { key: 'industries',  label: 'Industries',        Icon: IndustriesIcon, desc: 'Available industry options when creating or editing accounts.' },
-  { key: 'teamMembers', label: 'Team Members',       Icon: TeamIcon,       desc: 'People that can be assigned to tasks and opportunities.' },
-  { key: 'oppStages',   label: 'Opportunity Stages', Icon: StagesIcon,     desc: 'Pipeline stages for opportunities. Order here controls the kanban column order.' },
+  { key: 'industries',    label: 'Industries',        Icon: IndustriesIcon, desc: 'Available industry options when creating or editing accounts.' },
+  { key: 'teamMembers',   label: 'Team Members',       Icon: TeamIcon,       desc: 'People that can be assigned to tasks and opportunities.' },
+  { key: 'oppStages',     label: 'Opportunity Stages', Icon: StagesIcon,     desc: 'Pipeline stages for opportunities. Order here controls the kanban column order.' },
+  { key: 'accountGroups', label: 'Account Groups',     Icon: GroupsIcon,     desc: 'Named groups for clustering related accounts (subsidiaries, sister companies, etc.).' },
 ];
 
 interface ConfirmState { item: string; list: keyof ConfigState }
