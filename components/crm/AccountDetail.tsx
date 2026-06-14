@@ -53,13 +53,7 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
     </div>
   );
 
-  if (editing) return (
-    <EditAccountPanel
-      account={account}
-      onDone={() => { setEditing(false); toast('Account updated'); }}
-      onCancel={() => setEditing(false)}
-    />
-  );
+  // EditAccountPanel renders as a modal overlay — no early return needed
 
   const openTasks = account.tasks.filter(t => t.status !== 'Done').length;
   const critTasks = account.tasks.filter(t => t.priority === 'Critical' && t.status !== 'Done').length;
@@ -162,6 +156,14 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
           })}
         </div>
       </div>
+
+      {editing && (
+        <EditAccountPanel
+          account={account}
+          onDone={() => { setEditing(false); toast('Account updated'); }}
+          onCancel={() => setEditing(false)}
+        />
+      )}
 
       {/* ── Content ── */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>

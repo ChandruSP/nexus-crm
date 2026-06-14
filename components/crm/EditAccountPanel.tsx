@@ -63,19 +63,19 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
-      <div style={{ padding: '18px 32px', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>Editing Account</div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>{account.name}</h2>
+    <>
+      <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 800 }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 801, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', width: 640, maxWidth: '94vw', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(0,0,0,0.22)' }}>
+        <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>Edit Account</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>{account.name}</div>
+          </div>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
         </div>
-        <button onClick={onCancel} style={{ background: 'none', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', padding: '6px 14px', fontSize: 12, color: 'var(--text3)', cursor: 'pointer' }}>
-          Cancel
-        </button>
-      </div>
 
-      <form onSubmit={submit} style={{ flex: 1, overflowY: 'auto', padding: '28px 32px' }}>
-        <div style={{ maxWidth: 780 }}>
+      <form onSubmit={submit} style={{ flex: 1, overflowY: 'auto', padding: '24px 24px' }}>
+        <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Basic Information</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 24px' }}>
             <div>
@@ -134,6 +134,7 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
           </div>
         </div>
       </form>
-    </div>
+      </div>
+    </>
   );
 }

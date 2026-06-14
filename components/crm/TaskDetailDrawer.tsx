@@ -101,15 +101,11 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
               <div style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>
                 {task.accountName}{task.opportunityName ? ` · ${task.opportunityName}` : ''}
               </div>
-              {editing ? (
-                <input style={{ ...inp, fontSize: 14, fontWeight: 700, background: 'var(--bg3)' }} value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} autoFocus />
-              ) : (
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', lineHeight: 1.35 }}>{task.title}</div>
-              )}
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', lineHeight: 1.35 }}>{(liveTask ?? task).title}</div>
             </div>
             <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-              <button onClick={() => setEditing(e => !e)} title={editing ? 'Cancel edit' : 'Edit task'}
-                style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: editing ? 'var(--accent-dim)' : 'transparent', border: `1px solid ${editing ? 'var(--accent-border)' : 'var(--border2)'}`, borderRadius: 'var(--r-xs)', cursor: 'pointer', color: editing ? 'var(--accent)' : 'var(--text3)' }}>
+              <button onClick={() => setEditing(true)} title="Edit task"
+                style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)' }}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2L4 10H2V8L8.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <button onClick={() => setDelConfirm(true)} title="Delete task"
@@ -120,56 +116,23 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
             </div>
           </div>
 
-          {editing ? (
-            /* Edit fields */
-            <div style={{ display: 'grid', gap: 10 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div>
-                  <span style={lbl}>Priority</span>
-                  <select style={{ ...inp, cursor: 'pointer' }} value={editForm.priority} onChange={e => setEditForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}>
-                    {PRIORITY_ORDER.map(p => <option key={p}>{p}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <span style={lbl}>Due Date</span>
-                  <input type="date" style={inp} value={editForm.dueDate} onChange={e => setEditForm(f => ({ ...f, dueDate: e.target.value }))} />
-                </div>
-              </div>
-              <div>
-                <span style={lbl}>Assignee</span>
-                <select style={{ ...inp, cursor: 'pointer' }} value={editForm.assignee} onChange={e => setEditForm(f => ({ ...f, assignee: e.target.value }))}>
-                  <option value="">Unassigned</option>
-                  {config.teamMembers.map(m => <option key={m}>{m}</option>)}
-                </select>
-              </div>
-              <div>
-                <span style={lbl}>Description</span>
-                <textarea style={{ ...inp, resize: 'none', minHeight: 56, lineHeight: 1.55 }} value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} />
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={saveEdit} style={{ padding: '6px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)' }}>Save</button>
-                <button onClick={() => setEditing(false)} style={{ padding: '6px 12px', fontSize: 12, cursor: 'pointer', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)' }}>Cancel</button>
-              </div>
+          {/* View mode chips always visible; edit modal overlays everything */}
+          <div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+              <button onClick={cycleStatus} title="Click to advance status"
+                style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99, cursor: 'pointer', color: STATUS_COLOR[task.status], background: STATUS_COLOR[task.status] + '18', border: `1px solid ${STATUS_COLOR[task.status]}40` }}>
+                {task.status}
+              </button>
+              <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'var(--bg4)', color: PRIORITY_COLOR[task.priority] }}>{task.priority}</span>
+              {task.dueDate && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'var(--bg4)', color: 'var(--text3)' }}>Due {fmtDate(task.dueDate)}</span>}
+              {task.assignee && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'var(--bg4)', color: 'var(--text3)' }}>→ {task.assignee}</span>}
             </div>
-          ) : (
-            /* View mode chips */
-            <div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                <button onClick={cycleStatus} title="Click to advance status"
-                  style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99, cursor: 'pointer', color: STATUS_COLOR[task.status], background: STATUS_COLOR[task.status] + '18', border: `1px solid ${STATUS_COLOR[task.status]}40` }}>
-                  {task.status}
-                </button>
-                <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'var(--bg4)', color: PRIORITY_COLOR[task.priority] }}>{task.priority}</span>
-                {task.dueDate && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'var(--bg4)', color: 'var(--text3)' }}>Due {fmtDate(task.dueDate)}</span>}
-                {task.assignee && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'var(--bg4)', color: 'var(--text3)' }}>→ {task.assignee}</span>}
+            {task.description && (
+              <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, padding: '10px 12px', background: 'var(--bg3)', borderRadius: 'var(--r-sm)' }}>
+                {task.description}
               </div>
-              {task.description && (
-                <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, padding: '10px 12px', background: 'var(--bg3)', borderRadius: 'var(--r-sm)' }}>
-                  {task.description}
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Comments list */}
@@ -215,6 +178,52 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
             <button type="submit" style={{ padding: '6px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)' }}>Comment</button>
           </div>
         </form>
+
+        {/* Edit task modal */}
+        {editing && (
+          <>
+            <div onClick={() => setEditing(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 300 }} />
+            <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 301, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 460, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.22)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Edit Task</div>
+                <button onClick={() => setEditing(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
+              </div>
+              <div style={{ display: 'grid', gap: 12 }}>
+                <div>
+                  <span style={lbl}>Title</span>
+                  <input style={{ ...inp, fontSize: 14, fontWeight: 600 }} value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} autoFocus />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <span style={lbl}>Priority</span>
+                    <select style={{ ...inp, cursor: 'pointer' }} value={editForm.priority} onChange={e => setEditForm(f => ({ ...f, priority: e.target.value as TaskPriority }))}>
+                      {PRIORITY_ORDER.map(p => <option key={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <span style={lbl}>Due Date</span>
+                    <input type="date" style={inp} value={editForm.dueDate} onChange={e => setEditForm(f => ({ ...f, dueDate: e.target.value }))} />
+                  </div>
+                </div>
+                <div>
+                  <span style={lbl}>Assignee</span>
+                  <select style={{ ...inp, cursor: 'pointer' }} value={editForm.assignee} onChange={e => setEditForm(f => ({ ...f, assignee: e.target.value }))}>
+                    <option value="">Unassigned</option>
+                    {config.teamMembers.map(m => <option key={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <span style={lbl}>Description</span>
+                  <textarea style={{ ...inp, resize: 'none', minHeight: 80, lineHeight: 1.55 }} value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} />
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <button onClick={saveEdit} style={{ padding: '8px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)' }}>Save</button>
+                  <button onClick={() => setEditing(false)} style={{ padding: '8px 14px', fontSize: 13, cursor: 'pointer', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)' }}>Cancel</button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Delete task modal */}
         {delConfirm && (

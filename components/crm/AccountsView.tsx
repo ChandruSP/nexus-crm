@@ -127,16 +127,13 @@ export function AccountsView() {
     setMode('detail');
   }
 
-  if (mode === 'new') {
-    return <NewAccountPanel onDone={() => { toast('Account created'); setMode('detail'); }} onCancel={() => setMode('grid')} />;
-  }
-
   if (mode === 'detail') {
     return <AccountDetail onBack={() => setMode('grid')} />;
   }
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
+      {mode === 'new' && <NewAccountPanel onDone={() => { toast('Account created'); setMode('detail'); }} onCancel={() => setMode('grid')} />}
 
       {/* Toolbar */}
       <div style={{ padding: '16px 28px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
