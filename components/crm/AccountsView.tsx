@@ -147,10 +147,10 @@ export function AccountsView() {
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Search */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
               style={{ position: 'absolute', left: 10, pointerEvents: 'none', color: 'var(--text3)' }}>
-              <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.4"/>
+              <path d="M9 9l3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>
             <input type="text" placeholder="Search accounts…" value={search} onChange={e => setSearch(e.target.value)}
               style={{

@@ -71,10 +71,13 @@ export function CrmApp() {
                 style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
                   background: view === 'config' ? 'var(--bg4)' : 'none',
                   border: view === 'config' ? '1px solid var(--border2)' : '1px solid transparent',
-                  borderRadius:'var(--r-sm)', cursor:'pointer', color: view === 'config' ? 'var(--text)' : 'var(--text3)' }}>
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                  <path d="M7.5 9.5a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" strokeWidth="1.3"/>
-                  <path d="M12.2 7.5c0-.18-.01-.36-.04-.53l1.14-.88a.3.3 0 00.07-.38l-1.08-1.87a.3.3 0 00-.37-.13l-1.34.54a3.9 3.9 0 00-.92-.53l-.2-1.43A.3.3 0 009.17 2H6.83a.3.3 0 00-.3.25l-.2 1.43c-.34.14-.65.32-.92.53l-1.34-.54a.3.3 0 00-.37.13L2.62 5.7a.3.3 0 00.07.38l1.14.88c-.03.17-.04.35-.04.53s.01.36.04.53l-1.14.88a.3.3 0 00-.07.38l1.08 1.87c.08.14.25.19.37.13l1.34-.54c.27.21.58.39.92.53l.2 1.43c.04.14.16.25.3.25h2.34c.14 0 .26-.11.3-.25l.2-1.43c.34-.14.65-.32.92-.53l1.34.54c.12.06.29.01.37-.13l1.08-1.87a.3.3 0 00-.07-.38l-1.14-.88c.03-.17.04-.35.04-.53z" stroke="currentColor" strokeWidth="1.3"/>
+                  borderRadius:'var(--r-sm)', cursor:'pointer', color: view === 'config' ? 'var(--text)' : 'var(--text3)',
+                  transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}
+                onMouseEnter={e => { if (view !== 'config') { const b = e.currentTarget; b.style.color = 'var(--text)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'var(--bg4)'; } }}
+                onMouseLeave={e => { if (view !== 'config') { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'transparent'; b.style.background = 'none'; } }}>
+                <svg width="16" height="16" viewBox="0 0 15 15" fill="none">
+                  <path d="M7.5 9.5a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" strokeWidth="1.4"/>
+                  <path d="M12.2 7.5c0-.18-.01-.36-.04-.53l1.14-.88a.3.3 0 00.07-.38l-1.08-1.87a.3.3 0 00-.37-.13l-1.34.54a3.9 3.9 0 00-.92-.53l-.2-1.43A.3.3 0 009.17 2H6.83a.3.3 0 00-.3.25l-.2 1.43c-.34.14-.65.32-.92.53l-1.34-.54a.3.3 0 00-.37.13L2.62 5.7a.3.3 0 00.07.38l1.14.88c-.03.17-.04.35-.04.53s.01.36.04.53l-1.14.88a.3.3 0 00-.07.38l1.08 1.87c.08.14.25.19.37.13l1.34-.54c.27.21.58.39.92.53l.2 1.43c.04.14.16.25.3.25h2.34c.14 0 .26-.11.3-.25l.2-1.43c.34-.14.65-.32.92-.53l1.34.54c.12.06.29.01.37-.13l1.08-1.87a.3.3 0 00-.07-.38l-1.14-.88c.03-.17.04-.35.04-.53z" stroke="currentColor" strokeWidth="1.4"/>
                 </svg>
               </button>
               <ThemeToggle />

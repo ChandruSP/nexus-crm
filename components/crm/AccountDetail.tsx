@@ -75,6 +75,7 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
     padding: '5px 10px', borderRadius: 'var(--r-sm)',
     border: '1px solid var(--border2)', background: 'transparent',
     fontSize: 12, cursor: 'pointer', color: 'var(--text2)', fontWeight: 500,
+    transition: 'color 0.12s, border-color 0.12s, background 0.12s',
   };
 
   return (
@@ -84,8 +85,11 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
       <div style={{ padding: '20px 28px 0', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
 
         {onBack && (
-          <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 12, padding: '0 0 14px 0', fontWeight: 500 }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <button onClick={onBack}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 12, padding: '0 0 14px 0', fontWeight: 500, transition: 'color 0.12s' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--text)'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text3)'}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
             All Accounts
           </button>
         )}
@@ -121,12 +125,16 @@ export function AccountDetail({ onBack }: { onBack?: () => void }) {
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignSelf: 'flex-start' }}>
-            <button style={iconBtn} onClick={() => setEditing(true)}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2L4 10H2V8L8.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <button style={iconBtn} onClick={() => setEditing(true)}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--accent)'; b.style.borderColor = 'var(--accent)'; b.style.background = 'var(--accent-dim)'; }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text2)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'transparent'; }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L5 12H2V9L9.5 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Edit
             </button>
-            <button style={{ ...iconBtn, color: 'var(--red)', borderColor: 'var(--red-dim)' }} onClick={() => setDelConfirm(true)}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 3v7h4V3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <button style={{ ...iconBtn, color: 'var(--red)', borderColor: 'var(--red-dim)' }} onClick={() => setDelConfirm(true)}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = 'var(--red)'; b.style.background = 'var(--red-dim)'; }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--red)'; b.style.borderColor = 'var(--red-dim)'; b.style.background = 'transparent'; }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 4h9M6 4V2.5h2V4M5 4v8h4V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Delete
             </button>
           </div>
