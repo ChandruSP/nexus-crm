@@ -254,11 +254,7 @@ export function TaskKanban({ fAccount, fPriority, fAssignee, onTaskClick }: Kanb
                         </div>
 
                         {/* Title */}
-                        <div style={{
-                          fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.4, marginBottom: 8,
-                          textDecoration: task.status === 'Done' ? 'line-through' : 'none',
-                          opacity: task.status === 'Done' ? 0.5 : 1,
-                        }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.4, marginBottom: 8 }}>
                           {task.title}
                         </div>
 

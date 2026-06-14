@@ -155,12 +155,10 @@ function AccountKanban({ account }: { account: Account }) {
                     }}
                     onMouseEnter={e => { if (!dragId) (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'; }}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = 'none'}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <div style={{ marginBottom: 6 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 99, color: PRIORITY_COLOR[task.priority], background: PRIORITY_BG[task.priority] }}>{task.priority}</span>
-                      <button onClick={e => cycleStatus(task, e)} title="Advance status"
-                        style={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, background: status === 'Done' ? 'var(--green)' : 'transparent', border: `2px solid ${col}`, cursor: 'pointer', padding: 0 }} />
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: task.status === 'Done' ? 'var(--text3)' : 'var(--text)', lineHeight: 1.4, textDecoration: task.status === 'Done' ? 'line-through' : 'none', marginBottom: 4 }}>{task.title}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', lineHeight: 1.4, marginBottom: 4 }}>{task.title}</div>
                     {task.opportunityId && <div style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600, marginBottom: 4 }}>● {account.opportunities.find(o => o.id === task.opportunityId)?.name}</div>}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: overdue ? 'var(--red)' : 'var(--text3)' }}>
                       {task.assignee ? <span>→ {task.assignee}</span> : <span />}
@@ -244,10 +242,8 @@ export function TasksTab({ account }: { account: Account }) {
         style={{ padding: '10px 12px', background: 'var(--bg3)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', marginBottom: 6, display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }}
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border2)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}>
-        <button onClick={e => { e.stopPropagation(); cycleStatus(task); }} title={`Status: ${task.status}`}
-          style={{ width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: 2, background: task.status === 'Done' ? 'var(--green)' : 'transparent', border: `2px solid ${STATUS_COLOR[task.status]}`, cursor: 'pointer' }} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: task.status === 'Done' ? 'var(--text3)' : 'var(--text)', textDecoration: task.status === 'Done' ? 'line-through' : 'none', marginBottom: 3 }}>{task.title}</div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 3 }}>{task.title}</div>
           {task.description && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4 }}>{task.description}</div>}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 99, color: PRIORITY_COLOR[task.priority], background: PRIORITY_BG[task.priority] }}>{task.priority}</span>

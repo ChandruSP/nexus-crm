@@ -162,14 +162,8 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         onClick={() => onTaskClick?.(task as DrawerTask)}
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg3)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-        <td style={{ padding: '10px 12px', width: 36 }}>
-          <button onClick={e => { e.stopPropagation(); cycleStatus(task); }} title={`${task.status} — click to advance`}
-            style={{ width: 14, height: 14, borderRadius: '50%', cursor: 'pointer', padding: 0,
-              background: done ? 'var(--green)' : 'transparent',
-              border: `2px solid ${STATUS_COLOR[task.status]}` }} />
-        </td>
         <td style={{ padding: '10px 8px', minWidth: 200 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: done ? 'var(--text3)' : 'var(--text)', textDecoration: done ? 'line-through' : 'none' }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
             {task.title}
           </span>
           {task.opportunityName && (

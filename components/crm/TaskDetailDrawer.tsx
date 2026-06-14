@@ -119,10 +119,9 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
           {/* View mode chips always visible; edit modal overlays everything */}
           <div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-              <button onClick={cycleStatus} title="Click to advance status"
-                style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99, cursor: 'pointer', color: STATUS_COLOR[task.status], background: STATUS_COLOR[task.status] + '18', border: `1px solid ${STATUS_COLOR[task.status]}40` }}>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99, color: STATUS_COLOR[task.status], background: STATUS_COLOR[task.status] + '18', border: `1px solid ${STATUS_COLOR[task.status]}40` }}>
                 {task.status}
-              </button>
+              </span>
               <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'var(--bg4)', color: PRIORITY_COLOR[task.priority] }}>{task.priority}</span>
               {task.dueDate && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'var(--bg4)', color: 'var(--text3)' }}>Due {fmtDate(task.dueDate)}</span>}
               {task.assignee && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'var(--bg4)', color: 'var(--text3)' }}>→ {task.assignee}</span>}
