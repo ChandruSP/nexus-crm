@@ -71,7 +71,7 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>Edit Account</div>
             <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>{account.name}</div>
           </div>
-          <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
+          <button onClick={onCancel} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: '1px solid transparent', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)', fontSize: 18, lineHeight: 1, transition: 'color 0.12s, border-color 0.12s' }} onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--text)'; b.style.borderColor = 'var(--border2)'; }} onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'transparent'; }}>×</button>
         </div>
 
       <form onSubmit={submit} style={{ flex: 1, overflowY: 'auto', padding: '24px 24px' }}>

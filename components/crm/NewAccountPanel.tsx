@@ -130,7 +130,12 @@ export function NewAccountPanel({ onDone, onCancel }: Props) {
   function CardWrap({ onRemove, children }: { onRemove: () => void; children: React.ReactNode }) {
     return (
       <div style={{ position:'relative', padding:'14px 16px', background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:'var(--r)', marginBottom:10 }}>
-        <button type="button" onClick={onRemove} style={{ position:'absolute', top:10, right:10, background:'none', border:'none', cursor:'pointer', fontSize:16, color:'var(--text3)', lineHeight:1, padding:'0 4px' }}>×</button>
+        <button type="button" onClick={onRemove} title="Remove"
+          style={{ position:'absolute', top:10, right:10, width: 24, height: 24, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'1px solid var(--border2)', borderRadius:'var(--r-xs)', cursor:'pointer', color:'var(--text3)', transition:'color 0.12s, border-color 0.12s, background 0.12s' }}
+          onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--red)'; b.style.borderColor = 'var(--red)'; b.style.background = 'var(--red-dim)'; }}
+          onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'transparent'; }}>
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2.5 4h9M6 4V2.5h2V4M5 4v8h4V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
         {children}
       </div>
     );
@@ -147,7 +152,7 @@ export function NewAccountPanel({ onDone, onCancel }: Props) {
             <div style={{ fontSize:10, fontWeight:700, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:2 }}>New Account</div>
             <div style={{ fontSize:17, fontWeight:700, color:'var(--text)' }}>Add Account Details</div>
           </div>
-          <button onClick={onCancel} style={{ background:'none', border:'none', cursor:'pointer', fontSize:22, color:'var(--text3)', lineHeight:1, padding:'0 4px' }}>×</button>
+          <button onClick={onCancel} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: '1px solid transparent', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)', fontSize: 18, lineHeight: 1, transition: 'color 0.12s, border-color 0.12s' }} onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--text)'; b.style.borderColor = 'var(--border2)'; }} onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'transparent'; }}>×</button>
         </div>
 
       {/* Scrollable form */}

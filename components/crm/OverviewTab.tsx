@@ -27,7 +27,7 @@ function ProjectForm({ initial, onSave, onCancel, title }: { initial: PRForm; on
       <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 501, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 480, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
-          <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: '0 4px' }}>×</button>
+          <button onClick={onCancel} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: '1px solid transparent', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)', fontSize: 18, lineHeight: 1, transition: 'color 0.12s, border-color 0.12s' }} onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--text)'; b.style.borderColor = 'var(--border2)'; }} onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'transparent'; }}>×</button>
         </div>
         <form onSubmit={e => { e.preventDefault(); if (!form.name.trim()) return; onSave(form); }} style={{ display: 'grid', gap: 12 }}>
           <div><span style={lbl}>Project Name *</span><input style={inp} value={form.name} onChange={e => set('name', e.target.value)} autoFocus /></div>
@@ -57,14 +57,6 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function fileIcon(type: string) {
-  if (type.startsWith('image/')) return '🖼';
-  if (type === 'application/pdf') return '📄';
-  if (type.includes('word') || type.includes('document')) return '📝';
-  if (type.includes('sheet') || type.includes('excel')) return '📊';
-  if (type.includes('presentation') || type.includes('powerpoint')) return '📑';
-  return '📎';
-}
 
 export function OverviewTab({ account }: { account: Account }) {
   const { dispatch } = useCrm();
@@ -173,8 +165,18 @@ export function OverviewTab({ account }: { account: Account }) {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                           <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtCurrency(p.revenue)}</span>
-                          <button onClick={() => { setEditPRId(p.id); setAddingPR(false); }} style={{ padding: '2px 8px', fontSize: 10, background: 'transparent', color: 'var(--text3)', border: '1px solid var(--border)', borderRadius: 'var(--r-xs)', cursor: 'pointer' }}>Edit</button>
-                          <button onClick={() => setDelPRId(p.id)} style={{ padding: '2px 8px', fontSize: 10, background: 'transparent', color: 'var(--red)', border: '1px solid var(--red-dim)', borderRadius: 'var(--r-xs)', cursor: 'pointer' }}>Del</button>
+                          <button onClick={() => { setEditPRId(p.id); setAddingPR(false); }} title="Edit project"
+                            style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text2)', transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}
+                            onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--accent)'; b.style.borderColor = 'var(--accent)'; b.style.background = 'var(--accent-dim)'; }}
+                            onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text2)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'transparent'; }}>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L5 12H2V9L9.5 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </button>
+                          <button onClick={() => setDelPRId(p.id)} title="Delete project"
+                            style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)', transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}
+                            onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--red)'; b.style.borderColor = 'var(--red)'; b.style.background = 'var(--red-dim)'; }}
+                            onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'transparent'; }}>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 4h9M6 4V2.5h2V4M5 4v8h4V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </button>
                         </div>
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 2 }}>{p.year}</div>
@@ -215,7 +217,9 @@ export function OverviewTab({ account }: { account: Account }) {
               transition: 'all 0.15s', marginBottom: (account.attachments?.length ?? 0) > 0 ? 12 : 0,
               display: (account.attachments?.length ?? 0) > 0 ? 'none' : 'block',
             }}>
-            <div style={{ fontSize: 20, marginBottom: 4 }}>📎</div>
+            <div style={{ marginBottom: 8, color: 'var(--text3)', display: 'flex', justifyContent: 'center' }}>
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 20V10M14 10l-4 4M14 10l4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><rect x="3" y="18" width="22" height="7" rx="2" stroke="currentColor" strokeWidth="1.4" opacity="0.4"/></svg>
+            </div>
             <div style={{ fontSize: 12, color: 'var(--text3)' }}>Drop files here or click to upload</div>
             <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, opacity: 0.7 }}>Max 10 MB per file</div>
           </div>
@@ -230,19 +234,23 @@ export function OverviewTab({ account }: { account: Account }) {
                 style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {account.attachments!.map(att => (
                   <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg3)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>{fileIcon(att.type)}</span>
+                    <span style={{ flexShrink: 0, color: 'var(--text3)', display: 'flex', alignItems: 'center' }}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="2" width="9" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 2v4h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M5.5 9h5M5.5 11.5h3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                    </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.name}</div>
                       <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 1 }}>{formatSize(att.size)} · {new Date(att.uploadedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}</div>
                     </div>
-                    <a href={att.dataUrl} download={att.name}
-                      style={{ padding: '3px 8px', fontSize: 11, color: 'var(--accent)', background: 'var(--accent-dim)', border: 'none', borderRadius: 'var(--r-xs)', cursor: 'pointer', textDecoration: 'none', flexShrink: 0, fontWeight: 600 }}
+                    <a href={att.dataUrl} download={att.name} title="Download"
+                      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-dim)', border: '1px solid var(--accent-border)', borderRadius: 'var(--r-xs)', cursor: 'pointer', textDecoration: 'none', flexShrink: 0, color: 'var(--accent)', transition: 'background 0.12s' }}
                       onClick={e => e.stopPropagation()}>
-                      ↓
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M7 9l-3-3M7 9l3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 12h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
                     </a>
-                    <button onClick={() => deleteAttachment(att.id, att.name)}
-                      style={{ padding: '3px 8px', fontSize: 11, color: 'var(--red)', background: 'transparent', border: '1px solid var(--red-dim)', borderRadius: 'var(--r-xs)', cursor: 'pointer', flexShrink: 0 }}>
-                      ×
+                    <button onClick={() => deleteAttachment(att.id, att.name)} title="Remove attachment"
+                      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)', flexShrink: 0, transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}
+                      onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--red)'; b.style.borderColor = 'var(--red)'; b.style.background = 'var(--red-dim)'; }}
+                      onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'var(--border2)'; b.style.background = 'transparent'; }}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 4h9M6 4V2.5h2V4M5 4v8h4V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </button>
                   </div>
                 ))}
