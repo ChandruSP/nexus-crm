@@ -207,6 +207,14 @@ export async function apiCreateProject(accountId: string, p: PastProject): Promi
   });
 }
 
+export async function apiUpdateProject(accountId: string, p: PastProject): Promise<void> {
+  await fetch(`/api/accounts/${accountId}/projects/${p.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(p),
+  });
+}
+
 export async function apiDeleteProject(accountId: string, projectId: string): Promise<void> {
   await fetch(`/api/accounts/${accountId}/projects/${projectId}`, { method: 'DELETE' });
 }

@@ -10,6 +10,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       role: body.role,
       email: body.email,
       phone: body.phone,
+      whatsapp: body.whatsapp ?? false,
       isPrimary: body.isPrimary ?? false,
       notes: body.notes,
       accountId: id,

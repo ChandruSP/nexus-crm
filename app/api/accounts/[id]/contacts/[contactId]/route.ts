@@ -11,6 +11,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ contac
       role: body.role,
       email: body.email,
       phone: body.phone,
+      whatsapp: body.whatsapp,
       isPrimary: body.isPrimary,
       notes: body.notes,
     },

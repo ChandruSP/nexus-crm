@@ -6,7 +6,7 @@ import {
   apiCreateTask, apiUpdateTask, apiDeleteTask,
   apiCreateStakeholder, apiUpdateStakeholder, apiDeleteStakeholder,
   apiCreateOpportunity, apiUpdateOpportunity, apiDeleteOpportunity,
-  apiCreateProject, apiDeleteProject,
+  apiCreateProject, apiUpdateProject, apiDeleteProject,
 } from '@/lib/apiClient';
 
 interface CrmState {
@@ -183,6 +183,9 @@ export function CrmProvider({ children }: { children: ReactNode }) {
           break;
         case 'ADD_PAST_PROJECT':
           await apiCreateProject(action.accountId, action.project);
+          break;
+        case 'UPDATE_PAST_PROJECT':
+          await apiUpdateProject(action.accountId, action.project);
           break;
         case 'DELETE_PAST_PROJECT':
           await apiDeleteProject(action.accountId, action.projectId);

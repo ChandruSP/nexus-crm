@@ -9,7 +9,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       title: body.title,
       description: body.description,
       priority: body.priority ?? 'Medium',
-      status: body.status ?? 'To Do',
+      status: body.status ?? 'To do',
       dueDate: body.dueDate ? new Date(body.dueDate) : null,
       assignee: body.assignee,
       category: body.category,

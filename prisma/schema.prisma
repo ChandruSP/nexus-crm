@@ -32,6 +32,7 @@ model Contact {
   role      String?
   email     String?
   phone     String?
+  whatsapp  Boolean @default(false)
   isPrimary Boolean @default(false)
   notes     String?
   createdAt DateTime @default(now())
