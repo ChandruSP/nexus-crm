@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;width:100%}
+body{font-family:'Inter',sans-serif;font-size:13px}
+
+.dark{
+  --bg:#0f1117;--bg2:#161b24;--bg3:#1c2332;--bg4:#232c3d;
+  --border:#232c3d;--border2:#2d3850;
+  --text:#e8eaf0;--text2:#b0b8cc;--text3:#6b7694;
+  --accent:#4f7bff;--accent-dim:#4f7bff18;
+  --red:#f05252;--red-dim:#f0525218;
+  --green:#34d399;--green-dim:#34d39918;
+  --amber:#fbbf24;--amber-dim:#fbbf2418;
+  --purple:#a78bfa;--purple-dim:#a78bfa18;
+  --blue:#60a5fa;--blue-dim:#60a5fa18;
+  --yellow:#facc15;
+  --r:10px;--r-sm:7px;--r-xs:5px;
+}
+.light{
+  --bg:#f4f6fb;--bg2:#ffffff;--bg3:#eef1f8;--bg4:#e2e7f2;
+  --border:#e2e7f2;--border2:#c8d0e4;
+  --text:#0f1421;--text2:#374263;--text3:#7a85a8;
+  --accent:#3b65e8;--accent-dim:#3b65e818;
+  --red:#dc2626;--red-dim:#dc262618;
+  --green:#16a34a;--green-dim:#16a34a18;
+  --amber:#d97706;--amber-dim:#d9770618;
+  --purple:#7c3aed;--purple-dim:#7c3aed18;
+  --blue:#2563eb;--blue-dim:#2563eb18;
+  --yellow:#ca8a04;
+  --r:10px;--r-sm:7px;--r-xs:5px;
+}
+
+body{background:var(--bg);color:var(--text)}
+button{font-family:inherit;font-size:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 11px;outline:none;width:100%}
+select{cursor:pointer}
+textarea{resize:vertical;line-height:1.6}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{display:flex;align-items:center;gap:0;padding:0 24px;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{font-size:16px;font-weight:800;letter-spacing:-0.04em;color:var(--text);margin-right:32px}
+.logo span{color:var(--accent)}
+.nav-tabs{display:flex;align-items:center;gap:4px;flex:1}
+.nav-tab{padding:6px 14px;font-size:12px;font-weight:600;border-radius:99px;border:1px solid transparent;background:transparent;color:var(--text3);cursor:pointer;transition:all 0.15s}
+.nav-tab.active{background:var(--bg4);border-color:var(--border2);color:var(--text)}
+.nav-tab:hover:not(.active){color:var(--text2)}
+.theme-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text2);cursor:pointer;margin-left:auto}
+
+.main{flex:1;display:flex;overflow:hidden}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+
+/* Icon button */
+.icon-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border2);border-radius:var(--r-xs);color:var(--text3);cursor:pointer;flex-shrink:0;transition:all 0.12s}
+.icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg3)}
+.icon-btn.danger:hover{color:var(--red);border-color:var(--red);background:var(--red-dim)}
+
+/* Form */
+.form-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px}
+.form-error{font-size:11px;color:var(--red);margin-top:3px}
+
+/* Modal overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:800;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 24px 64px rgba(0,0,0,0.22);display:flex;flex-direction:column}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 18px;font-size:13px;font-weight:600;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,0.18);z-index:9999;animation:slideUp 0.2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Kanban */
+.kanban-board{display:flex;gap:12px;overflow-x:auto;padding:20px 24px;height:100%}
+.kanban-col{flex-shrink:0;width:240px;display:flex;flex-direction:column;gap:8px}
+.kanban-col-header{padding:8px 12px;background:var(--bg3);border-radius:var(--r-sm);font-size:11px;font-weight:700;color:var(--text2);display:flex;align-items:center;justify-content:space-between}
+.kanban-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s}
+.kanban-card:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;padding:8px 12px;text-align:left;background:var(--bg2);position:sticky;top:0;z-index:1;border-bottom:1px solid var(--border)}
+.data-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);vertical-align:middle}
+.data-table tr:hover td{background:var(--bg3)}
+.data-table tr:last-child td{border-bottom:none}
+</style>
+</head>
+<body class="dark">
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useReducer, useContext, createContext, useCallback, useEffect, useRef } = React;
+
+// ─── Sample Data ─────────────────────────────────────────────────────────────
+const SAMPLE_DATA = {
+  accounts: [
+    {
+      id:'acc1', name:'Tata Steel Limited', industry:'Manufacturing', segment:'Enterprise',
+      owner:'Priya Nair', location:'Mumbai, Maharashtra', website:'tatasteel.com',
+      description:'India\'s largest integrated steel manufacturer. Key stakeholder is VP of Digital Transformation. Decision cycle ~3 months.',
+      group:'Tata Group', createdAt: Date.now()-86400000*30,
+      contacts:[
+        {id:'c1',name:'Rajiv Mehta',role:'VP Digital Transformation',email:'r.mehta@tatasteel.com',phone:'+91 98765 43210',isPrimary:true,notes:'Prefers morning calls.'},
+        {id:'c2',name:'Sunita Rao',role:'IT Director',email:'s.rao@tatasteel.com',phone:'+91 87654 32109',isPrimary:false,notes:'Technical decision maker.'},
+      ],
+      tasks:[
+        {id:'t1',title:'Send proposal for AI analytics',description:'Prepare deck and send',priority:'Critical',status:'In Progress',dueDate:'2026-06-20',assignee:'Priya Nair',category:'Proposal',comments:[]},
+        {id:'t2',title:'Schedule QBR meeting',description:'Quarterly business review',priority:'High',status:'To Do',dueDate:'2026-06-25',assignee:'Dev Sharma',category:'Meeting',comments:[]},
+        {id:'t3',title:'Follow up on POC results',description:'Get feedback on the pilot',priority:'Medium',status:'Done',dueDate:'2026-06-10',assignee:'Priya Nair',category:'Follow-up',comments:['POC results positive, moving to proposal stage.']},
+      ],
+      opportunities:[
+        {id:'o1',title:'AI Analytics Platform',stage:'Proposal',value:4500000,probability:60,closeDate:'2026-08-31',notes:'Strong interest from VP.'},
+        {id:'o2',title:'ERP Integration',stage:'Qualified',value:2200000,probability:40,closeDate:'2026-10-15',notes:'Awaiting budget approval.'},
+      ],
+      pastProjects:[
+        {id:'p1',name:'Steel 4.0 Pilot',revenue:1800000,year:2024,description:'Digital twin pilot for blast furnaces.'},
+        {id:'p2',name:'Supply Chain Dashboard',revenue:950000,year:2023,description:'Real-time supply chain visibility.'},
+      ],
+    },
+    {
+      id:'acc2', name:'Tata Consultancy Services', industry:'Technology', segment:'Enterprise',
+      owner:'Dev Sharma', location:'Bangalore, Karnataka', website:'tcs.com',
+      description:'Global IT services giant. Multiple business units. Key contact in the Digital Initiatives group.',
+      group:'Tata Group', createdAt: Date.now()-86400000*45,
+      contacts:[
+        {id:'c3',name:'Ananya Singh',role:'Global Head of Procurement',email:'a.singh@tcs.com',phone:'+91 76543 21098',isPrimary:true,notes:'Very process-oriented.'},
+      ],
+      tasks:[
+        {id:'t4',title:'Legal review of MSA',description:'Get legal to review master service agreement',priority:'High',status:'In Progress',dueDate:'2026-06-18',assignee:'Dev Sharma',category:'Legal',comments:[]},
+        {id:'t5',title:'Product demo for TCS Digital',description:'Demo the new analytics module',priority:'Medium',status:'To Do',dueDate:'2026-06-30',assignee:'Tanvi Kapila',category:'Demo',comments:[]},
+      ],
+      opportunities:[
+        {id:'o3',title:'Analytics-as-a-Service',stage:'Negotiation',value:12000000,probability:75,closeDate:'2026-07-31',notes:'In final pricing negotiation.'},
+      ],
+      pastProjects:[
+        {id:'p3',name:'Data Lakehouse Migration',revenue:3400000,year:2024,description:'Migrated 3 data warehouses to lakehouse.'},
+      ],
+    },
+    {
+      id:'acc3', name:'Infosys Limited', industry:'Technology', segment:'Enterprise',
+      owner:'Tanvi Kapila', location:'Pune, Maharashtra', website:'infosys.com',
+      description:'Tier-1 IT services. Focus on Infosys Cobalt cloud division. Long sales cycle.',
+      group: undefined, createdAt: Date.now()-86400000*60,
+      contacts:[
+        {id:'c4',name:'Kiran Bose',role:'Cloud Procurement Lead',email:'k.bose@infosys.com',phone:'+91 65432 10987',isPrimary:true,notes:'Prefers email.'},
+        {id:'c5',name:'Meera Joshi',role:'SVP Cloud Services',email:'m.joshi@infosys.com',phone:'+91 54321 09876',isPrimary:false,notes:'Executive sponsor.'},
+      ],
+      tasks:[
+        {id:'t6',title:'RFP response draft',description:'Write response to Infosys RFP',priority:'Critical',status:'To Do',dueDate:'2026-06-17',assignee:'Tanvi Kapila',category:'Proposal',comments:[]},
+      ],
+      opportunities:[
+        {id:'o4',title:'Cloud Observability Suite',stage:'Prospecting',value:8000000,probability:25,closeDate:'2026-12-31',notes:'Early stage, building relationship.'},
+      ],
+      pastProjects:[],
+    },
+    {
+      id:'acc4', name:'Reliance Retail Ventures', industry:'Retail', segment:'Mid-Market',
+      owner:'Priya Nair', location:'Delhi, NCR', website:'relianceretail.com',
+      description:'Fastest growing retail chain. Interested in customer analytics and loyalty platform integration.',
+      group: undefined, createdAt: Date.now()-86400000*15,
+      contacts:[
+        {id:'c6',name:'Deepak Verma',role:'Head of Analytics',email:'d.verma@relianceretail.com',phone:'+91 43210 98765',isPrimary:true,notes:'Very data savvy.'},
+      ],
+      tasks:[
+        {id:'t7',title:'Share case study',description:'Send relevant retail case studies',priority:'Medium',status:'Done',dueDate:'2026-06-12',assignee:'Priya Nair',category:'Follow-up',comments:['Sent 3 case studies via email.']},
+        {id:'t8',title:'Loyalty platform demo',description:'Run live demo of loyalty module',priority:'High',status:'To Do',dueDate:'2026-06-22',assignee:'Priya Nair',category:'Demo',comments:[]},
+      ],
+      opportunities:[
+        {id:'o5',title:'Customer Analytics Platform',stage:'Qualified',value:3200000,probability:50,closeDate:'2026-09-30',notes:'Budget confirmed.'},
+      ],
+      pastProjects:[
+        {id:'p4',name:'Pilot Analytics',revenue:420000,year:2025,description:'3-month analytics pilot.'},
+      ],
+    },
+  ],
+  tasks: [], // global tasks are derived from all accounts
+};
+
+// ─── Contexts ─────────────────────────────────────────────────────────────────
+const ToastContext = createContext(null);
+function ToastProvider({children}) {
+  const [msg, setMsg] = useState(null);
+  const timer = useRef(null);
+  const toast = useCallback((m) => {
+    setMsg(m);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setMsg(null), 2500);
+  }, []);
+  return (
+    <ToastContext.Provider value={toast}>
+      {children}
+      {msg && <div className="toast">{msg}</div>}
+    </ToastContext.Provider>
+  );
+}
+const useToast = () => useContext(ToastContext);
+
+const ConfigContext = createContext(null);
+const CONFIG_DEFAULT = {
+  industries:['Banking & Finance','Supply Chain & Logistics','Healthcare & Life Sciences','Media & Entertainment','Technology','Manufacturing','Retail','Real Estate','Education','Government','Telecom','Energy'],
+  teamMembers:['Priya Nair','Dev Sharma','Tanvi Kapila','Tech Team','Finance'],
+  oppStages:['Prospecting','Qualified','Proposal','Negotiation','Closed Won','Closed Lost'],
+  accountGroups:[],
+};
+function configReducer(state, action) {
+  const list = [...state[action.list]];
+  switch(action.type) {
+    case 'ADD_ITEM':
+      if (!action.value.trim() || list.includes(action.value.trim())) return state;
+      return {...state, [action.list]: [...list, action.value.trim()]};
+    case 'REMOVE_ITEM':
+      return {...state, [action.list]: list.filter(v => v !== action.value)};
+    case 'MOVE_ITEM': {
+      const [item] = list.splice(action.from, 1);
+      list.splice(action.to, 0, item);
+      return {...state, [action.list]: list};
+    }
+    default: return state;
+  }
+}
+function ConfigProvider({children}) {
+  const [config, dispatch] = useReducer(configReducer, CONFIG_DEFAULT);
+  return <ConfigContext.Provider value={{config, dispatch}}>{children}</ConfigContext.Provider>;
+}
+const useConfig = () => useContext(ConfigContext);
+
+const CrmContext = createContext(null);
+function crmReducer(state, action) {
+  switch(action.type) {
+    case 'ADD_ACCOUNT': return {...state, accounts: [...state.accounts, action.account]};
+    case 'UPDATE_ACCOUNT': return {...state, accounts: state.accounts.map(a => a.id === action.account.id ? action.account : a)};
+    case 'DELETE_ACCOUNT': return {...state, accounts: state.accounts.filter(a => a.id !== action.id), selectedAccountId: state.selectedAccountId === action.id ? null : state.selectedAccountId};
+    case 'SELECT_ACCOUNT': return {...state, selectedAccountId: action.id};
+    case 'ADD_TASK': {
+      const accs = state.accounts.map(a => a.id === action.accountId ? {...a, tasks:[...a.tasks, action.task]} : a);
+      return {...state, accounts: accs};
+    }
+    case 'UPDATE_TASK': {
+      const accs = state.accounts.map(a => ({...a, tasks: a.tasks.map(t => t.id === action.task.id ? action.task : t)}));
+      return {...state, accounts: accs};
+    }
+    case 'DELETE_TASK': {
+      const accs = state.accounts.map(a => ({...a, tasks: a.tasks.filter(t => t.id !== action.taskId)}));
+      return {...state, accounts: accs};
+    }
+    case 'ADD_OPP': {
+      const accs = state.accounts.map(a => a.id === action.accountId ? {...a, opportunities:[...a.opportunities, action.opp]} : a);
+      return {...state, accounts: accs};
+    }
+    case 'UPDATE_OPP': {
+      const accs = state.accounts.map(a => ({...a, opportunities: a.opportunities.map(o => o.id === action.opp.id ? action.opp : o)}));
+      return {...state, accounts: accs};
+    }
+    case 'DELETE_OPP': {
+      const accs = state.accounts.map(a => ({...a, opportunities: a.opportunities.filter(o => o.id !== action.oppId)}));
+      return {...state, accounts: accs};
+    }
+    case 'ADD_CONTACT': {
+      const accs = state.accounts.map(a => a.id === action.accountId ? {...a, contacts:[...a.contacts, action.contact]} : a);
+      return {...state, accounts: accs};
+    }
+    case 'UPDATE_CONTACT': {
+      const accs = state.accounts.map(a => ({...a, contacts: a.contacts.map(c => c.id === action.contact.id ? action.contact : c)}));
+      return {...state, accounts: accs};
+    }
+    case 'DELETE_CONTACT': {
+      const accs = state.accounts.map(a => ({...a, contacts: a.contacts.filter(c => c.id !== action.contactId)}));
+      return {...state, accounts: accs};
+    }
+    case 'ADD_PROJECT': {
+      const accs = state.accounts.map(a => a.id === action.accountId ? {...a, pastProjects:[...a.pastProjects, action.project]} : a);
+      return {...state, accounts: accs};
+    }
+    case 'DELETE_PROJECT': {
+      const accs = state.accounts.map(a => ({...a, pastProjects: a.pastProjects.filter(p => p.id !== action.projectId)}));
+      return {...state, accounts: accs};
+    }
+    default: return state;
+  }
+}
+function CrmProvider({children}) {
+  const [state, dispatch] = useReducer(crmReducer, {accounts: SAMPLE_DATA.accounts, selectedAccountId: null});
+  return <CrmContext.Provider value={{state, dispatch}}>{children}</CrmContext.Provider>;
+}
+const useCrm = () => useContext(CrmContext);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function uid() { return Math.random().toString(36).slice(2); }
+function avatarColor(name) {
+  const hue = name.split('').reduce((n,c) => n + c.charCodeAt(0), 0) % 360;
+  return `hsl(${hue},50%,48%)`;
+}
+function initials(name) { return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+function fmtCurrency(n) {
+  if (n >= 10000000) return `₹${(n/10000000).toFixed(1)}Cr`;
+  if (n >= 100000)   return `₹${(n/100000).toFixed(1)}L`;
+  if (n === 0)       return '—';
+  return `₹${n.toLocaleString('en-IN')}`;
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+const PRIORITY_COLOR = { Critical:'var(--red)', High:'var(--amber)', Medium:'var(--accent)', Low:'var(--text3)' };
+const SEGMENT_COLOR = { Enterprise:'var(--purple)', 'Mid-Market':'var(--blue)', SMB:'var(--green)' };
+const STAGE_COLOR = { Prospecting:'var(--text3)', Qualified:'var(--blue)', Proposal:'var(--accent)', Negotiation:'var(--amber)', 'Closed Won':'var(--green)', 'Closed Lost':'var(--red)' };
+
+// ─── SVG Icons ────────────────────────────────────────────────────────────────
+const IconEdit = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>;
+const IconTrash = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 4h9M6 4V2.5h2V4M5 4v8h4V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IconPlus = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+const IconChevronLeft = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IconChevronDown = ({size=10}) => <svg width={size} height={size} viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IconSearch = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.4"/><path d="M9 9l3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+const IconKanban = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="3.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="5.25" y="1" width="3.5" height="8" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="9.5" y="1" width="3.5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/></svg>;
+const IconList = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 3.5h11M1.5 7h11M1.5 10.5h11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+const IconClose = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+const IconCheck = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IconSun = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" strokeWidth="1.3"/><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.5 2.5l1 1M10.5 10.5l1 1M11.5 2.5l-1 1M3.5 10.5l-1 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>;
+const IconMoon = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8 2a5 5 0 1 0 4 8A6 6 0 0 1 8 2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>;
+
+// ─── Shared UI Components ─────────────────────────────────────────────────────
+function IconBtn({onClick, danger=false, title, children}) {
+  return (
+    <button className={`icon-btn${danger?' danger':''}`} onClick={onClick} title={title}>
+      {children}
+    </button>
+  );
+}
+
+function ConfirmModal({title, body, onConfirm, onCancel, dangerous=true}) {
+  return (
+    <div className="overlay" onClick={onCancel}>
+      <div className="modal" style={{width:360,padding:'24px 28px'}} onClick={e=>e.stopPropagation()}>
+        <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:8}}>{title}</div>
+        <div style={{fontSize:13,color:'var(--text2)',marginBottom:20}}>{body}</div>
+        <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
+          <button onClick={onCancel} style={{padding:'7px 16px',fontSize:13,background:'transparent',color:'var(--text2)',border:'1px solid var(--border2)',borderRadius:'var(--r-sm)'}}>Cancel</button>
+          <button onClick={onConfirm} style={{padding:'7px 16px',fontSize:13,fontWeight:600,background:dangerous?'var(--red)':'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)'}}>
+            {dangerous?'Delete':'Confirm'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FormField({label, required, error, children}) {
+  return (
+    <div>
+      <div className="form-label">{label}{required && <span style={{color:'var(--red)',marginLeft:2}}>*</span>}</div>
+      {children}
+      {error && <div className="form-error">{error}</div>}
+    </div>
+  );
+}
+
+function PriorityBadge({priority}) {
+  const c = PRIORITY_COLOR[priority];
+  return <span className="badge" style={{color:c,background:c+'18',border:`1px solid ${c}33`}}>{priority}</span>;
+}
+
+function StatusBadge({status}) {
+  const c = status==='Done'?'var(--green)':status==='In Progress'?'var(--accent)':'var(--text3)';
+  return <span className="badge" style={{color:c,background:c+'18'}}>{status}</span>;
+}
+
+function StageBadge({stage}) {
+  const c = STAGE_COLOR[stage]||'var(--text3)';
+  return <span className="badge" style={{color:c,background:c+'18'}}>{stage}</span>;
+}
+
+// ─── Task Detail Drawer ────────────────────────────────────────────────────────
+function TaskDrawer({task, onClose, onSave, onDelete}) {
+  const {config} = useConfig();
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({...task});
+  const [comment, setComment] = useState('');
+  const toast = useToast();
+
+  function save() {
+    onSave(form);
+    setEditing(false);
+    toast('Task updated');
+  }
+  function addComment() {
+    if (!comment.trim()) return;
+    const updated = {...form, comments:[...(form.comments||[]), comment.trim()]};
+    setForm(updated);
+    onSave(updated);
+    setComment('');
+    toast('Comment added');
+  }
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" style={{width:520,maxWidth:'94vw',maxHeight:'88vh',right:0}} onClick={e=>e.stopPropagation()}>
+        {/* Header */}
+        <div style={{padding:'16px 20px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+          {editing
+            ? <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} style={{flex:1,fontSize:16,fontWeight:700}} autoFocus/>
+            : <div style={{flex:1,fontSize:16,fontWeight:700,color:'var(--text)'}}>{task.title}</div>
+          }
+          <div style={{display:'flex',gap:6}}>
+            {!editing && <IconBtn onClick={()=>setEditing(true)} title="Edit"><IconEdit/></IconBtn>}
+            {editing && <IconBtn onClick={save} title="Save"><IconCheck/></IconBtn>}
+            <IconBtn onClick={()=>{onDelete(task.id);onClose();}} danger title="Delete"><IconTrash/></IconBtn>
+            <IconBtn onClick={onClose} title="Close"><IconClose/></IconBtn>
+          </div>
+        </div>
+
+        <div style={{flex:1,overflowY:'auto',padding:'20px'}}>
+          {editing ? (
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 16px'}}>
+              <FormField label="Priority">
+                <select value={form.priority} onChange={e=>setForm(f=>({...f,priority:e.target.value}))}>
+                  {['Critical','High','Medium','Low'].map(p=><option key={p}>{p}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Status">
+                <select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}>
+                  {['To Do','In Progress','Done'].map(s=><option key={s}>{s}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Assignee">
+                <select value={form.assignee} onChange={e=>setForm(f=>({...f,assignee:e.target.value}))}>
+                  {config.teamMembers.map(m=><option key={m}>{m}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Due Date">
+                <input type="date" value={form.dueDate} onChange={e=>setForm(f=>({...f,dueDate:e.target.value}))}/>
+              </FormField>
+              <div style={{gridColumn:'1/-1'}}>
+                <FormField label="Description">
+                  <textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} rows={3}/>
+                </FormField>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
+                <PriorityBadge priority={task.priority}/>
+                <StatusBadge status={task.status}/>
+                {task.category && <span className="badge" style={{color:'var(--text2)',background:'var(--bg3)'}}>{task.category}</span>}
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+                <div><div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>Assignee</div><div style={{fontSize:13,color:'var(--text)'}}>{task.assignee||'—'}</div></div>
+                <div><div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>Due Date</div><div style={{fontSize:13,color:'var(--text)'}}>{fmtDate(task.dueDate)}</div></div>
+              </div>
+              {task.description && <div style={{fontSize:13,color:'var(--text2)',lineHeight:1.6,marginBottom:16}}>{task.description}</div>}
+            </div>
+          )}
+
+          {/* Comments */}
+          <div style={{marginTop:20,borderTop:'1px solid var(--border)',paddingTop:16}}>
+            <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:12}}>Comments</div>
+            {(form.comments||[]).map((c,i)=>(
+              <div key={i} style={{fontSize:13,color:'var(--text2)',background:'var(--bg3)',borderRadius:'var(--r-sm)',padding:'8px 12px',marginBottom:8}}>{c}</div>
+            ))}
+            <div style={{display:'flex',gap:8,marginTop:8}}>
+              <input value={comment} onChange={e=>setComment(e.target.value)} placeholder="Add a comment…" onKeyDown={e=>e.key==='Enter'&&addComment()} style={{flex:1}}/>
+              <button onClick={addComment} style={{padding:'8px 14px',background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)',fontWeight:600,fontSize:12}}>Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Tasks Tab (inside account) ───────────────────────────────────────────────
+function TasksTab({account}) {
+  const {dispatch} = useCrm();
+  const {config} = useConfig();
+  const toast = useToast();
+  const [view, setView] = useState('kanban');
+  const [showNew, setShowNew] = useState(false);
+  const [editTask, setEditTask] = useState(null);
+  const [delTask, setDelTask] = useState(null);
+  const [drawerTask, setDrawerTask] = useState(null);
+  const [newForm, setNewForm] = useState({title:'',priority:'Medium',status:'To Do',dueDate:'',assignee:'',description:'',category:'',comments:[]});
+
+  const tasks = account.tasks;
+
+  function addTask() {
+    if (!newForm.title.trim()) return;
+    const task = {...newForm, id: uid()};
+    dispatch({type:'ADD_TASK', accountId:account.id, task});
+    setShowNew(false);
+    setNewForm({title:'',priority:'Medium',status:'To Do',dueDate:'',assignee:'',description:'',category:'',comments:[]});
+    toast('Task added');
+  }
+
+  function saveTask(t) {
+    dispatch({type:'UPDATE_TASK', task:t});
+    if (drawerTask) setDrawerTask(t);
+  }
+
+  function deleteTask(id) {
+    dispatch({type:'DELETE_TASK', taskId:id});
+    toast('Task deleted');
+  }
+
+  const STATUSES = ['To Do','In Progress','Done'];
+  const viewBtn = (v,icon,lbl) => (
+    <button onClick={()=>setView(v)} title={lbl} style={{width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',background:view===v?'var(--bg4)':'transparent',border:`1px solid ${view===v?'var(--border2)':'transparent'}`,borderRadius:'var(--r-xs)',color:view===v?'var(--text)':'var(--text3)',cursor:'pointer'}}>
+      {icon}
+    </button>
+  );
+
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      {/* Toolbar */}
+      <div style={{padding:'12px 20px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:10,background:'var(--bg2)',flexShrink:0}}>
+        <span style={{fontSize:12,fontWeight:600,color:'var(--text2)'}}>{tasks.length} task{tasks.length!==1?'s':''}</span>
+        <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:8}}>
+          <div style={{display:'flex',gap:2}}>
+            {viewBtn('kanban',<IconKanban/>,'Kanban')}
+            {viewBtn('list',<IconList/>,'List')}
+          </div>
+          <button onClick={()=>setShowNew(true)} style={{padding:'6px 12px',fontSize:11,fontWeight:600,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)',display:'flex',alignItems:'center',gap:5}}>
+            <IconPlus/> Add Task
+          </button>
+        </div>
+      </div>
+
+      {view==='kanban' ? (
+        <div className="kanban-board">
+          {STATUSES.map(status=>{
+            const col = tasks.filter(t=>t.status===status);
+            return (
+              <div key={status} className="kanban-col">
+                <div className="kanban-col-header">
+                  <span>{status}</span>
+                  <span style={{color:'var(--text3)'}}>{col.length}</span>
+                </div>
+                {col.map(task=>(
+                  <div key={task.id} className="kanban-card" onClick={()=>setDrawerTask(task)}>
+                    <div style={{fontSize:12,fontWeight:600,color:'var(--text)',marginBottom:6,lineHeight:1.4}}>{task.title}</div>
+                    <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                      <PriorityBadge priority={task.priority}/>
+                    </div>
+                    {task.dueDate && <div style={{fontSize:10,color:'var(--text3)',marginTop:6}}>Due {fmtDate(task.dueDate)}</div>}
+                    {task.assignee && <div style={{fontSize:10,color:'var(--text3)',marginTop:2}}>{task.assignee}</div>}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{flex:1,overflowY:'auto'}}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{width:68}}>Actions</th>
+                <th>Title</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assignee</th>
+                <th>Due Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.length===0 && <tr><td colSpan={6} style={{textAlign:'center',padding:'32px',color:'var(--text3)'}}>No tasks yet.</td></tr>}
+              {tasks.map(task=>(
+                <tr key={task.id}>
+                  <td>
+                    <div style={{display:'flex',gap:4}}>
+                      <IconBtn onClick={()=>setDrawerTask(task)} title="Edit"><IconEdit/></IconBtn>
+                      <IconBtn onClick={()=>setDelTask(task.id)} danger title="Delete"><IconTrash/></IconBtn>
+                    </div>
+                  </td>
+                  <td style={{color:'var(--text)',fontWeight:500,cursor:'pointer'}} onClick={()=>setDrawerTask(task)}>{task.title}</td>
+                  <td><PriorityBadge priority={task.priority}/></td>
+                  <td><StatusBadge status={task.status}/></td>
+                  <td>{task.assignee||'—'}</td>
+                  <td>{fmtDate(task.dueDate)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* New task modal */}
+      {showNew && (
+        <div className="overlay" onClick={()=>setShowNew(false)}>
+          <div className="modal" style={{width:480,maxWidth:'94vw',padding:'24px'}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:16}}>New Task</div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <FormField label="Title" required>
+                <input value={newForm.title} onChange={e=>setNewForm(f=>({...f,title:e.target.value}))} autoFocus/>
+              </FormField>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 16px'}}>
+                <FormField label="Priority">
+                  <select value={newForm.priority} onChange={e=>setNewForm(f=>({...f,priority:e.target.value}))}>
+                    {['Critical','High','Medium','Low'].map(p=><option key={p}>{p}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Status">
+                  <select value={newForm.status} onChange={e=>setNewForm(f=>({...f,status:e.target.value}))}>
+                    {['To Do','In Progress','Done'].map(s=><option key={s}>{s}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Assignee">
+                  <select value={newForm.assignee} onChange={e=>setNewForm(f=>({...f,assignee:e.target.value}))}>
+                    <option value="">Select…</option>
+                    {config.teamMembers.map(m=><option key={m}>{m}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Due Date">
+                  <input type="date" value={newForm.dueDate} onChange={e=>setNewForm(f=>({...f,dueDate:e.target.value}))}/>
+                </FormField>
+              </div>
+              <FormField label="Description">
+                <textarea value={newForm.description} onChange={e=>setNewForm(f=>({...f,description:e.target.value}))} rows={2}/>
+              </FormField>
+            </div>
+            <div style={{display:'flex',gap:10,marginTop:20}}>
+              <button onClick={addTask} style={{padding:'9px 20px',fontSize:13,fontWeight:700,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)'}}>Add Task</button>
+              <button onClick={()=>setShowNew(false)} style={{padding:'9px 16px',fontSize:13,background:'transparent',color:'var(--text3)',border:'1px solid var(--border2)',borderRadius:'var(--r-sm)'}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {delTask && <ConfirmModal title="Delete task?" body="This task will be permanently removed." onConfirm={()=>{deleteTask(delTask);setDelTask(null);}} onCancel={()=>setDelTask(null)}/>}
+      {drawerTask && <TaskDrawer task={drawerTask} onClose={()=>setDrawerTask(null)} onSave={saveTask} onDelete={(id)=>{deleteTask(id);setDrawerTask(null);}}/>}
+    </div>
+  );
+}
+
+// ─── Stakeholders Tab ─────────────────────────────────────────────────────────
+function StakeholdersTab({account}) {
+  const {dispatch} = useCrm();
+  const toast = useToast();
+  const [showNew, setShowNew] = useState(false);
+  const [editContact, setEditContact] = useState(null);
+  const [delContact, setDelContact] = useState(null);
+  const empty = {name:'',role:'',email:'',phone:'',isPrimary:false,notes:''};
+  const [form, setForm] = useState(empty);
+
+  function save() {
+    if (!form.name.trim()) return;
+    if (editContact) {
+      dispatch({type:'UPDATE_CONTACT', contact:{...form,id:editContact.id}});
+      toast('Contact updated');
+    } else {
+      dispatch({type:'ADD_CONTACT', accountId:account.id, contact:{...form,id:uid()}});
+      toast('Contact added');
+    }
+    setShowNew(false); setEditContact(null); setForm(empty);
+  }
+
+  return (
+    <div style={{flex:1,overflowY:'auto',padding:'20px 24px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+        <span style={{fontSize:13,fontWeight:600,color:'var(--text2)'}}>{account.contacts.length} contact{account.contacts.length!==1?'s':''}</span>
+        <button onClick={()=>{setShowNew(true);setForm(empty);setEditContact(null);}} style={{padding:'7px 14px',fontSize:12,fontWeight:600,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)',display:'flex',alignItems:'center',gap:5}}>
+          <IconPlus/> Add Contact
+        </button>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))',gap:12}}>
+        {account.contacts.map(c=>(
+          <div key={c.id} style={{background:'var(--bg2)',border:`1px solid ${c.isPrimary?'var(--accent)':'var(--border)'}`,borderRadius:'var(--r)',padding:'16px',position:'relative'}}>
+            {c.isPrimary && <span style={{position:'absolute',top:10,right:10,fontSize:9,fontWeight:700,color:'var(--accent)',background:'var(--accent-dim)',borderRadius:99,padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.04em'}}>Primary</span>}
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+              <div style={{width:36,height:36,borderRadius:'50%',background:avatarColor(c.name),display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#fff',flexShrink:0}}>{initials(c.name)}</div>
+              <div>
+                <div style={{fontSize:14,fontWeight:700,color:'var(--text)'}}>{c.name}</div>
+                <div style={{fontSize:12,color:'var(--text3)'}}>{c.role}</div>
+              </div>
+            </div>
+            {c.email && <div style={{fontSize:12,color:'var(--text2)',marginBottom:3}}>✉ {c.email}</div>}
+            {c.phone && <div style={{fontSize:12,color:'var(--text2)',marginBottom:3}}>📞 {c.phone}</div>}
+            {c.notes && <div style={{fontSize:12,color:'var(--text3)',marginTop:8,padding:'6px 10px',background:'var(--bg3)',borderRadius:'var(--r-xs)'}}>{c.notes}</div>}
+            <div style={{display:'flex',gap:6,marginTop:12}}>
+              <IconBtn onClick={()=>{setEditContact(c);setForm({...c});setShowNew(true);}} title="Edit"><IconEdit/></IconBtn>
+              <IconBtn onClick={()=>setDelContact(c.id)} danger title="Delete"><IconTrash/></IconBtn>
+            </div>
+          </div>
+        ))}
+        {account.contacts.length===0 && <div style={{color:'var(--text3)',fontSize:13,padding:'40px 0'}}>No contacts yet.</div>}
+      </div>
+
+      {showNew && (
+        <div className="overlay" onClick={()=>{setShowNew(false);setEditContact(null);}}>
+          <div className="modal" style={{width:480,maxWidth:'94vw',padding:'24px'}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:16}}>{editContact?'Edit Contact':'New Contact'}</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 16px'}}>
+              <div style={{gridColumn:'1/-1'}}>
+                <FormField label="Full Name" required>
+                  <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} autoFocus/>
+                </FormField>
+              </div>
+              <FormField label="Role / Title"><input value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))}/></FormField>
+              <FormField label="Email"><input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))}/></FormField>
+              <FormField label="Phone"><input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))}/></FormField>
+              <div style={{gridColumn:'1/-1'}}>
+                <FormField label="Notes"><textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={2}/></FormField>
+              </div>
+              <div style={{gridColumn:'1/-1',display:'flex',alignItems:'center',gap:8}}>
+                <input type="checkbox" id="isPrimary" checked={form.isPrimary} onChange={e=>setForm(f=>({...f,isPrimary:e.target.checked}))} style={{width:'auto'}}/>
+                <label htmlFor="isPrimary" style={{fontSize:13,color:'var(--text2)',cursor:'pointer'}}>Primary contact</label>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:10,marginTop:20}}>
+              <button onClick={save} style={{padding:'9px 20px',fontSize:13,fontWeight:700,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)'}}>{editContact?'Save Changes':'Add Contact'}</button>
+              <button onClick={()=>{setShowNew(false);setEditContact(null);}} style={{padding:'9px 16px',fontSize:13,background:'transparent',color:'var(--text3)',border:'1px solid var(--border2)',borderRadius:'var(--r-sm)'}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {delContact && <ConfirmModal title="Delete contact?" body="This contact will be permanently removed." onConfirm={()=>{dispatch({type:'DELETE_CONTACT',contactId:delContact});setDelContact(null);toast('Contact deleted');}} onCancel={()=>setDelContact(null)}/>}
+    </div>
+  );
+}
+
+// ─── Opportunities Tab ────────────────────────────────────────────────────────
+function OpportunitiesTab({account}) {
+  const {dispatch} = useCrm();
+  const {config} = useConfig();
+  const toast = useToast();
+  const [showNew, setShowNew] = useState(false);
+  const [editOpp, setEditOpp] = useState(null);
+  const [delOpp, setDelOpp] = useState(null);
+  const empty = {title:'',stage:'Prospecting',value:0,probability:25,closeDate:'',notes:''};
+  const [form, setForm] = useState(empty);
+
+  function save() {
+    if (!form.title.trim()) return;
+    if (editOpp) {
+      dispatch({type:'UPDATE_OPP', opp:{...form,id:editOpp.id,value:Number(form.value),probability:Number(form.probability)}});
+      toast('Opportunity updated');
+    } else {
+      dispatch({type:'ADD_OPP', accountId:account.id, opp:{...form,id:uid(),value:Number(form.value),probability:Number(form.probability)}});
+      toast('Opportunity added');
+    }
+    setShowNew(false);setEditOpp(null);setForm(empty);
+  }
+
+  const totalPipeline = account.opportunities.filter(o=>o.stage!=='Closed Won'&&o.stage!=='Closed Lost').reduce((s,o)=>s+o.value*(o.probability/100),0);
+  const totalWon = account.opportunities.filter(o=>o.stage==='Closed Won').reduce((s,o)=>s+o.value,0);
+
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div style={{padding:'12px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:20,background:'var(--bg2)',flexShrink:0}}>
+        <div><div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Pipeline</div><div style={{fontSize:14,fontWeight:700,color:'var(--accent)'}}>{fmtCurrency(totalPipeline)}</div></div>
+        <div><div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Won</div><div style={{fontSize:14,fontWeight:700,color:'var(--green)'}}>{fmtCurrency(totalWon)}</div></div>
+        <div style={{marginLeft:'auto'}}>
+          <button onClick={()=>{setShowNew(true);setForm(empty);setEditOpp(null);}} style={{padding:'7px 14px',fontSize:12,fontWeight:600,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)',display:'flex',alignItems:'center',gap:5}}>
+            <IconPlus/> Add Opportunity
+          </button>
+        </div>
+      </div>
+
+      <div style={{flex:1,overflowY:'auto',padding:'16px 24px'}}>
+        {account.opportunities.length===0 && <div style={{color:'var(--text3)',fontSize:13,padding:'40px 0',textAlign:'center'}}>No opportunities yet.</div>}
+        {config.oppStages.map(stage=>{
+          const opps = account.opportunities.filter(o=>o.stage===stage);
+          if (opps.length===0) return null;
+          return (
+            <div key={stage} style={{marginBottom:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                <div style={{width:6,height:6,borderRadius:'50%',background:STAGE_COLOR[stage]||'var(--text3)',flexShrink:0}}/>
+                <span style={{fontSize:12,fontWeight:700,color:'var(--text)'}}>{stage}</span>
+                <span style={{fontSize:11,color:'var(--text3)'}}>{opps.length}</span>
+                <div style={{flex:1,height:1,background:'var(--border)',marginLeft:4}}/>
+              </div>
+              {opps.map(o=>(
+                <div key={o.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'14px 16px',marginBottom:8}}>
+                  <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8}}>
+                    <div style={{fontSize:14,fontWeight:700,color:'var(--text)'}}>{o.title}</div>
+                    <div style={{display:'flex',gap:6}}>
+                      <IconBtn onClick={()=>{setEditOpp(o);setForm({...o});setShowNew(true);}} title="Edit"><IconEdit/></IconBtn>
+                      <IconBtn onClick={()=>setDelOpp(o.id)} danger title="Delete"><IconTrash/></IconBtn>
+                    </div>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
+                    <div><div style={{fontSize:10,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:2}}>Value</div><div style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>{fmtCurrency(o.value)}</div></div>
+                    <div><div style={{fontSize:10,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:2}}>Probability</div><div style={{fontSize:13,fontWeight:700,color:'var(--amber)'}}>{o.probability}%</div></div>
+                    <div><div style={{fontSize:10,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:2}}>Close Date</div><div style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>{fmtDate(o.closeDate)}</div></div>
+                  </div>
+                  {o.notes && <div style={{fontSize:12,color:'var(--text3)',marginTop:8}}>{o.notes}</div>}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      {showNew && (
+        <div className="overlay" onClick={()=>{setShowNew(false);setEditOpp(null);}}>
+          <div className="modal" style={{width:480,maxWidth:'94vw',padding:'24px'}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:16}}>{editOpp?'Edit Opportunity':'New Opportunity'}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <FormField label="Title" required><input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} autoFocus/></FormField>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 16px'}}>
+                <FormField label="Stage">
+                  <select value={form.stage} onChange={e=>setForm(f=>({...f,stage:e.target.value}))}>
+                    {config.oppStages.map(s=><option key={s}>{s}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Value (₹)"><input type="number" value={form.value} onChange={e=>setForm(f=>({...f,value:e.target.value}))}/></FormField>
+                <FormField label="Probability (%)"><input type="number" min="0" max="100" value={form.probability} onChange={e=>setForm(f=>({...f,probability:e.target.value}))}/></FormField>
+                <FormField label="Close Date"><input type="date" value={form.closeDate} onChange={e=>setForm(f=>({...f,closeDate:e.target.value}))}/></FormField>
+              </div>
+              <FormField label="Notes"><textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={2}/></FormField>
+            </div>
+            <div style={{display:'flex',gap:10,marginTop:20}}>
+              <button onClick={save} style={{padding:'9px 20px',fontSize:13,fontWeight:700,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)'}}>{editOpp?'Save Changes':'Add'}</button>
+              <button onClick={()=>{setShowNew(false);setEditOpp(null);}} style={{padding:'9px 16px',fontSize:13,background:'transparent',color:'var(--text3)',border:'1px solid var(--border2)',borderRadius:'var(--r-sm)'}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {delOpp && <ConfirmModal title="Delete opportunity?" body="This opportunity will be permanently removed." onConfirm={()=>{dispatch({type:'DELETE_OPP',oppId:delOpp});setDelOpp(null);toast('Opportunity deleted');}} onCancel={()=>setDelOpp(null)}/>}
+    </div>
+  );
+}
+
+// ─── Overview Tab ─────────────────────────────────────────────────────────────
+function OverviewTab({account}) {
+  const {dispatch} = useCrm();
+  const toast = useToast();
+  const [delProj, setDelProj] = useState(null);
+  const [showNewProj, setShowNewProj] = useState(false);
+  const [projForm, setProjForm] = useState({name:'',revenue:0,year:new Date().getFullYear(),description:''});
+
+  const openTasks = account.tasks.filter(t=>t.status!=='Done').length;
+  const critTasks = account.tasks.filter(t=>t.priority==='Critical'&&t.status!=='Done').length;
+  const revenue = account.pastProjects.reduce((s,p)=>s+p.revenue,0);
+  const openOpp = account.opportunities.filter(o=>o.stage!=='Closed Won'&&o.stage!=='Closed Lost');
+  const pipeline = openOpp.reduce((s,o)=>s+o.value*(o.probability/100),0);
+
+  function addProject() {
+    if (!projForm.name.trim()) return;
+    dispatch({type:'ADD_PROJECT', accountId:account.id, project:{...projForm,id:uid(),revenue:Number(projForm.revenue),year:Number(projForm.year)}});
+    setShowNewProj(false);
+    setProjForm({name:'',revenue:0,year:new Date().getFullYear(),description:''});
+    toast('Project added');
+  }
+
+  return (
+    <div style={{flex:1,overflowY:'auto',padding:'20px 24px'}}>
+      {/* Stats row */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+        {[
+          {label:'Total Revenue',value:fmtCurrency(revenue),color:'var(--green)'},
+          {label:'Weighted Pipeline',value:fmtCurrency(pipeline),color:'var(--accent)'},
+          {label:'Open Tasks',value:openTasks,color:openTasks>0?'var(--amber)':'var(--text)'},
+          {label:'Critical Tasks',value:critTasks,color:critTasks>0?'var(--red)':'var(--text)'},
+        ].map(s=>(
+          <div key={s.label} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'14px 16px'}}>
+            <div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>{s.label}</div>
+            <div style={{fontSize:20,fontWeight:700,color:s.color}}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Description */}
+      {account.description && (
+        <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'14px 16px',marginBottom:16}}>
+          <div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>Account Notes</div>
+          <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.7,margin:0}}>{account.description}</p>
+        </div>
+      )}
+
+      {/* Past Projects */}
+      <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'14px 16px'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+          <div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Past Projects</div>
+          <button onClick={()=>setShowNewProj(true)} style={{padding:'5px 10px',fontSize:11,fontWeight:600,background:'var(--bg3)',border:'1px solid var(--border2)',borderRadius:'var(--r-sm)',color:'var(--text2)',display:'flex',alignItems:'center',gap:4,cursor:'pointer'}}>
+            <IconPlus/> Add
+          </button>
+        </div>
+        {account.pastProjects.length===0 && <div style={{fontSize:13,color:'var(--text3)',textAlign:'center',padding:'20px 0'}}>No past projects.</div>}
+        {account.pastProjects.map(p=>(
+          <div key={p.id} style={{display:'flex',alignItems:'center',padding:'10px 0',borderBottom:'1px solid var(--border)'}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{p.name} <span style={{fontSize:11,color:'var(--text3)',fontWeight:400}}>· {p.year}</span></div>
+              {p.description && <div style={{fontSize:12,color:'var(--text3)',marginTop:2}}>{p.description}</div>}
+            </div>
+            <div style={{fontSize:13,fontWeight:700,color:'var(--green)',marginRight:12}}>{fmtCurrency(p.revenue)}</div>
+            <IconBtn onClick={()=>setDelProj(p.id)} danger title="Delete"><IconTrash/></IconBtn>
+          </div>
+        ))}
+      </div>
+
+      {showNewProj && (
+        <div className="overlay" onClick={()=>setShowNewProj(false)}>
+          <div className="modal" style={{width:400,maxWidth:'94vw',padding:'24px'}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:16}}>Add Past Project</div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <FormField label="Project Name" required><input value={projForm.name} onChange={e=>setProjForm(f=>({...f,name:e.target.value}))} autoFocus/></FormField>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 16px'}}>
+                <FormField label="Revenue (₹)"><input type="number" value={projForm.revenue} onChange={e=>setProjForm(f=>({...f,revenue:e.target.value}))}/></FormField>
+                <FormField label="Year"><input type="number" value={projForm.year} onChange={e=>setProjForm(f=>({...f,year:e.target.value}))}/></FormField>
+              </div>
+              <FormField label="Description"><textarea value={projForm.description} onChange={e=>setProjForm(f=>({...f,description:e.target.value}))} rows={2}/></FormField>
+            </div>
+            <div style={{display:'flex',gap:10,marginTop:20}}>
+              <button onClick={addProject} style={{padding:'9px 20px',fontSize:13,fontWeight:700,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)'}}>Add Project</button>
+              <button onClick={()=>setShowNewProj(false)} style={{padding:'9px 16px',fontSize:13,background:'transparent',color:'var(--text3)',border:'1px solid var(--border2)',borderRadius:'var(--r-sm)'}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {delProj && <ConfirmModal title="Delete project?" body="This project record will be permanently removed." onConfirm={()=>{dispatch({type:'DELETE_PROJECT',projectId:delProj});setDelProj(null);toast('Project deleted');}} onCancel={()=>setDelProj(null)}/>}
+    </div>
+  );
+}
+
+// ─── Account Detail ───────────────────────────────────────────────────────────
+function AccountDetail({onBack}) {
+  const {state, dispatch} = useCrm();
+  const {config} = useConfig();
+  const toast = useToast();
+  const account = state.accounts.find(a=>a.id===state.selectedAccountId);
+  const [tab, setTab] = useState('overview');
+  const [showEdit, setShowEdit] = useState(false);
+  const [delAccount, setDelAccount] = useState(false);
+  const [editForm, setEditForm] = useState(null);
+
+  if (!account) return null;
+
+  function openEdit() {
+    setEditForm({
+      name:account.name, industry:account.industry, segment:account.segment,
+      owner:account.owner, location:account.location||'', website:account.website||'',
+      description:account.description, group:account.group||'',
+    });
+    setShowEdit(true);
+  }
+
+  function saveEdit() {
+    if (!editForm.name.trim()) return;
+    dispatch({type:'UPDATE_ACCOUNT', account:{
+      ...account,
+      name:editForm.name.trim(), industry:editForm.industry.trim(), segment:editForm.segment,
+      owner:editForm.owner.trim(), location:editForm.location.trim()||'—', website:editForm.website.trim()||undefined,
+      description:editForm.description.trim(), group:editForm.group.trim()||undefined,
+    }});
+    setShowEdit(false);
+    toast('Account updated');
+  }
+
+  const TABS = [{id:'overview',label:'Overview'},{id:'tasks',label:'Tasks'},{id:'stakeholders',label:'Stakeholders'},{id:'opportunities',label:'Opportunities'}];
+
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      {/* Header */}
+      <div style={{padding:'14px 24px',borderBottom:'1px solid var(--border)',background:'var(--bg2)',flexShrink:0}}>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:10}}>
+          <button onClick={onBack} style={{display:'flex',alignItems:'center',gap:4,color:'var(--text3)',background:'none',border:'none',fontSize:12,cursor:'pointer',padding:0}}>
+            <IconChevronLeft/> Accounts
+          </button>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:14}}>
+          <div style={{width:44,height:44,borderRadius:12,background:avatarColor(account.name),display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700,color:'#fff',flexShrink:0}}>{initials(account.name)}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:20,fontWeight:800,color:'var(--text)',letterSpacing:'-0.02em'}}>{account.name}</div>
+            <div style={{fontSize:12,color:'var(--text3)',marginTop:2}}>{[account.industry,account.location,account.owner&&`Owner: ${account.owner}`].filter(Boolean).join(' · ')}</div>
+          </div>
+          <div style={{display:'flex',gap:6,flexShrink:0}}>
+            <span className="badge" style={{color:SEGMENT_COLOR[account.segment],background:SEGMENT_COLOR[account.segment]+'18'}}>{account.segment}</span>
+            {account.group && <span className="badge" style={{color:'var(--text2)',background:'var(--bg3)',border:'1px solid var(--border2)'}}>{account.group}</span>}
+          </div>
+          <IconBtn onClick={openEdit} title="Edit account"><IconEdit/></IconBtn>
+          <IconBtn onClick={()=>setDelAccount(true)} danger title="Delete account"><IconTrash/></IconBtn>
+        </div>
+
+        {/* Tabs */}
+        <div style={{display:'flex',gap:0,marginTop:14,borderBottom:'none'}}>
+          {TABS.map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{padding:'7px 16px',fontSize:12,fontWeight:600,background:'none',border:'none',borderBottom:`2px solid ${tab===t.id?'var(--accent)':'transparent'}`,color:tab===t.id?'var(--accent)':'var(--text3)',cursor:'pointer',transition:'color 0.15s',marginBottom:'-1px'}}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab content */}
+      {tab==='overview'&&<OverviewTab account={account}/>}
+      {tab==='tasks'&&<TasksTab account={account}/>}
+      {tab==='stakeholders'&&<StakeholdersTab account={account}/>}
+      {tab==='opportunities'&&<OpportunitiesTab account={account}/>}
+
+      {/* Edit modal */}
+      {showEdit && editForm && (
+        <div className="overlay" onClick={()=>setShowEdit(false)}>
+          <div className="modal" style={{width:600,maxWidth:'94vw',maxHeight:'88vh'}} onClick={e=>e.stopPropagation()}>
+            <div style={{padding:'16px 24px',borderBottom:'1px solid var(--border)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{fontSize:16,fontWeight:700,color:'var(--text)'}}>Edit Account</div>
+              <IconBtn onClick={()=>setShowEdit(false)} title="Close"><IconClose/></IconBtn>
+            </div>
+            <div style={{flex:1,overflowY:'auto',padding:'20px 24px'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 16px'}}>
+                <div style={{gridColumn:'1/-1'}}><FormField label="Account Name" required><input value={editForm.name} onChange={e=>setEditForm(f=>({...f,name:e.target.value}))} autoFocus/></FormField></div>
+                <FormField label="Industry">
+                  <select value={editForm.industry} onChange={e=>setEditForm(f=>({...f,industry:e.target.value}))}>
+                    {config.industries.map(i=><option key={i}>{i}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Segment">
+                  <select value={editForm.segment} onChange={e=>setEditForm(f=>({...f,segment:e.target.value}))}>
+                    <option>Enterprise</option><option>Mid-Market</option><option>SMB</option>
+                  </select>
+                </FormField>
+                <FormField label="Account Owner">
+                  <select value={editForm.owner} onChange={e=>setEditForm(f=>({...f,owner:e.target.value}))}>
+                    {config.teamMembers.map(m=><option key={m}>{m}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Location"><input value={editForm.location} onChange={e=>setEditForm(f=>({...f,location:e.target.value}))}/></FormField>
+                <FormField label="Website"><input value={editForm.website} onChange={e=>setEditForm(f=>({...f,website:e.target.value}))}/></FormField>
+                <FormField label="Account Group">
+                  <select value={editForm.group} onChange={e=>setEditForm(f=>({...f,group:e.target.value}))}>
+                    <option value="">No group</option>
+                    {config.accountGroups.map(g=><option key={g}>{g}</option>)}
+                  </select>
+                </FormField>
+                <div style={{gridColumn:'1/-1'}}><FormField label="Description"><textarea value={editForm.description} onChange={e=>setEditForm(f=>({...f,description:e.target.value}))} rows={3}/></FormField></div>
+              </div>
+              <div style={{display:'flex',gap:10,marginTop:20}}>
+                <button onClick={saveEdit} style={{padding:'9px 20px',fontSize:13,fontWeight:700,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)'}}>Save Changes</button>
+                <button onClick={()=>setShowEdit(false)} style={{padding:'9px 16px',fontSize:13,background:'transparent',color:'var(--text3)',border:'1px solid var(--border2)',borderRadius:'var(--r-sm)'}}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {delAccount && <ConfirmModal title="Delete account?" body={`"${account.name}" and all associated data will be permanently removed.`} onConfirm={()=>{dispatch({type:'DELETE_ACCOUNT',id:account.id});toast('Account deleted');onBack();}} onCancel={()=>setDelAccount(false)}/>}
+    </div>
+  );
+}
+
+// ─── New Account Panel ────────────────────────────────────────────────────────
+function NewAccountPanel({onDone, onCancel}) {
+  const {dispatch} = useCrm();
+  const {config} = useConfig();
+  const [form, setForm] = useState({name:'',industry:'',segment:'Enterprise',owner:'',location:'',website:'',description:'',group:''});
+  const [errors, setErrors] = useState({});
+
+  function validate() {
+    const e = {};
+    if (!form.name.trim()) e.name='Required';
+    if (!form.industry.trim()) e.industry='Required';
+    if (!form.owner.trim()) e.owner='Required';
+    setErrors(e);
+    return Object.keys(e).length===0;
+  }
+
+  function submit(e) {
+    e.preventDefault();
+    if (!validate()) return;
+    const account = {
+      id: uid(),
+      name:form.name.trim(), industry:form.industry.trim(), segment:form.segment,
+      owner:form.owner.trim(), location:form.location.trim()||'—', website:form.website.trim()||undefined,
+      description:form.description.trim(), group:form.group.trim()||undefined,
+      contacts:[], tasks:[], opportunities:[], pastProjects:[], createdAt:Date.now(),
+    };
+    dispatch({type:'ADD_ACCOUNT', account});
+    dispatch({type:'SELECT_ACCOUNT', id:account.id});
+    onDone();
+  }
+
+  return (
+    <div className="overlay" onClick={onCancel}>
+      <div className="modal" style={{width:600,maxWidth:'94vw',maxHeight:'88vh'}} onClick={e=>e.stopPropagation()}>
+        <div style={{padding:'16px 24px',borderBottom:'1px solid var(--border)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{fontSize:16,fontWeight:700,color:'var(--text)'}}>New Account</div>
+          <IconBtn onClick={onCancel} title="Close"><IconClose/></IconBtn>
+        </div>
+        <form onSubmit={submit} style={{flex:1,overflowY:'auto',padding:'20px 24px'}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 16px'}}>
+            <div style={{gridColumn:'1/-1'}}><FormField label="Account Name" required error={errors.name}><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} autoFocus/></FormField></div>
+            <FormField label="Industry" error={errors.industry}>
+              <select value={form.industry} onChange={e=>setForm(f=>({...f,industry:e.target.value}))}>
+                <option value="">Select…</option>
+                {config.industries.map(i=><option key={i}>{i}</option>)}
+              </select>
+            </FormField>
+            <FormField label="Segment">
+              <select value={form.segment} onChange={e=>setForm(f=>({...f,segment:e.target.value}))}>
+                <option>Enterprise</option><option>Mid-Market</option><option>SMB</option>
+              </select>
+            </FormField>
+            <FormField label="Account Owner" error={errors.owner}>
+              <select value={form.owner} onChange={e=>setForm(f=>({...f,owner:e.target.value}))}>
+                <option value="">Select…</option>
+                {config.teamMembers.map(m=><option key={m}>{m}</option>)}
+              </select>
+            </FormField>
+            <FormField label="Location"><input value={form.location} onChange={e=>setForm(f=>({...f,location:e.target.value}))}/></FormField>
+            <FormField label="Website"><input value={form.website} onChange={e=>setForm(f=>({...f,website:e.target.value}))} placeholder="e.g. acme.com"/></FormField>
+            <FormField label="Account Group">
+              <select value={form.group} onChange={e=>setForm(f=>({...f,group:e.target.value}))}>
+                <option value="">No group</option>
+                {config.accountGroups.map(g=><option key={g}>{g}</option>)}
+              </select>
+            </FormField>
+            <div style={{gridColumn:'1/-1'}}><FormField label="Description"><textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} rows={3} placeholder="Key relationships, strategic context…"/></FormField></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:20}}>
+            <button type="submit" style={{padding:'9px 20px',fontSize:13,fontWeight:700,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)'}}>Create Account</button>
+            <button type="button" onClick={onCancel} style={{padding:'9px 16px',fontSize:13,background:'transparent',color:'var(--text3)',border:'1px solid var(--border2)',borderRadius:'var(--r-sm)'}}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Account Card ─────────────────────────────────────────────────────────────
+function AccountCard({account, onClick}) {
+  const openTasks = account.tasks.filter(t=>t.status!=='Done').length;
+  const critTasks = account.tasks.filter(t=>t.priority==='Critical'&&t.status!=='Done').length;
+  const revenue = account.pastProjects.reduce((s,p)=>s+p.revenue,0);
+  const pipeline = account.opportunities.filter(o=>o.stage!=='Closed Won'&&o.stage!=='Closed Lost').reduce((s,o)=>s+o.value*(o.probability/100),0);
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <button onClick={onClick} onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)}
+      style={{textAlign:'left',padding:0,background:'var(--bg2)',border:`1px solid ${hovered?'var(--border2)':'var(--border)'}`,borderRadius:'var(--r)',cursor:'pointer',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:hovered?'0 4px 16px rgba(0,0,0,0.1)':'none',transition:'all 0.15s'}}>
+      <div style={{height:3,background:avatarColor(account.name),width:'100%',flexShrink:0}}/>
+      <div style={{padding:'16px 18px 14px',flex:1,display:'flex',flexDirection:'column'}}>
+        <div style={{display:'flex',alignItems:'flex-start',gap:12,marginBottom:10}}>
+          <div style={{width:40,height:40,borderRadius:10,flexShrink:0,background:avatarColor(account.name),display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'#fff'}}>{initials(account.name)}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:14,fontWeight:700,color:'var(--text)',lineHeight:1.3,marginBottom:4,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{account.name}</div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              <span className="badge" style={{color:SEGMENT_COLOR[account.segment],background:SEGMENT_COLOR[account.segment]+'18'}}>{account.segment}</span>
+              {critTasks>0 && <span className="badge" style={{color:'var(--red)',background:'var(--red-dim)'}}>{critTasks} critical</span>}
+            </div>
+          </div>
+        </div>
+        <div style={{fontSize:11,color:'var(--text3)',marginBottom:12,lineHeight:1.5}}>{[account.industry,account.location,account.owner&&`Owner: ${account.owner}`].filter(Boolean).join(' · ')}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:0,marginTop:'auto',borderTop:'1px solid var(--border)',paddingTop:12}}>
+          {[{label:'Revenue',value:fmtCurrency(revenue)},{label:'Pipeline',value:fmtCurrency(pipeline)},{label:'Open tasks',value:openTasks||'—'}].map((s,i)=>(
+            <div key={s.label} style={{textAlign:i===0?'left':i===1?'center':'right'}}>
+              <div style={{fontSize:11,fontWeight:700,color:'var(--text)'}}>{s.value}</div>
+              <div style={{fontSize:9,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.05em',marginTop:1}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ─── Accounts View ────────────────────────────────────────────────────────────
+function AccountsView() {
+  const {state, dispatch} = useCrm();
+  const toast = useToast();
+  const [mode, setMode] = useState('grid');
+  const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState('flat');
+  const [collapsed, setCollapsed] = useState(new Set());
+
+  const filtered = state.accounts.filter(a => !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.industry.toLowerCase().includes(search.toLowerCase()) || (a.owner&&a.owner.toLowerCase().includes(search.toLowerCase())));
+
+  const grouped = filtered.reduce((acc,a) => {
+    const key = a.group||'';
+    if (!acc[key]) acc[key]=[];
+    acc[key].push(a);
+    return acc;
+  }, {});
+  const groupNames = Object.keys(grouped).filter(k=>k!=='').sort();
+  const ungrouped = grouped['']||[];
+  const hasAnyGroups = state.accounts.some(a=>a.group);
+
+  function toggleCollapse(name) {
+    setCollapsed(prev=>{const n=new Set(prev);n.has(name)?n.delete(name):n.add(name);return n;});
+  }
+
+  function openAccount(id) {
+    dispatch({type:'SELECT_ACCOUNT', id});
+    setMode('detail');
+  }
+
+  const GRID = {display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:16};
+
+  const viewBtnStyle = (active) => ({
+    padding:'4px 12px',fontSize:11,fontWeight:600,cursor:'pointer',borderRadius:99,
+    background:active?'var(--bg4)':'transparent',
+    border:active?'1px solid var(--border2)':'1px solid transparent',
+    color:active?'var(--text)':'var(--text3)',
+  });
+
+  if (mode==='detail') return <AccountDetail onBack={()=>setMode('grid')}/>;
+
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      {mode==='new' && <NewAccountPanel onDone={()=>{toast('Account created');setMode('detail');}} onCancel={()=>setMode('grid')}/>}
+
+      {/* Toolbar */}
+      <div style={{padding:'16px 28px',borderBottom:'1px solid var(--border)',background:'var(--bg2)',display:'flex',alignItems:'center',gap:12,flexShrink:0}}>
+        <div>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.1em',color:'var(--text3)',textTransform:'uppercase',marginBottom:1}}>Accounts</div>
+          <div style={{fontSize:20,fontWeight:700,color:'var(--text)',lineHeight:1.1}}>{state.accounts.length} Account{state.accounts.length!==1?'s':''}</div>
+        </div>
+        <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:10}}>
+          <div style={{position:'relative',display:'flex',alignItems:'center'}}>
+            <span style={{position:'absolute',left:10,color:'var(--text3)'}}><IconSearch/></span>
+            <input type="text" placeholder="Search accounts…" value={search} onChange={e=>setSearch(e.target.value)} style={{padding:'7px 12px 7px 30px',width:200}}/>
+          </div>
+          {hasAnyGroups && (
+            <div style={{display:'flex',gap:2,background:'var(--bg3)',borderRadius:99,padding:2}}>
+              <button style={viewBtnStyle(viewMode==='flat')} onClick={()=>setViewMode('flat')}>Flat</button>
+              <button style={viewBtnStyle(viewMode==='grouped')} onClick={()=>setViewMode('grouped')}>Grouped</button>
+            </div>
+          )}
+          <button onClick={()=>setMode('new')} style={{padding:'8px 16px',fontSize:12,fontWeight:600,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)',display:'flex',alignItems:'center',gap:6}}>
+            <span style={{fontSize:16,fontWeight:300,lineHeight:1}}>+</span> New Account
+          </button>
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div style={{flex:1,overflowY:'auto',padding:'24px 28px'}}>
+        {filtered.length===0 ? (
+          <div style={{textAlign:'center',padding:'60px 0',color:'var(--text3)',fontSize:13}}>{search?'No accounts match your search.':'No accounts yet — add one to get started.'}</div>
+        ) : viewMode==='flat'||!hasAnyGroups ? (
+          <div style={GRID}>{filtered.map(acc=><AccountCard key={acc.id} account={acc} onClick={()=>openAccount(acc.id)}/>)}</div>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:28}}>
+            {groupNames.map(name=>{
+              const members = grouped[name]||[];
+              const isCollapsed = collapsed.has(name);
+              const totalOpp = members.reduce((s,a)=>s+a.opportunities.filter(o=>o.stage!=='Closed Won'&&o.stage!=='Closed Lost').reduce((ss,o)=>ss+o.value*(o.probability/100),0),0);
+              const openTasks = members.reduce((s,a)=>s+a.tasks.filter(t=>t.status!=='Done').length,0);
+              return (
+                <div key={name}>
+                  <button onClick={()=>toggleCollapse(name)} style={{width:'100%',textAlign:'left',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:10,marginBottom:isCollapsed?0:12,padding:'8px 0'}}>
+                    <span style={{color:'var(--text3)',transition:'transform 0.15s',display:'inline-block',transform:isCollapsed?'rotate(-90deg)':'rotate(0deg)'}}><IconChevronDown/></span>
+                    <span style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>{name}</span>
+                    <span style={{fontSize:11,color:'var(--text3)'}}>{members.length} account{members.length!==1?'s':''}</span>
+                    {openTasks>0 && <span className="badge" style={{color:'var(--amber)',background:'var(--amber-dim)'}}>{openTasks} open tasks</span>}
+                    {totalOpp>0 && <span className="badge" style={{color:'var(--accent)',background:'var(--accent-dim)'}}>{fmtCurrency(totalOpp)} pipeline</span>}
+                    <div style={{flex:1,height:1,background:'var(--border)',marginLeft:4}}/>
+                  </button>
+                  {!isCollapsed && (
+                    <div style={{...GRID,paddingLeft:20,borderLeft:'2px solid var(--border2)'}}>
+                      {members.map(acc=><AccountCard key={acc.id} account={acc} onClick={()=>openAccount(acc.id)}/>)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {ungrouped.length>0 && (
+              <div>
+                {groupNames.length>0 && <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:12,paddingBottom:8,borderBottom:'1px solid var(--border)'}}>Other Accounts</div>}
+                <div style={GRID}>{ungrouped.map(acc=><AccountCard key={acc.id} account={acc} onClick={()=>openAccount(acc.id)}/>)}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Global Tasks View ────────────────────────────────────────────────────────
+function TasksView() {
+  const {state, dispatch} = useCrm();
+  const toast = useToast();
+  const [view, setView] = useState('list');
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState({priority:'All',status:'All',assignee:'All'});
+  const [drawerTask, setDrawerTask] = useState(null);
+  const [delTask, setDelTask] = useState(null);
+  const {config} = useConfig();
+
+  const allTasks = state.accounts.flatMap(a=>a.tasks.map(t=>({...t,_accountName:a.name,_accountId:a.id})));
+
+  const filtered = allTasks.filter(t=>{
+    if (search && !t.title.toLowerCase().includes(search.toLowerCase()) && !t._accountName.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filter.priority!=='All' && t.priority!==filter.priority) return false;
+    if (filter.status!=='All' && t.status!==filter.status) return false;
+    if (filter.assignee!=='All' && t.assignee!==filter.assignee) return false;
+    return true;
+  });
+
+  function saveTask(t) {
+    dispatch({type:'UPDATE_TASK', task:t});
+    if (drawerTask) setDrawerTask(t);
+  }
+  function deleteTask(id) {
+    dispatch({type:'DELETE_TASK', taskId:id});
+    toast('Task deleted');
+  }
+
+  const STATUSES = ['To Do','In Progress','Done'];
+  const viewBtn = (v,icon,lbl) => (
+    <button onClick={()=>setView(v)} title={lbl} style={{width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',background:view===v?'var(--bg4)':'transparent',border:`1px solid ${view===v?'var(--border2)':'transparent'}`,borderRadius:'var(--r-xs)',color:view===v?'var(--text)':'var(--text3)',cursor:'pointer'}}>
+      {icon}
+    </button>
+  );
+
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div style={{padding:'16px 28px',borderBottom:'1px solid var(--border)',background:'var(--bg2)',flexShrink:0}}>
+        <div style={{marginBottom:10}}>
+          <div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:1}}>Tasks</div>
+          <div style={{fontSize:20,fontWeight:700,color:'var(--text)'}}>{allTasks.length} Task{allTasks.length!==1?'s':''}</div>
+        </div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+          <div style={{position:'relative',display:'flex',alignItems:'center'}}>
+            <span style={{position:'absolute',left:8,color:'var(--text3)'}}><IconSearch/></span>
+            <input type="text" placeholder="Search tasks…" value={search} onChange={e=>setSearch(e.target.value)} style={{padding:'6px 10px 6px 26px',width:180}}/>
+          </div>
+          {[
+            {key:'priority',opts:['All','Critical','High','Medium','Low']},
+            {key:'status',opts:['All','To Do','In Progress','Done']},
+            {key:'assignee',opts:['All',...config.teamMembers]},
+          ].map(({key,opts})=>(
+            <select key={key} value={filter[key]} onChange={e=>setFilter(f=>({...f,[key]:e.target.value}))} style={{padding:'6px 10px',width:'auto',fontSize:12}}>
+              {opts.map(o=><option key={o}>{o}</option>)}
+            </select>
+          ))}
+          <div style={{marginLeft:'auto',display:'flex',gap:2}}>
+            {viewBtn('kanban',<IconKanban/>,'Kanban')}
+            {viewBtn('list',<IconList/>,'List')}
+          </div>
+        </div>
+      </div>
+
+      {view==='kanban' ? (
+        <div className="kanban-board">
+          {STATUSES.map(status=>{
+            const col = filtered.filter(t=>t.status===status);
+            return (
+              <div key={status} className="kanban-col">
+                <div className="kanban-col-header"><span>{status}</span><span style={{color:'var(--text3)'}}>{col.length}</span></div>
+                {col.map(task=>(
+                  <div key={task.id} className="kanban-card" onClick={()=>setDrawerTask(task)}>
+                    <div style={{fontSize:11,color:'var(--accent)',marginBottom:3}}>{task._accountName}</div>
+                    <div style={{fontSize:12,fontWeight:600,color:'var(--text)',marginBottom:6,lineHeight:1.4}}>{task.title}</div>
+                    <PriorityBadge priority={task.priority}/>
+                    {task.dueDate && <div style={{fontSize:10,color:'var(--text3)',marginTop:6}}>Due {fmtDate(task.dueDate)}</div>}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{flex:1,overflowY:'auto'}}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{width:68}}>Actions</th>
+                <th>Title</th>
+                <th>Account</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assignee</th>
+                <th>Due Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length===0 && <tr><td colSpan={7} style={{textAlign:'center',padding:'40px',color:'var(--text3)'}}>No tasks match filters.</td></tr>}
+              {filtered.map(task=>(
+                <tr key={task.id}>
+                  <td>
+                    <div style={{display:'flex',gap:4}}>
+                      <IconBtn onClick={()=>setDrawerTask(task)} title="View"><IconEdit/></IconBtn>
+                      <IconBtn onClick={()=>setDelTask(task.id)} danger title="Delete"><IconTrash/></IconBtn>
+                    </div>
+                  </td>
+                  <td style={{color:'var(--text)',fontWeight:500,cursor:'pointer'}} onClick={()=>setDrawerTask(task)}>{task.title}</td>
+                  <td style={{color:'var(--accent)',fontSize:11}}>{task._accountName}</td>
+                  <td><PriorityBadge priority={task.priority}/></td>
+                  <td><StatusBadge status={task.status}/></td>
+                  <td>{task.assignee||'—'}</td>
+                  <td>{fmtDate(task.dueDate)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {delTask && <ConfirmModal title="Delete task?" body="This task will be permanently removed." onConfirm={()=>{deleteTask(delTask);setDelTask(null);}} onCancel={()=>setDelTask(null)}/>}
+      {drawerTask && <TaskDrawer task={drawerTask} onClose={()=>setDrawerTask(null)} onSave={saveTask} onDelete={(id)=>{deleteTask(id);setDrawerTask(null);}}/>}
+    </div>
+  );
+}
+
+// ─── Config View ──────────────────────────────────────────────────────────────
+function ConfigView() {
+  const {config, dispatch} = useConfig();
+  const [activeSection, setActiveSection] = useState('industries');
+  const [input, setInput] = useState('');
+  const [confirm, setConfirm] = useState(null);
+
+  const SECTIONS = [
+    {key:'industries',label:'Industries',desc:'Available industry options when creating or editing accounts.'},
+    {key:'teamMembers',label:'Team Members',desc:'People that can be assigned to tasks and opportunities.'},
+    {key:'oppStages',label:'Opportunity Stages',desc:'Pipeline stages for opportunities.'},
+    {key:'accountGroups',label:'Account Groups',desc:'Named groups for clustering related accounts.'},
+  ];
+
+  const section = SECTIONS.find(s=>s.key===activeSection);
+  const items = config[activeSection];
+
+  function add() {
+    if (!input.trim()) return;
+    dispatch({type:'ADD_ITEM',list:activeSection,value:input.trim()});
+    setInput('');
+  }
+
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div style={{padding:'20px 32px 18px',background:'var(--bg2)',borderBottom:'1px solid var(--border)',flexShrink:0}}>
+        <div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:2}}>Settings</div>
+        <h2 style={{margin:0,fontSize:20,fontWeight:700,color:'var(--text)'}}>Configure Picklists</h2>
+        <p style={{margin:'4px 0 0',fontSize:12,color:'var(--text3)'}}>Manage the dropdown options available across the app.</p>
+      </div>
+      <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+        <div style={{width:200,borderRight:'1px solid var(--border)',background:'var(--bg2)',flexShrink:0,padding:'12px 8px',display:'flex',flexDirection:'column',gap:2}}>
+          {SECTIONS.map(s=>{
+            const active = s.key===activeSection;
+            return (
+              <button key={s.key} onClick={()=>setActiveSection(s.key)} style={{display:'flex',alignItems:'center',width:'100%',textAlign:'left',padding:'10px 12px',borderRadius:'var(--r-sm)',border:'none',cursor:'pointer',background:active?'var(--accent-dim)':'transparent',color:active?'var(--accent)':'var(--text2)',fontWeight:active?600:400,fontSize:13,transition:'background 0.15s'}}>
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{flex:1,overflowY:'auto',padding:'24px 32px'}}>
+          <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:4}}>{section.label}</div>
+          <p style={{margin:'0 0 16px',fontSize:13,color:'var(--text2)'}}>{section.desc}</p>
+          <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'var(--r)',overflow:'hidden',marginBottom:12}}>
+            {items.map((item,i)=>(
+              <div key={item} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderBottom:i<items.length-1?'1px solid var(--border)':'none'}}>
+                {activeSection==='oppStages' && (
+                  <div style={{display:'flex',flexDirection:'column',gap:2,marginRight:8}}>
+                    <button disabled={i===0} onClick={()=>dispatch({type:'MOVE_ITEM',list:activeSection,from:i,to:i-1})} style={{background:'none',border:'none',cursor:i===0?'default':'pointer',color:'var(--text3)',padding:0,opacity:i===0?0.25:1,lineHeight:1}}>▲</button>
+                    <button disabled={i===items.length-1} onClick={()=>dispatch({type:'MOVE_ITEM',list:activeSection,from:i,to:i+1})} style={{background:'none',border:'none',cursor:i===items.length-1?'default':'pointer',color:'var(--text3)',padding:0,opacity:i===items.length-1?0.25:1,lineHeight:1}}>▼</button>
+                  </div>
+                )}
+                <span style={{fontSize:13,color:'var(--text)',flex:1}}>{item}</span>
+                <IconBtn onClick={()=>setConfirm(item)} danger title={`Remove ${item}`}><IconTrash/></IconBtn>
+              </div>
+            ))}
+            {items.length===0 && <div style={{padding:'20px 14px',fontSize:13,color:'var(--text3)',textAlign:'center'}}>No items yet.</div>}
+          </div>
+          <div style={{display:'flex',gap:8}}>
+            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&add()} placeholder="Type and press Enter or Add…"/>
+            <button onClick={add} style={{padding:'8px 18px',fontSize:13,fontWeight:600,background:'var(--accent)',color:'#fff',border:'none',borderRadius:'var(--r-sm)',flexShrink:0,cursor:'pointer'}}>Add</button>
+          </div>
+        </div>
+      </div>
+
+      {confirm && (
+        <div className="overlay" onClick={()=>setConfirm(null)}>
+          <div className="modal" style={{width:360,padding:'24px 28px'}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:8}}>Remove item?</div>
+            <div style={{fontSize:13,color:'var(--text2)',marginBottom:20}}><strong>"{confirm}"</strong> will be removed. This won't affect existing records.</div>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
+              <button onClick={()=>setConfirm(null)} style={{padding:'7px 16px',fontSize:13,background:'transparent',color:'var(--text2)',border:'1px solid var(--border2)',borderRadius:'var(--r-sm)',cursor:'pointer'}}>Cancel</button>
+              <button onClick={()=>{dispatch({type:'REMOVE_ITEM',list:activeSection,value:confirm});setConfirm(null);}} style={{padding:'7px 16px',fontSize:13,fontWeight:600,background:'var(--red)',color:'#fff',border:'none',borderRadius:'var(--r-sm)',cursor:'pointer'}}>Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+function Dashboard() {
+  const {state, dispatch} = useCrm();
+  const accounts = state.accounts;
+  const allTasks = accounts.flatMap(a=>a.tasks);
+  const allOpps = accounts.flatMap(a=>a.opportunities);
+
+  const totalRevenue = accounts.flatMap(a=>a.pastProjects).reduce((s,p)=>s+p.revenue,0);
+  const totalPipeline = allOpps.filter(o=>o.stage!=='Closed Won'&&o.stage!=='Closed Lost').reduce((s,o)=>s+o.value*(o.probability/100),0);
+  const openTasks = allTasks.filter(t=>t.status!=='Done').length;
+  const critTasks = allTasks.filter(t=>t.priority==='Critical'&&t.status!=='Done');
+
+  return (
+    <div style={{flex:1,overflowY:'auto',padding:'24px 32px'}}>
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:2}}>Dashboard</div>
+        <div style={{fontSize:22,fontWeight:800,color:'var(--text)',letterSpacing:'-0.02em'}}>Good morning 👋</div>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:12,marginBottom:24}}>
+        {[
+          {label:'Total Accounts',value:accounts.length,color:'var(--accent)'},
+          {label:'Total Revenue',value:fmtCurrency(totalRevenue),color:'var(--green)'},
+          {label:'Weighted Pipeline',value:fmtCurrency(totalPipeline),color:'var(--blue)'},
+          {label:'Open Tasks',value:openTasks,color:openTasks>0?'var(--amber)':'var(--text)'},
+          {label:'Critical Tasks',value:critTasks.length,color:critTasks.length>0?'var(--red)':'var(--text)'},
+          {label:'Open Opportunities',value:allOpps.filter(o=>o.stage!=='Closed Won'&&o.stage!=='Closed Lost').length,color:'var(--purple)'},
+        ].map(s=>(
+          <div key={s.label} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'16px'}}>
+            <div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>{s.label}</div>
+            <div style={{fontSize:22,fontWeight:800,color:s.color,letterSpacing:'-0.02em'}}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {critTasks.length>0 && (
+        <div style={{background:'var(--bg2)',border:'1px solid var(--red)',borderRadius:'var(--r)',padding:'16px',marginBottom:16}}>
+          <div style={{fontSize:11,fontWeight:700,color:'var(--red)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:10}}>⚠ Critical Tasks Requiring Attention</div>
+          {critTasks.map(t=>{
+            const acc = accounts.find(a=>a.tasks.some(tt=>tt.id===t.id));
+            return (
+              <div key={t.id} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 0',borderBottom:'1px solid var(--border)'}}>
+                <PriorityBadge priority="Critical"/>
+                <span style={{fontSize:13,color:'var(--text)',flex:1}}>{t.title}</span>
+                <span style={{fontSize:11,color:'var(--text3)'}}>{acc?.name}</span>
+                {t.dueDate && <span style={{fontSize:11,color:'var(--text3)'}}>Due {fmtDate(t.dueDate)}</span>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'16px'}}>
+        <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:10}}>Recent Accounts</div>
+        {[...accounts].sort((a,b)=>b.createdAt-a.createdAt).slice(0,5).map(acc=>(
+          <div key={acc.id} style={{display:'flex',alignItems:'center',gap:12,padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
+            <div style={{width:32,height:32,borderRadius:8,background:avatarColor(acc.name),display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#fff',flexShrink:0}}>{initials(acc.name)}</div>
+            <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{acc.name}</div><div style={{fontSize:11,color:'var(--text3)'}}>{acc.industry} · {acc.owner}</div></div>
+            <span className="badge" style={{color:SEGMENT_COLOR[acc.segment],background:SEGMENT_COLOR[acc.segment]+'18'}}>{acc.segment}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+function App() {
+  const [tab, setTab] = useState('dashboard');
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    document.body.className = theme;
+  }, [theme]);
+
+  const TABS = [
+    {id:'dashboard',label:'Dashboard'},
+    {id:'accounts',label:'Accounts'},
+    {id:'tasks',label:'Tasks'},
+    {id:'config',label:'Settings'},
+  ];
+
+  return (
+    <ConfigProvider>
+      <CrmProvider>
+        <ToastProvider>
+          <div className="app">
+            <div className="topbar">
+              <div className="logo">NEX<span>US</span></div>
+              <nav className="nav-tabs">
+                {TABS.map(t=>(
+                  <button key={t.id} className={`nav-tab${tab===t.id?' active':''}`} onClick={()=>setTab(t.id)}>{t.label}</button>
+                ))}
+              </nav>
+              <button className="theme-btn" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} title="Toggle theme">
+                {theme==='dark'?<IconSun/>:<IconMoon/>}
+              </button>
+            </div>
+            <main className="main">
+              {tab==='dashboard' && <Dashboard/>}
+              {tab==='accounts' && <AccountsView/>}
+              {tab==='tasks' && <TasksView/>}
+              {tab==='config' && <ConfigView/>}
+            </main>
+          </div>
+        </ToastProvider>
+      </CrmProvider>
+    </ConfigProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
