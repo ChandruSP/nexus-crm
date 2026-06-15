@@ -97,11 +97,13 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
   const [editTask, setEditTask] = useState<FlatTask | null>(null);
   const [delTask,  setDelTask]  = useState<FlatTask | null>(null);
 
-  const [sortKey,   setSortKey]   = useState<SortKey>('priority');
-  const [sortAsc,   setSortAsc]   = useState(true);
-  const [groupBy,   setGroupBy]   = useState<GroupBy>('status');
-  const [page,      setPage]      = useState(1);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [sortKey,    setSortKey]    = useState<SortKey>('priority');
+  const [sortAsc,    setSortAsc]    = useState(true);
+  const [groupBy,    setGroupBy]    = useState<GroupBy>('status');
+  const [flatPage,   setFlatPage]   = useState(1);
+  // per-group page: key → 1-based page number
+  const [groupPages, setGroupPages] = useState<Record<string, number>>({});
+  const [collapsed,  setCollapsed]  = useState<Set<string>>(new Set());
 
   const allTasks = useMemo<FlatTask[]>(() =>
     state.accounts.flatMap(acc =>
@@ -145,15 +147,17 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
     [allTasks, sortKey, sortAsc]
   );
 
-  // Pagination only applies in ungrouped mode
-  const totalPages = groupBy === 'none' ? Math.max(1, Math.ceil(sorted.length / PAGE_SIZE)) : 1;
-  const safePage   = Math.min(page, totalPages);
-  const pageStart  = (safePage - 1) * PAGE_SIZE;
-  const pageEnd    = pageStart + PAGE_SIZE;
-  const pageTasks  = groupBy === 'none' ? sorted.slice(pageStart, pageEnd) : sorted;
+  // Reset pages when filters/sort/groupBy change
+  useEffect(() => { setFlatPage(1); setGroupPages({}); }, [fAccount, fPriority, fAssignee, search, groupBy, sortKey]);
 
-  useEffect(() => { setPage(1); }, [fAccount, fPriority, fAssignee, search, groupBy, sortKey]);
+  // ── Flat (no grouping) pagination ──────────────────────────────
+  const flatTotal  = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const flatSafe   = Math.min(flatPage, flatTotal);
+  const flatStart  = (flatSafe - 1) * PAGE_SIZE;
+  const flatEnd    = flatStart + PAGE_SIZE;
+  const flatTasks  = sorted.slice(flatStart, flatEnd);
 
+  // ── Groups ─────────────────────────────────────────────────────
   const groups = useMemo(() => {
     if (groupBy === 'status') {
       return (['To do', 'In progress', 'Done', 'Blocked'] as TaskStatus[])
@@ -168,17 +172,15 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
     return [];
   }, [groupBy, sorted, state.accounts]);
 
+  function getGroupPage(key: string) { return groupPages[key] ?? 1; }
+  function setGroupPage(key: string, p: number) { setGroupPages(prev => ({ ...prev, [key]: p })); }
+
   function changeSort(key: SortKey) {
     if (sortKey === key) setSortAsc(a => !a);
     else { setSortKey(key); setSortAsc(true); }
   }
   function toggleGroup(label: string) {
     setCollapsed(prev => { const n = new Set(prev); n.has(label) ? n.delete(label) : n.add(label); return n; });
-  }
-  function cycleStatus(task: FlatTask) {
-    const order: TaskStatus[] = ['To do', 'In progress', 'Blocked', 'Done'];
-    const next = order[(order.indexOf(task.status) + 1) % order.length];
-    dispatch({ type: 'UPDATE_TASK', accountId: task.accountId, task: { id: task.id, createdAt: task.createdAt, comments: task.comments, opportunityId: task.opportunityId, title: task.title, description: task.description, status: next, priority: task.priority, dueDate: task.dueDate, assignee: task.assignee } });
   }
 
   // ── Shared styles ────────────────────────────────────────────────
@@ -201,15 +203,15 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
     color: active ? 'var(--text)' : 'var(--text3)',
   });
   const pgBtnStyle = (active: boolean, disabled = false): React.CSSProperties => ({
-    minWidth: 30, height: 30, padding: '0 6px', borderRadius: 'var(--r-xs)',
-    fontSize: 12, fontWeight: active ? 700 : 400, cursor: disabled ? 'default' : 'pointer',
+    minWidth: 28, height: 26, padding: '0 6px', borderRadius: 'var(--r-xs)',
+    fontSize: 11, fontWeight: active ? 700 : 400, cursor: disabled ? 'default' : 'pointer',
     background: active ? 'var(--accent)' : 'transparent',
     border: active ? 'none' : '1px solid transparent',
-    color: active ? '#000' : disabled ? 'var(--text3)' : 'var(--text2)',
+    color: active ? '#fff' : disabled ? 'var(--text3)' : 'var(--text2)',
     opacity: disabled ? 0.4 : 1,
   });
 
-  // ── Inline row renderer (plain function returning JSX, not a component) ──
+  // ── Row renderer ───────────────────────────────────────────────
   function rowJsx(task: FlatTask) {
     const overdue = isOverdue(task.dueDate, task.status);
     return (
@@ -217,7 +219,6 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         onClick={() => onTaskClick?.(task as DrawerTask)}
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg3)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-        {/* Edit + Delete — first column */}
         <td style={{ padding: '6px 8px', width: 68, whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
           <div style={{ display: 'flex', gap: 4 }}>
             <button onClick={e => { e.stopPropagation(); setEditTask(task); }} title="Edit task"
@@ -235,9 +236,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
           </div>
         </td>
         <td style={{ padding: '10px 8px', minWidth: 200 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
-            {task.title}
-          </span>
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{task.title}</span>
           {task.opportunityName && (
             <div style={{ fontSize: 10, color: 'var(--accent)', marginTop: 2, fontWeight: 600 }}>● {task.opportunityName}</div>
           )}
@@ -251,9 +250,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
           </span>
         </td>
         <td style={{ padding: '6px 8px' }} onClick={e => e.stopPropagation()}>
-          <select
-            className="select-badge"
-            value={task.status}
+          <select className="select-badge" value={task.status}
             onChange={e => dispatch({ type: 'UPDATE_TASK', accountId: task.accountId, task: { id: task.id, createdAt: task.createdAt, comments: task.comments, opportunityId: task.opportunityId, title: task.title, description: task.description, status: e.target.value as TaskStatus, priority: task.priority, dueDate: task.dueDate, assignee: task.assignee } })}
             style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 99, border: `1px solid ${STATUS_COLOR[task.status]}40`, background: STATUS_COLOR[task.status] + '18', color: STATUS_COLOR[task.status], cursor: 'pointer', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'inherit' }}>
             {STATUSES.map(s => <option key={s} value={s} style={{ background: 'var(--bg2)', color: 'var(--text)' }}>{s}</option>)}
@@ -271,37 +268,50 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
             const last = task.comments[task.comments.length - 1];
             return (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                <div style={{
-                  width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1,
-                  background: `hsl(${last.author.split('').reduce((n, ch) => n + ch.charCodeAt(0), 0) % 360},50%,48%)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 8, fontWeight: 700, color: '#fff',
-                }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1, background: `hsl(${last.author.split('').reduce((n, ch) => n + ch.charCodeAt(0), 0) % 360},50%,48%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#fff' }}>
                   {last.author.slice(0, 2).toUpperCase()}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 11, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
-                    {last.text}
-                  </div>
-                  {task.comments.length > 1 && (
-                    <div style={{ fontSize: 10, color: 'var(--text3)', opacity: 0.6 }}>+{task.comments.length - 1} more</div>
-                  )}
+                  <div style={{ fontSize: 11, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>{last.text}</div>
+                  {task.comments.length > 1 && <div style={{ fontSize: 10, color: 'var(--text3)', opacity: 0.6 }}>+{task.comments.length - 1} more</div>}
                 </div>
               </div>
             );
-          })() : (
-            <span style={{ fontSize: 11, color: 'var(--text3)', opacity: 0.4 }}>—</span>
-          )}
+          })() : <span style={{ fontSize: 11, color: 'var(--text3)', opacity: 0.4 }}>—</span>}
         </td>
       </tr>
     );
   }
 
-  function groupHeaderJsx(g: typeof groups[0]) {
+  // ── Per-group pagination footer row ───────────────────────────
+  function groupPagerJsx(g: { key: string; tasks: FlatTask[] }) {
+    const total = Math.ceil(g.tasks.length / PAGE_SIZE);
+    if (total <= 1) return null;
+    const cur = getGroupPage(g.key);
+    return (
+      <tr key={g.key + '-pg'}>
+        <td colSpan={8} style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', background: 'var(--bg)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button style={pgBtnStyle(false, cur === 1)} disabled={cur === 1} onClick={() => setGroupPage(g.key, cur - 1)}>‹</button>
+            {Array.from({ length: total }, (_, i) => i + 1).map(n => (
+              <button key={n} style={pgBtnStyle(n === cur)} onClick={() => setGroupPage(g.key, n)}>{n}</button>
+            ))}
+            <button style={pgBtnStyle(false, cur === total)} disabled={cur === total} onClick={() => setGroupPage(g.key, cur + 1)}>›</button>
+            <span style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 6 }}>
+              {(cur - 1) * PAGE_SIZE + 1}–{Math.min(cur * PAGE_SIZE, g.tasks.length)} of {g.tasks.length}
+            </span>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  // ── Group header row ───────────────────────────────────────────
+  function groupHeaderJsx(g: { key: string; label: string; color: string; tasks: FlatTask[] }) {
     const isCollapsed = collapsed.has(g.label);
     return (
       <tr key={g.key + '-hdr'}>
-        <td colSpan={9} style={{ padding: 0, background: 'var(--bg3)', borderBottom: '1px solid var(--border)', borderTop: '1px solid var(--border)' }}>
+        <td colSpan={8} style={{ padding: 0, background: 'var(--bg3)', borderBottom: '1px solid var(--border)', borderTop: '1px solid var(--border)' }}>
           <button onClick={() => toggleGroup(g.label)}
             style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
@@ -310,23 +320,21 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
             </svg>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: g.color, display: 'inline-block', flexShrink: 0 }} />
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{g.label}</span>
-            <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-              {g.tasks.length} task{g.tasks.length !== 1 ? 's' : ''}
-            </span>
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>{g.tasks.length} task{g.tasks.length !== 1 ? 's' : ''}</span>
           </button>
         </td>
       </tr>
     );
   }
 
-  // pageNums for pagination bar
-  function pageNums() {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1 as number | '…');
+  // ── Flat pagination helpers ────────────────────────────────────
+  function flatPageNums() {
+    if (flatTotal <= 7) return Array.from({ length: flatTotal }, (_, i) => i + 1 as number | '…');
     const pages: (number | '…')[] = [1];
-    if (safePage > 3) pages.push('…');
-    for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i);
-    if (safePage < totalPages - 2) pages.push('…');
-    pages.push(totalPages);
+    if (flatSafe > 3) pages.push('…');
+    for (let i = Math.max(2, flatSafe - 1); i <= Math.min(flatTotal - 1, flatSafe + 1); i++) pages.push(i);
+    if (flatSafe < flatTotal - 2) pages.push('…');
+    pages.push(flatTotal);
     return pages;
   }
 
@@ -335,17 +343,16 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
       {/* Sub-toolbar */}
       <div style={{ padding: '8px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
         <span style={{ fontSize: 11, color: 'var(--text3)', marginRight: 2 }}>Group by</span>
-        <button style={groupBtnStyle(groupBy === 'status')}  onClick={() => { setGroupBy('status');  setCollapsed(new Set()); }}>Status</button>
-        <button style={groupBtnStyle(groupBy === 'account')} onClick={() => { setGroupBy('account'); setCollapsed(new Set()); }}>Account</button>
-        <button style={groupBtnStyle(groupBy === 'none')}    onClick={() => { setGroupBy('none');    setCollapsed(new Set()); }}>None</button>
+        <button style={groupBtnStyle(groupBy === 'status')}  onClick={() => { setGroupBy('status');  setCollapsed(new Set()); setGroupPages({}); }}>Status</button>
+        <button style={groupBtnStyle(groupBy === 'account')} onClick={() => { setGroupBy('account'); setCollapsed(new Set()); setGroupPages({}); }}>Account</button>
+        <button style={groupBtnStyle(groupBy === 'none')}    onClick={() => { setGroupBy('none');    setCollapsed(new Set()); setFlatPage(1); }}>None</button>
         {groupBy !== 'none' && (() => {
           const allKeys = groupBy === 'status' ? ['To do', 'In progress', 'Done', 'Blocked'] : state.accounts.map(a => a.name);
           const allCollapsed = allKeys.every(k => collapsed.has(k));
           return (
             <>
               <span style={{ width: 1, height: 14, background: 'var(--border2)', margin: '0 4px' }} />
-              <button
-                onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(allKeys))}
+              <button onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(allKeys))}
                 style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 4px' }}>
                 {allCollapsed ? 'Expand all' : 'Collapse all'}
               </button>
@@ -355,7 +362,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text3)' }}>
           {sorted.length > 0
             ? groupBy === 'none'
-              ? `${pageStart + 1}–${Math.min(pageEnd, sorted.length)} of ${sorted.length} task${sorted.length !== 1 ? 's' : ''}`
+              ? `${flatStart + 1}–${Math.min(flatEnd, sorted.length)} of ${sorted.length} task${sorted.length !== 1 ? 's' : ''}`
               : `${sorted.length} task${sorted.length !== 1 ? 's' : ''}`
             : '0 tasks'}
         </span>
@@ -378,13 +385,19 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
           </thead>
           <tbody>
             {groupBy === 'none'
-              ? pageTasks.map(rowJsx)
-              : groups.map(g => (
-                  <Fragment key={g.key}>
-                    {groupHeaderJsx(g)}
-                    {!collapsed.has(g.label) && g.tasks.map(rowJsx)}
-                  </Fragment>
-                ))
+              ? flatTasks.map(rowJsx)
+              : groups.map(g => {
+                  const cur   = getGroupPage(g.key);
+                  const start = (cur - 1) * PAGE_SIZE;
+                  const page  = g.tasks.slice(start, start + PAGE_SIZE);
+                  return (
+                    <Fragment key={g.key}>
+                      {groupHeaderJsx(g)}
+                      {!collapsed.has(g.label) && page.map(rowJsx)}
+                      {!collapsed.has(g.label) && groupPagerJsx(g)}
+                    </Fragment>
+                  );
+                })
             }
           </tbody>
         </table>
@@ -411,20 +424,16 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         </div>
       )}
 
-      {/* Pagination — only in ungrouped mode */}
-      {groupBy === 'none' && totalPages > 1 && (
+      {/* Flat-mode pagination bar */}
+      {groupBy === 'none' && flatTotal > 1 && (
         <div style={{ padding: '10px 24px', borderTop: '1px solid var(--border)', background: 'var(--bg2)', display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-          <button style={pgBtnStyle(false, safePage === 1)} disabled={safePage === 1} onClick={() => setPage(p => p - 1)}>
-            ‹ Prev
-          </button>
-          {pageNums().map((n, i) =>
+          <button style={pgBtnStyle(false, flatSafe === 1)} disabled={flatSafe === 1} onClick={() => setFlatPage(p => p - 1)}>‹ Prev</button>
+          {flatPageNums().map((n, i) =>
             n === '…'
               ? <span key={`el-${i}`} style={{ padding: '0 4px', color: 'var(--text3)', fontSize: 12 }}>…</span>
-              : <button key={n} style={pgBtnStyle(n === safePage)} onClick={() => setPage(n as number)}>{n}</button>
+              : <button key={n} style={pgBtnStyle(n === flatSafe)} onClick={() => setFlatPage(n as number)}>{n}</button>
           )}
-          <button style={pgBtnStyle(false, safePage === totalPages)} disabled={safePage === totalPages} onClick={() => setPage(p => p + 1)}>
-            Next ›
-          </button>
+          <button style={pgBtnStyle(false, flatSafe === flatTotal)} disabled={flatSafe === flatTotal} onClick={() => setFlatPage(p => p + 1)}>Next ›</button>
         </div>
       )}
     </div>
