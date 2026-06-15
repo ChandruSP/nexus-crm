@@ -145,36 +145,28 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
     [allTasks, sortKey, sortAsc]
   );
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  // Pagination only applies in ungrouped mode
+  const totalPages = groupBy === 'none' ? Math.max(1, Math.ceil(sorted.length / PAGE_SIZE)) : 1;
   const safePage   = Math.min(page, totalPages);
   const pageStart  = (safePage - 1) * PAGE_SIZE;
   const pageEnd    = pageStart + PAGE_SIZE;
-  const pageTasks  = sorted.slice(pageStart, pageEnd);
-  const pageIds    = useMemo(() => new Set(pageTasks.map(t => t.id)), [pageTasks]);
+  const pageTasks  = groupBy === 'none' ? sorted.slice(pageStart, pageEnd) : sorted;
 
   useEffect(() => { setPage(1); }, [fAccount, fPriority, fAssignee, search, groupBy, sortKey]);
 
   const groups = useMemo(() => {
     if (groupBy === 'status') {
       return (['To do', 'In progress', 'Done', 'Blocked'] as TaskStatus[])
-        .map(s => ({
-          key: s, label: s, color: STATUS_COLOR[s],
-          allTasks: sorted.filter(t => t.status === s),
-          pageTasks: sorted.filter(t => t.status === s && pageIds.has(t.id)),
-        }))
-        .filter(g => g.allTasks.length > 0);
+        .map(s => ({ key: s, label: s, color: STATUS_COLOR[s], tasks: sorted.filter(t => t.status === s) }))
+        .filter(g => g.tasks.length > 0);
     }
     if (groupBy === 'account') {
       return state.accounts
-        .map(acc => ({
-          key: acc.id, label: acc.name, color: 'var(--text2)',
-          allTasks: sorted.filter(t => t.accountId === acc.id),
-          pageTasks: sorted.filter(t => t.accountId === acc.id && pageIds.has(t.id)),
-        }))
-        .filter(g => g.allTasks.length > 0);
+        .map(acc => ({ key: acc.id, label: acc.name, color: 'var(--text2)', tasks: sorted.filter(t => t.accountId === acc.id) }))
+        .filter(g => g.tasks.length > 0);
     }
     return [];
-  }, [groupBy, sorted, pageIds, state.accounts]);
+  }, [groupBy, sorted, state.accounts]);
 
   function changeSort(key: SortKey) {
     if (sortKey === key) setSortAsc(a => !a);
@@ -319,7 +311,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: g.color, display: 'inline-block', flexShrink: 0 }} />
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{g.label}</span>
             <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-              {isCollapsed ? `${g.allTasks.length} task${g.allTasks.length !== 1 ? 's' : ''}` : `${g.pageTasks.length} of ${g.allTasks.length}`}
+              {g.tasks.length} task{g.tasks.length !== 1 ? 's' : ''}
             </span>
           </button>
         </td>
@@ -362,7 +354,9 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         })()}
         <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text3)' }}>
           {sorted.length > 0
-            ? `${pageStart + 1}–${Math.min(pageEnd, sorted.length)} of ${sorted.length} task${sorted.length !== 1 ? 's' : ''}`
+            ? groupBy === 'none'
+              ? `${pageStart + 1}–${Math.min(pageEnd, sorted.length)} of ${sorted.length} task${sorted.length !== 1 ? 's' : ''}`
+              : `${sorted.length} task${sorted.length !== 1 ? 's' : ''}`
             : '0 tasks'}
         </span>
       </div>
@@ -388,7 +382,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
               : groups.map(g => (
                   <Fragment key={g.key}>
                     {groupHeaderJsx(g)}
-                    {!collapsed.has(g.label) && g.pageTasks.map(rowJsx)}
+                    {!collapsed.has(g.label) && g.tasks.map(rowJsx)}
                   </Fragment>
                 ))
             }
@@ -417,8 +411,8 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {/* Pagination — only in ungrouped mode */}
+      {groupBy === 'none' && totalPages > 1 && (
         <div style={{ padding: '10px 24px', borderTop: '1px solid var(--border)', background: 'var(--bg2)', display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           <button style={pgBtnStyle(false, safePage === 1)} disabled={safePage === 1} onClick={() => setPage(p => p - 1)}>
             ‹ Prev
