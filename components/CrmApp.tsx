@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { CrmProvider } from '@/context/CrmContext';
+import { useCrm } from '@/context/CrmContext';
 import { ConfigProvider } from '@/context/ConfigContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { ToastContainer } from './Toast';
@@ -48,6 +49,24 @@ function NavTab({ label, active, onClick }: { label: string; active: boolean; on
   );
 }
 
+function CrmBody({ view }: { view: AppView }) {
+  const { state } = useCrm();
+  if (state.loading) {
+    return (
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)', fontSize: 13 }}>
+        Loading…
+      </div>
+    );
+  }
+  return (
+    <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      {view === 'accounts' && <AccountsView />}
+      {view === 'tasks'    && <TasksView />}
+      {view === 'config'   && <ConfigView />}
+    </div>
+  );
+}
+
 export function CrmApp() {
   const [view, setView] = useState<AppView>('tasks');
   const [splash, setSplash] = useState(true);
@@ -85,11 +104,7 @@ export function CrmApp() {
           </div>
 
           {/* Body */}
-          <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
-            {view === 'accounts' && <AccountsView />}
-            {view === 'tasks'    && <TasksView />}
-            {view === 'config'   && <ConfigView />}
-          </div>
+          <CrmBody view={view} />
         </div>
       </CrmProvider>
     </ConfigProvider>
