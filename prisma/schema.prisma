@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id          String   @id @default(cuid())
+  name        String
+  industry    String
+  segment     String
+  owner       String
+  location    String?
+  website     String?
+  description String?
+  group       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  contacts      Contact[]
+  tasks         Task[]
+  opportunities Opportunity[]
+  pastProjects  PastProject[]
+}
+
+model Contact {
+  id        String  @id @default(cuid())
+  name      String
+  role      String?
+  email     String?
+  phone     String?
+  isPrimary Boolean @default(false)
+  notes     String?
+  createdAt DateTime @default(now())
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  priority    String
+  status      String
+  dueDate     DateTime?
+  assignee    String?
+  category    String?
+  comments    String[]  @default([])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Opportunity {
+  id          String    @id @default(cuid())
+  title       String
+  stage       String
+  value       Float     @default(0)
+  probability Int       @default(25)
+  closeDate   DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model PastProject {
+  id          String   @id @default(cuid())
+  name        String
+  revenue     Float    @default(0)
+  year        Int
+  description String?
+  createdAt   DateTime @default(now())
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Config {
+  id     String   @id @default(cuid())
+  key    String   @unique
+  values String[]
+}
