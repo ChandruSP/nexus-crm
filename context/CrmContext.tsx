@@ -127,6 +127,10 @@ export function CrmProvider({ children }: { children: ReactNode }) {
     // Apply optimistic update immediately
     dispatch(action);
 
+    // For CREATE operations: don't apply optimistic update with temp IDs.
+    // Instead wait for the API to return the real DB id, then reload.
+    const isCreate = ['ADD_ACCOUNT','ADD_TASK','ADD_STAKEHOLDER','ADD_OPPORTUNITY','ADD_PAST_PROJECT'].includes(action.type);
+
     try {
       switch (action.type) {
         case 'ADD_ACCOUNT':
@@ -183,6 +187,19 @@ export function CrmProvider({ children }: { children: ReactNode }) {
         case 'DELETE_PAST_PROJECT':
           await apiDeleteProject(action.accountId, action.projectId);
           break;
+      }
+
+      // After any CREATE, reload from DB to get real IDs (replaces temp IDs)
+      if (isCreate) {
+        const accounts = await fetchAccounts();
+        dispatch({ type: 'SET_ACCOUNTS', accounts });
+        // Re-select the same account if possible
+        const currentId = state.selectedAccountId;
+        if (currentId) {
+          const found = accounts.find(a => a.id === currentId);
+          if (found) dispatch({ type: 'SELECT_ACCOUNT', id: found.id });
+          else if (accounts.length > 0) dispatch({ type: 'SELECT_ACCOUNT', id: accounts[0].id });
+        }
       }
     } catch (err) {
       console.error('API error, reloading data', err);
