@@ -1,5 +1,22 @@
 import { Account, Task, Stakeholder, Opportunity, PastProject, Comment, TaskStatus, TaskPriority } from './crmTypes';
 
+function normalizeStatus(s: string): TaskStatus {
+  const map: Record<string, TaskStatus> = {
+    'to do': 'To do', 'todo': 'To do',
+    'in progress': 'In progress', 'inprogress': 'In progress',
+    'done': 'Done',
+    'blocked': 'Blocked',
+  };
+  return map[s?.toLowerCase()] ?? 'To do';
+}
+
+function normalizePriority(s: string): TaskPriority {
+  const map: Record<string, TaskPriority> = {
+    'low': 'Low', 'medium': 'Medium', 'high': 'High', 'critical': 'Critical',
+  };
+  return map[s?.toLowerCase()] ?? 'Medium';
+}
+
 // ─── DB → Frontend mappers ────────────────────────────────────────────────────
 
 export function mapAccount(raw: Record<string, unknown>): Account {
@@ -44,8 +61,8 @@ function mapTask(t: Record<string, unknown>): Task {
     id: t.id as string,
     title: t.title as string,
     description: t.description as string | undefined,
-    status: (t.status as TaskStatus) || 'To do',
-    priority: (t.priority as TaskPriority) || 'Medium',
+    status: normalizeStatus(t.status as string),
+    priority: normalizePriority(t.priority as string),
     dueDate: t.dueDate ? (t.dueDate as string).split('T')[0] : undefined,
     assignee: t.assignee as string | undefined,
     createdAt: new Date(t.createdAt as string).getTime(),

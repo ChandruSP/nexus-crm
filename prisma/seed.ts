@@ -24,8 +24,8 @@ async function main() {
         { name:'Sunita Rao', role:'IT Director', email:'s.rao@tatasteel.com', phone:'+91 87654 32109', isPrimary:false, notes:'Technical decision maker.' },
       ]},
       tasks: { create: [
-        { title:'Send proposal for AI analytics', description:'Prepare deck and send', priority:'Critical', status:'In Progress', dueDate: new Date('2026-06-20'), assignee:'Priya Nair', category:'Proposal', comments:[] },
-        { title:'Schedule QBR meeting', priority:'High', status:'To Do', dueDate: new Date('2026-06-25'), assignee:'Dev Sharma', category:'Meeting', comments:[] },
+        { title:'Send proposal for AI analytics', description:'Prepare deck and send', priority:'Critical', status:'In progress', dueDate: new Date('2026-06-20'), assignee:'Priya Nair', category:'Proposal', comments:[] },
+        { title:'Schedule QBR meeting', priority:'High', status:'To do', dueDate: new Date('2026-06-25'), assignee:'Dev Sharma', category:'Meeting', comments:[] },
         { title:'Follow up on POC results', priority:'Medium', status:'Done', dueDate: new Date('2026-06-10'), assignee:'Priya Nair', category:'Follow-up', comments:['POC results positive, moving to proposal stage.'] },
       ]},
       opportunities: { create: [
@@ -49,8 +49,8 @@ async function main() {
         { name:'Ananya Singh', role:'Global Head of Procurement', email:'a.singh@tcs.com', phone:'+91 76543 21098', isPrimary:true, notes:'Very process-oriented.' },
       ]},
       tasks: { create: [
-        { title:'Legal review of MSA', description:'Get legal to review master service agreement', priority:'High', status:'In Progress', dueDate: new Date('2026-06-18'), assignee:'Dev Sharma', category:'Legal', comments:[] },
-        { title:'Product demo for TCS Digital', priority:'Medium', status:'To Do', dueDate: new Date('2026-06-30'), assignee:'Tanvi Kapila', category:'Demo', comments:[] },
+        { title:'Legal review of MSA', description:'Get legal to review master service agreement', priority:'High', status:'In progress', dueDate: new Date('2026-06-18'), assignee:'Dev Sharma', category:'Legal', comments:[] },
+        { title:'Product demo for TCS Digital', priority:'Medium', status:'To do', dueDate: new Date('2026-06-30'), assignee:'Tanvi Kapila', category:'Demo', comments:[] },
       ]},
       opportunities: { create: [
         { title:'Analytics-as-a-Service', stage:'Negotiation', value:12000000, probability:75, closeDate: new Date('2026-07-31'), notes:'In final pricing negotiation.' },
@@ -71,7 +71,7 @@ async function main() {
         { name:'Meera Joshi', role:'SVP Cloud Services', email:'m.joshi@infosys.com', phone:'+91 54321 09876', isPrimary:false, notes:'Executive sponsor.' },
       ]},
       tasks: { create: [
-        { title:'RFP response draft', description:'Write response to Infosys RFP', priority:'Critical', status:'To Do', dueDate: new Date('2026-06-17'), assignee:'Tanvi Kapila', category:'Proposal', comments:[] },
+        { title:'RFP response draft', description:'Write response to Infosys RFP', priority:'Critical', status:'To do', dueDate: new Date('2026-06-17'), assignee:'Tanvi Kapila', category:'Proposal', comments:[] },
       ]},
       opportunities: { create: [
         { title:'Cloud Observability Suite', stage:'Prospecting', value:8000000, probability:25, closeDate: new Date('2026-12-31'), notes:'Early stage, building relationship.' },
@@ -89,7 +89,7 @@ async function main() {
       ]},
       tasks: { create: [
         { title:'Share case study', description:'Send relevant retail case studies', priority:'Medium', status:'Done', dueDate: new Date('2026-06-12'), assignee:'Priya Nair', category:'Follow-up', comments:['Sent 3 case studies via email.'] },
-        { title:'Loyalty platform demo', priority:'High', status:'To Do', dueDate: new Date('2026-06-22'), assignee:'Priya Nair', category:'Demo', comments:[] },
+        { title:'Loyalty platform demo', priority:'High', status:'To do', dueDate: new Date('2026-06-22'), assignee:'Priya Nair', category:'Demo', comments:[] },
       ]},
       opportunities: { create: [
         { title:'Customer Analytics Platform', stage:'Qualified', value:3200000, probability:50, closeDate: new Date('2026-09-30'), notes:'Budget confirmed.' },
