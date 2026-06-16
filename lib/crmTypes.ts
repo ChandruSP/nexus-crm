@@ -36,6 +36,7 @@ export interface Opportunity {
   stage: OppStage;
   closeDate: string;
   description?: string;
+  nextStep?: string;
   probability: number;
 }
 

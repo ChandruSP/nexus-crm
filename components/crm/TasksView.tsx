@@ -88,6 +88,7 @@ const ListIcon = () => (
 
 export function TasksView() {
   const { state } = useCrm();
+  const { config } = useConfig();
   const [view,       setView]       = useState<ViewMode>('kanban');
   const [newTask,    setNewTask]    = useState(false);
   const [search,     setSearch]     = useState('');
@@ -96,14 +97,14 @@ export function TasksView() {
   const [fPriority, setFPriority] = useState('');
   const [fAssignee, setFAssignee] = useState('');
 
-  const allAssignees = [...new Set(
-    state.accounts.flatMap(a => a.tasks.map(t => t.assignee).filter(Boolean) as string[])
-  )].sort();
+  const [fDue, setFDue] = useState('');
 
-  const hasFilters = !!(search || fAccount || fPriority || fAssignee);
+  const allAssignees = config.teamMembers;
+
+  const hasFilters = !!(search || fAccount || fPriority || fAssignee || fDue);
 
   function clearAll() {
-    setSearch(''); setFAccount(''); setFPriority(''); setFAssignee('');
+    setSearch(''); setFAccount(''); setFPriority(''); setFAssignee(''); setFDue('');
   }
 
   const selectStyle: React.CSSProperties = {
@@ -161,6 +162,12 @@ export function TasksView() {
           {allAssignees.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
 
+        <select style={selectStyle} value={fDue} onChange={e => setFDue(e.target.value)}>
+          <option value="">All due dates</option>
+          <option value="overdue">Overdue</option>
+          <option value="week">Due this week</option>
+        </select>
+
         {hasFilters && (
           <button onClick={clearAll}
             style={{ fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 2px' }}>
@@ -186,8 +193,8 @@ export function TasksView() {
       </div>
 
       {view === 'kanban'
-        ? <TaskKanban fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} onTaskClick={setDrawerTask} />
-        : <TaskList search={search} fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} onTaskClick={setDrawerTask} />
+        ? <TaskKanban fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} fDue={fDue} onTaskClick={setDrawerTask} />
+        : <TaskList search={search} fAccount={fAccount} fPriority={fPriority} fAssignee={fAssignee} fDue={fDue} onTaskClick={setDrawerTask} />
       }
 
       {drawerTask && <TaskDetailDrawer task={drawerTask} onClose={() => setDrawerTask(null)} />}

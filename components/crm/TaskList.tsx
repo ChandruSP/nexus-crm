@@ -88,11 +88,11 @@ function EditTaskModal({ task, onClose }: { task: FlatTask; onClose: () => void 
   );
 }
 
-interface Props { search: string; fAccount: string; fPriority: string; fAssignee: string; onTaskClick?: (t: DrawerTask) => void; }
+interface Props { search: string; fAccount: string; fPriority: string; fAssignee: string; fDue?: string; onTaskClick?: (t: DrawerTask) => void; }
 
 type FlatTask = { id: string; accountId: string; accountName: string; title: string; description?: string; status: TaskStatus; priority: TaskPriority; dueDate?: string; assignee?: string; opportunityId?: string; opportunityName?: string; comments: import('@/lib/crmTypes').Comment[]; createdAt: number; };
 
-export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }: Props) {
+export function TaskList({ search, fAccount, fPriority, fAssignee, fDue, onTaskClick }: Props) {
   const { state, dispatch } = useCrm();
   const [editTask, setEditTask] = useState<FlatTask | null>(null);
   const [delTask,  setDelTask]  = useState<FlatTask | null>(null);
@@ -119,6 +119,19 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
       if (fAccount  && t.accountId !== fAccount)  return false;
       if (fPriority && t.priority  !== fPriority) return false;
       if (fAssignee && t.assignee  !== fAssignee) return false;
+      if (fDue) {
+        const today = new Date(); today.setHours(0,0,0,0);
+        if (fDue === 'overdue') {
+          if (!t.dueDate || t.status === 'Done') return false;
+          if (new Date(t.dueDate) >= today) return false;
+        }
+        if (fDue === 'week') {
+          if (!t.dueDate || t.status === 'Done') return false;
+          const d = new Date(t.dueDate);
+          const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
+          if (d < today || d > weekEnd) return false;
+        }
+      }
       if (search) {
         const q = search.toLowerCase();
         return (
@@ -130,7 +143,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
       }
       return true;
     }),
-    [state.accounts, fAccount, fPriority, fAssignee, search]
+    [state.accounts, fAccount, fPriority, fAssignee, fDue, search]
   );
 
   const sorted = useMemo(() =>
@@ -148,7 +161,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, onTaskClick }
   );
 
   // Reset pages when filters/sort/groupBy change
-  useEffect(() => { setFlatPage(1); setGroupPages({}); }, [fAccount, fPriority, fAssignee, search, groupBy, sortKey]);
+  useEffect(() => { setFlatPage(1); setGroupPages({}); }, [fAccount, fPriority, fAssignee, fDue, search, groupBy, sortKey]);
 
   // ── Flat (no grouping) pagination ──────────────────────────────
   const flatTotal  = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));

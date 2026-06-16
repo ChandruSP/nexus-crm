@@ -130,12 +130,15 @@ export function CrmProvider({ children }: { children: ReactNode }) {
     // For CREATE operations: don't apply optimistic update with temp IDs.
     // Instead wait for the API to return the real DB id, then reload.
     const isCreate = ['ADD_ACCOUNT','ADD_TASK','ADD_STAKEHOLDER','ADD_OPPORTUNITY','ADD_PAST_PROJECT'].includes(action.type);
+    let createdAccountId: string | null = null;
 
     try {
       switch (action.type) {
-        case 'ADD_ACCOUNT':
-          await apiCreateAccount(action.account);
+        case 'ADD_ACCOUNT': {
+          const created = await apiCreateAccount(action.account);
+          createdAccountId = created.id;
           break;
+        }
         case 'UPDATE_ACCOUNT':
           await apiUpdateAccount(action.account.id, action.account);
           break;
@@ -196,12 +199,17 @@ export function CrmProvider({ children }: { children: ReactNode }) {
       if (isCreate) {
         const accounts = await fetchAccounts();
         dispatch({ type: 'SET_ACCOUNTS', accounts });
-        // Re-select the same account if possible
-        const currentId = state.selectedAccountId;
-        if (currentId) {
-          const found = accounts.find(a => a.id === currentId);
+        if (createdAccountId) {
+          // Newly created account — select it by its real DB id
+          const found = accounts.find(a => a.id === createdAccountId);
           if (found) dispatch({ type: 'SELECT_ACCOUNT', id: found.id });
-          else if (accounts.length > 0) dispatch({ type: 'SELECT_ACCOUNT', id: accounts[0].id });
+        } else {
+          // Other creates (task/opp/etc) — keep current account selected
+          const currentId = state.selectedAccountId;
+          if (currentId) {
+            const found = accounts.find(a => a.id === currentId);
+            if (found) dispatch({ type: 'SELECT_ACCOUNT', id: found.id });
+          }
         }
       }
     } catch (err) {

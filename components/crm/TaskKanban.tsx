@@ -38,9 +38,9 @@ interface DropTarget {
 }
 
 import { DrawerTask } from './TaskDetailDrawer';
-interface KanbanProps { fAccount: string; fPriority: string; fAssignee: string; onTaskClick?: (t: DrawerTask) => void; }
+interface KanbanProps { fAccount: string; fPriority: string; fAssignee: string; fDue?: string; onTaskClick?: (t: DrawerTask) => void; }
 
-export function TaskKanban({ fAccount, fPriority, fAssignee, onTaskClick }: KanbanProps) {
+export function TaskKanban({ fAccount, fPriority, fAssignee, fDue, onTaskClick }: KanbanProps) {
   const { state, dispatch } = useCrm();
 
   // Flat list of all tasks across all accounts
@@ -69,12 +69,25 @@ export function TaskKanban({ fAccount, fPriority, fAssignee, onTaskClick }: Kanb
     });
   }, [allTasks]);
 
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
+
   const filtered = useMemo(() =>
-    allTasks.filter(t =>
-      (!fAccount  || t.accountId === fAccount) &&
-      (!fPriority || t.priority  === fPriority) &&
-      (!fAssignee || t.assignee  === fAssignee)
-    ), [allTasks, fAccount, fPriority, fAssignee]);
+    allTasks.filter(t => {
+      if (fAccount  && t.accountId !== fAccount)  return false;
+      if (fPriority && t.priority  !== fPriority) return false;
+      if (fAssignee && t.assignee  !== fAssignee) return false;
+      if (fDue === 'overdue') {
+        if (!t.dueDate || t.status === 'Done') return false;
+        return new Date(t.dueDate) < today;
+      }
+      if (fDue === 'week') {
+        if (!t.dueDate || t.status === 'Done') return false;
+        const d = new Date(t.dueDate);
+        return d >= today && d <= weekEnd;
+      }
+      return true;
+    }), [allTasks, fAccount, fPriority, fAssignee, fDue]);
 
   function colCards(status: TaskStatus): FlatTask[] {
     return manualOrder

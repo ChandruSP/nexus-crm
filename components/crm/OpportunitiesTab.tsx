@@ -16,9 +16,9 @@ const STAGE_COLOR: Record<string, string> = {
 const STAGES: OppStage[] = ['Prospecting', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
 
 function fmtCurrency(n: number) {
-  if (n >= 10000000) return `₹${(n / 10000000).toFixed(1)}Cr`;
-  if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L`;
-  return `₹${n.toLocaleString('en-IN')}`;
+  if (n >= 1000000) return `$${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `$${(n / 1000).toFixed(0)}K`;
+  return `$${n.toLocaleString()}`;
 }
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -31,11 +31,11 @@ export function OpportunitiesTab({ account }: { account: Account }) {
   const [editId, setEditId] = useState<string | null>(null);
   const [delId, setDelId]   = useState<string | null>(null);
   const [form, setForm] = useState<Partial<Opportunity>>({
-    name: '', value: 0, stage: 'Prospecting', closeDate: '', probability: 50, description: '',
+    name: '', value: 0, stage: 'Prospecting', closeDate: '', probability: 50, description: '', nextStep: '',
   });
 
   function openAdd() {
-    setForm({ name: '', value: 0, stage: 'Prospecting', closeDate: '', probability: 50, description: '' });
+    setForm({ name: '', value: 0, stage: 'Prospecting', closeDate: '', probability: 50, description: '', nextStep: '' });
     setEditId(null);
     setAdding(true);
   }
@@ -100,7 +100,7 @@ export function OpportunitiesTab({ account }: { account: Account }) {
             <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
               <div><label style={labelStyle}>Name *</label><input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} autoFocus /></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                <div><label style={labelStyle}>Value (₹)</label><input type="number" style={inputStyle} value={form.value} onChange={e => setForm(f => ({ ...f, value: Number(e.target.value) }))} /></div>
+                <div><label style={labelStyle}>Value ($)</label><input type="number" style={inputStyle} value={form.value} onChange={e => setForm(f => ({ ...f, value: Number(e.target.value) }))} /></div>
                 <div><label style={labelStyle}>Stage</label>
                   <select style={inputStyle} value={form.stage} onChange={e => setForm(f => ({ ...f, stage: e.target.value as OppStage }))}>
                     {STAGES.map(s => <option key={s}>{s}</option>)}
@@ -109,7 +109,8 @@ export function OpportunitiesTab({ account }: { account: Account }) {
                 <div><label style={labelStyle}>Probability %</label><input type="number" min={0} max={100} style={inputStyle} value={form.probability} onChange={e => setForm(f => ({ ...f, probability: Number(e.target.value) }))} /></div>
               </div>
               <div><label style={labelStyle}>Expected Close Date</label><input type="date" style={inputStyle} value={form.closeDate} onChange={e => setForm(f => ({ ...f, closeDate: e.target.value }))} /></div>
-              <div><label style={labelStyle}>Description</label><textarea style={{ ...inputStyle, minHeight: 68, resize: 'vertical' }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
+              <div><label style={labelStyle}>Next Step</label><input style={inputStyle} placeholder="e.g. Send proposal by Friday" value={form.nextStep ?? ''} onChange={e => setForm(f => ({ ...f, nextStep: e.target.value }))} /></div>
+              <div><label style={labelStyle}>Description / Notes</label><textarea style={{ ...inputStyle, minHeight: 68, resize: 'vertical' }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <button type="submit" style={{ padding: '8px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{editId ? 'Update' : 'Add'}</button>
                 <button type="button" onClick={() => { setAdding(false); setEditId(null); }} style={{ padding: '8px 14px', background: 'transparent', color: 'var(--text2)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
@@ -144,7 +145,16 @@ export function OpportunitiesTab({ account }: { account: Account }) {
               <div style={{ height: 3, background: 'var(--bg4)', borderRadius: 99, marginBottom: 8 }}>
                 <div style={{ height: '100%', width: `${opp.probability}%`, background: stageColor, borderRadius: 99 }} />
               </div>
-              {opp.description && <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>{opp.description}</div>}
+              {opp.nextStep
+                ? <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 8, padding: '6px 10px', background: 'var(--accent-dim)', borderRadius: 'var(--r-sm)', border: '1px solid var(--accent)33' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>Next step</span>
+                    <span style={{ fontSize: 12, color: 'var(--text)', fontWeight: 500 }}>{opp.nextStep}</span>
+                  </div>
+                : <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '5px 10px', background: 'var(--red-dim)', borderRadius: 'var(--r-sm)', border: '1px solid var(--red)33' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--red)' }}>⚠ No next step defined</span>
+                  </div>
+              }
+              {opp.description && <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 6 }}>{opp.description}</div>}
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                 <button onClick={() => openEdit(opp)} title="Edit opportunity"
                   style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text2)', transition: 'color 0.12s, border-color 0.12s, background 0.12s' }}

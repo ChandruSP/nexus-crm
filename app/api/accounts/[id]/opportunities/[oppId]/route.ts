@@ -13,6 +13,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ oppId:
       probability: body.probability,
       closeDate: body.closeDate ? new Date(body.closeDate) : null,
       notes: body.notes,
+      nextStep: body.nextStep,
     },
   });
   return NextResponse.json(opp);

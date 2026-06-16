@@ -12,6 +12,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       probability: body.probability ?? 25,
       closeDate: body.closeDate ? new Date(body.closeDate) : null,
       notes: body.notes,
+      nextStep: body.nextStep,
       accountId: id,
     },
   });

@@ -79,6 +79,7 @@ function mapOpportunity(o: Record<string, unknown>): Opportunity {
     closeDate: o.closeDate ? (o.closeDate as string).split('T')[0] : '',
     probability: o.probability as number,
     description: o.notes as string | undefined,
+    nextStep: o.nextStep as string | undefined,
   };
 }
 
@@ -183,7 +184,7 @@ export async function apiCreateOpportunity(accountId: string, o: Opportunity): P
   await fetch(`/api/accounts/${accountId}/opportunities`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: o.name, stage: o.stage, value: o.value, probability: o.probability, closeDate: o.closeDate, notes: o.description }),
+    body: JSON.stringify({ title: o.name, stage: o.stage, value: o.value, probability: o.probability, closeDate: o.closeDate, notes: o.description, nextStep: o.nextStep }),
   });
 }
 
@@ -191,7 +192,7 @@ export async function apiUpdateOpportunity(accountId: string, o: Opportunity): P
   await fetch(`/api/accounts/${accountId}/opportunities/${o.id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: o.name, stage: o.stage, value: o.value, probability: o.probability, closeDate: o.closeDate, notes: o.description }),
+    body: JSON.stringify({ title: o.name, stage: o.stage, value: o.value, probability: o.probability, closeDate: o.closeDate, notes: o.description, nextStep: o.nextStep }),
   });
 }
 
