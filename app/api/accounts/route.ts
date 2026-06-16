@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 
 export async function GET() {
   const accounts = await prisma.account.findMany({
-    include: { contacts: true, tasks: true, opportunities: true, pastProjects: true },
+    include: { contacts: true, tasks: true, opportunities: true, pastProjects: true, group: true },
     orderBy: { createdAt: 'desc' },
   });
   return NextResponse.json(accounts);
@@ -20,9 +20,9 @@ export async function POST(req: Request) {
       location: body.location,
       website: body.website,
       description: body.description,
-      group: body.group,
+      groupId: body.groupId ?? null,
     },
-    include: { contacts: true, tasks: true, opportunities: true, pastProjects: true },
+    include: { contacts: true, tasks: true, opportunities: true, pastProjects: true, group: true },
   });
   return NextResponse.json(account, { status: 201 });
 }

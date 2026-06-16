@@ -9,14 +9,14 @@ const STAGES: OppStage[] = ['Prospecting','Qualified','Proposal','Negotiation','
 interface Props { account: Account; onDone: () => void; onCancel: () => void; }
 
 export function EditAccountPanel({ account, onDone, onCancel }: Props) {
-  const { dispatch } = useCrm();
+  const { state, dispatch } = useCrm();
   const { config } = useConfig();
 
   const [basic, setBasic] = useState({
     name: account.name, industry: account.industry,
     segment: account.segment, owner: account.owner,
     location: account.location ?? '', website: account.website ?? '',
-    description: account.description, group: account.group ?? '',
+    description: account.description, groupId: account.groupId ?? '',
   });
   const setB = (k: string, v: string) => setBasic(f => ({ ...f, [k]: v }));
 
@@ -45,7 +45,8 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
         location: basic.location.trim() || '—',
         website: basic.website.trim() || undefined,
         description: basic.description.trim(),
-        group: basic.group.trim() || undefined,
+        groupId: basic.groupId || undefined,
+        group: state.groups.find(g => g.id === basic.groupId)?.name,
       },
     });
     onDone();
@@ -116,9 +117,9 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
             </div>
             <div>
               <Label t="Account Group" />
-              <select style={sel()} value={basic.group} onChange={e => setB('group', e.target.value)}>
+              <select style={sel()} value={basic.groupId} onChange={e => setB('groupId', e.target.value)}>
                 <option value="">No group</option>
-                {config.accountGroups.map(g => <option key={g}>{g}</option>)}
+                {state.groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
             </div>
           </div>

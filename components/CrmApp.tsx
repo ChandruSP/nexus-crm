@@ -7,10 +7,11 @@ import { ToastProvider } from '@/context/ToastContext';
 import { ToastContainer } from './Toast';
 import { AccountsView } from './crm/AccountsView';
 import { TasksView } from './crm/TasksView';
+import { GroupsView } from './crm/GroupsView';
 import { ConfigView } from './crm/ConfigView';
 import { SplashScreen } from './SplashScreen';
 
-type AppView = 'accounts' | 'tasks' | 'config';
+type AppView = 'accounts' | 'tasks' | 'groups' | 'config';
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -62,6 +63,7 @@ function CrmBody({ view }: { view: AppView }) {
     <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
       {view === 'accounts' && <AccountsView />}
       {view === 'tasks'    && <TasksView />}
+      {view === 'groups'   && <GroupsView />}
       {view === 'config'   && <ConfigView />}
     </div>
   );
@@ -85,6 +87,7 @@ export function CrmApp() {
             </div>
             <NavTab label="Tasks"    active={view === 'tasks'}    onClick={() => setView('tasks')} />
             <NavTab label="Accounts" active={view === 'accounts'} onClick={() => setView('accounts')} />
+            <NavTab label="Groups"   active={view === 'groups'}   onClick={() => setView('groups')} />
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:4 }}>
               <button onClick={() => setView('config')} title="Settings"
                 style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',

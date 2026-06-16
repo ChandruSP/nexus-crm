@@ -10,12 +10,19 @@ async function main() {
   await prisma.task.deleteMany();
   await prisma.contact.deleteMany();
   await prisma.account.deleteMany();
+  await prisma.group.deleteMany();
 
   // Config
   await prisma.config.upsert({ where:{key:'industries'}, update:{values:['Banking & Finance','Supply Chain & Logistics','Healthcare & Life Sciences','Media & Entertainment','Technology','Manufacturing','Retail','Real Estate','Education','Government','Telecom','Energy']}, create:{key:'industries',values:['Banking & Finance','Supply Chain & Logistics','Healthcare & Life Sciences','Media & Entertainment','Technology','Manufacturing','Retail','Real Estate','Education','Government','Telecom','Energy']} });
   await prisma.config.upsert({ where:{key:'teamMembers'}, update:{values:['Priya Nair','Dev Sharma','Tanvi Kapila','Rohan Mehta','Sneha Iyer','Tech Team','Finance']}, create:{key:'teamMembers',values:['Priya Nair','Dev Sharma','Tanvi Kapila','Rohan Mehta','Sneha Iyer','Tech Team','Finance']} });
   await prisma.config.upsert({ where:{key:'oppStages'}, update:{values:['Prospecting','Qualified','Proposal','Negotiation','Closed Won','Closed Lost']}, create:{key:'oppStages',values:['Prospecting','Qualified','Proposal','Negotiation','Closed Won','Closed Lost']} });
-  await prisma.config.upsert({ where:{key:'accountGroups'}, update:{values:['Tata Group','Reliance Group','Adani Group','Public Sector']}, create:{key:'accountGroups',values:['Tata Group','Reliance Group','Adani Group','Public Sector']} });
+
+  // Create Groups
+  console.log('Seeding groups…');
+  const tataGroup     = await prisma.group.create({ data: { name: 'Tata Group',     industry: 'Conglomerate', description: 'Tata Sons conglomerate — steel, IT services, automotive, consumer goods. Largest industrial group in India.' } });
+  const relianceGroup = await prisma.group.create({ data: { name: 'Reliance Group', industry: 'Conglomerate', description: 'Reliance Industries conglomerate — retail, telecom, energy, media. Rapid digital transformation across all verticals.' } });
+  const adaniGroup    = await prisma.group.create({ data: { name: 'Adani Group',    industry: 'Energy',       description: 'Adani Enterprises conglomerate — ports, airports, energy, logistics. Aggressive expansion mode.' } });
+  const publicSector  = await prisma.group.create({ data: { name: 'Public Sector',  industry: 'Government',   description: 'Government-owned enterprises — long procurement cycles, policy-driven budgets, committee approvals required.' } });
 
   console.log('Seeding accounts…');
 
@@ -23,7 +30,7 @@ async function main() {
   await prisma.account.create({ data: {
     name: 'Tata Steel Limited', industry: 'Manufacturing', segment: 'Enterprise',
     owner: 'Priya Nair', location: 'Mumbai, Maharashtra', website: 'tatasteel.com',
-    group: 'Tata Group',
+    groupId: tataGroup.id,
     description: "India's largest integrated steel manufacturer. Key stakeholder is VP of Digital Transformation. Decision cycle ~3 months. Budget cycle resets in Q2.",
     contacts: { create: [
       { name:'Rajiv Mehta', role:'VP Digital Transformation', email:'r.mehta@tatasteel.com', phone:'+91 98765 43210', whatsapp:true, isPrimary:true, notes:'Prefers morning calls before 10am. Very analytical, wants data-driven proposals.' },
@@ -54,7 +61,7 @@ async function main() {
   await prisma.account.create({ data: {
     name: 'Tata Consultancy Services', industry: 'Technology', segment: 'Enterprise',
     owner: 'Dev Sharma', location: 'Bangalore, Karnataka', website: 'tcs.com',
-    group: 'Tata Group',
+    groupId: tataGroup.id,
     description: 'Global IT services giant. Multiple business units. Key contact in the Digital Initiatives group. TCS is also a potential reseller partner for Southeast Asia deals.',
     contacts: { create: [
       { name:'Ananya Singh', role:'Global Head of Procurement', email:'a.singh@tcs.com', phone:'+91 76543 21098', whatsapp:true, isPrimary:true, notes:'Very process-oriented. Always asks for references. Responds quickly on WhatsApp.' },
@@ -108,7 +115,7 @@ async function main() {
   await prisma.account.create({ data: {
     name: 'Reliance Retail Ventures', industry: 'Retail', segment: 'Mid-Market',
     owner: 'Priya Nair', location: 'Delhi, NCR', website: 'relianceretail.com',
-    group: 'Reliance Group',
+    groupId: relianceGroup.id,
     description: "Fastest growing retail chain in India. 2,000+ stores. Interested in customer analytics and loyalty platform integration. Seasonal budget peaks in Oct-Nov ahead of Diwali campaigns.",
     contacts: { create: [
       { name:'Deepak Verma', role:'Head of Analytics', email:'d.verma@relianceretail.com', phone:'+91 43210 98765', whatsapp:true, isPrimary:true, notes:'Very data-savvy. Loves dashboards. Prefers to test things himself before presenting to leadership.' },
@@ -187,7 +194,7 @@ async function main() {
   await prisma.account.create({ data: {
     name: 'Adani Ports and SEZ', industry: 'Supply Chain & Logistics', segment: 'Enterprise',
     owner: 'Dev Sharma', location: 'Ahmedabad, Gujarat', website: 'adaniports.com',
-    group: 'Adani Group',
+    groupId: adaniGroup.id,
     description: "India's largest port operator. 14 ports. Interested in IoT-based vessel tracking, cargo analytics, and predictive port congestion management.",
     contacts: { create: [
       { name:'Harish Bhat', role:'Head of Digital Transformation', email:'h.bhat@adaniports.com', phone:'+91 98776 54321', whatsapp:true, isPrimary:true, notes:'Aggressive timeline expectations. Wants POC live within 60 days of sign-off.' },
@@ -214,7 +221,7 @@ async function main() {
   await prisma.account.create({ data: {
     name: 'BSNL (Bharat Sanchar Nigam)', industry: 'Telecom', segment: 'Enterprise',
     owner: 'Sneha Iyer', location: 'New Delhi, NCR', website: 'bsnl.in',
-    group: 'Public Sector',
+    groupId: publicSector.id,
     description: 'Government-owned telecom. Budget-constrained but massive scale. Decisions require multi-level approvals including MoC clearance. GEM procurement portal mandatory.',
     contacts: { create: [
       { name:'Rajendra Prasad', role:'Director (IT)', email:'r.prasad@bsnl.in', phone:'+011 2301 5678', whatsapp:false, isPrimary:true, notes:'Senior ITS officer. Very process-driven. All proposals must go through official channels on GEM portal.' },

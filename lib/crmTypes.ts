@@ -1,3 +1,10 @@
+export interface Group {
+  id: string;
+  name: string;
+  industry: string;
+  description?: string;
+}
+
 export type TaskStatus   = 'To do' | 'In progress' | 'Done' | 'Blocked';
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 export type OppStage     = string; // configurable — default values in ConfigContext
@@ -77,5 +84,6 @@ export interface Account {
   tasks: Task[];
   attachments?: Attachment[];
   group?: string;
+  groupId?: string;
   createdAt: number;
 }

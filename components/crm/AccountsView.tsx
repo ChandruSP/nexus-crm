@@ -135,7 +135,7 @@ export function AccountsView() {
   }, {});
   const groupNames   = Object.keys(grouped).filter(k => k !== '').sort();
   const ungrouped    = grouped[''] ?? [];
-  const hasAnyGroups = state.accounts.some(a => a.group);
+  const hasAnyGroups = state.accounts.some(a => a.groupId);
 
   function toggleCollapse(name: string) {
     setCollapsed(prev => { const n = new Set(prev); n.has(name) ? n.delete(name) : n.add(name); return n; });

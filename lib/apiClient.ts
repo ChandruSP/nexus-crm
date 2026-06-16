@@ -1,4 +1,4 @@
-import { Account, Task, Stakeholder, Opportunity, PastProject, Comment, TaskStatus, TaskPriority } from './crmTypes';
+import { Account, Group, Task, Stakeholder, Opportunity, PastProject, Comment, TaskStatus, TaskPriority } from './crmTypes';
 
 function normalizeStatus(s: string): TaskStatus {
   const map: Record<string, TaskStatus> = {
@@ -29,7 +29,8 @@ export function mapAccount(raw: Record<string, unknown>): Account {
     website: raw.website as string | undefined,
     location: raw.location as string | undefined,
     owner: raw.owner as string,
-    group: raw.group as string | undefined,
+    group: (raw.group as Record<string, unknown> | null)?.name as string | undefined,
+    groupId: raw.groupId as string | undefined,
     createdAt: new Date(raw.createdAt as string).getTime(),
     stakeholders: ((raw.contacts as Record<string, unknown>[]) || []).map(mapContact),
     tasks: ((raw.tasks as Record<string, unknown>[]) || []).map(mapTask),
@@ -218,4 +219,37 @@ export async function apiUpdateProject(accountId: string, p: PastProject): Promi
 
 export async function apiDeleteProject(accountId: string, projectId: string): Promise<void> {
   await fetch(`/api/accounts/${accountId}/projects/${projectId}`, { method: 'DELETE' });
+}
+
+export async function fetchGroups(): Promise<Group[]> {
+  const res = await fetch('/api/groups');
+  const data = await res.json();
+  return data.map((g: Record<string, unknown>) => ({
+    id: g.id as string,
+    name: g.name as string,
+    industry: g.industry as string,
+    description: g.description as string | undefined,
+  }));
+}
+
+export async function apiCreateGroup(g: { name: string; industry: string; description?: string }): Promise<Group> {
+  const res = await fetch('/api/groups', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(g),
+  });
+  const data = await res.json();
+  return { id: data.id, name: data.name, industry: data.industry, description: data.description };
+}
+
+export async function apiUpdateGroup(id: string, g: Partial<Group>): Promise<void> {
+  await fetch(`/api/groups/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(g),
+  });
+}
+
+export async function apiDeleteGroup(id: string): Promise<void> {
+  await fetch(`/api/groups/${id}`, { method: 'DELETE' });
 }

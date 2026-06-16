@@ -1,8 +1,9 @@
 'use client';
 import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Account, Task, Opportunity, Stakeholder, PastProject, Comment, Attachment } from '@/lib/crmTypes';
+import { Account, Group, Task, Opportunity, Stakeholder, PastProject, Comment, Attachment } from '@/lib/crmTypes';
 import {
-  fetchAccounts, apiCreateAccount, apiUpdateAccount, apiDeleteAccount,
+  fetchAccounts, fetchGroups, apiCreateGroup, apiUpdateGroup, apiDeleteGroup,
+  apiCreateAccount, apiUpdateAccount, apiDeleteAccount,
   apiCreateTask, apiUpdateTask, apiDeleteTask,
   apiCreateStakeholder, apiUpdateStakeholder, apiDeleteStakeholder,
   apiCreateOpportunity, apiUpdateOpportunity, apiDeleteOpportunity,
@@ -11,12 +12,17 @@ import {
 
 interface CrmState {
   accounts: Account[];
+  groups: Group[];
   selectedAccountId: string | null;
   loading: boolean;
 }
 
 type Action =
   | { type: 'SET_ACCOUNTS'; accounts: Account[] }
+  | { type: 'SET_GROUPS'; groups: Group[] }
+  | { type: 'ADD_GROUP'; group: Group }
+  | { type: 'UPDATE_GROUP'; group: Group }
+  | { type: 'DELETE_GROUP'; groupId: string }
   | { type: 'SET_LOADING'; loading: boolean }
   | { type: 'SELECT_ACCOUNT'; id: string | null }
   | { type: 'ADD_ACCOUNT'; account: Account }
@@ -47,6 +53,14 @@ function reducer(state: CrmState, action: Action): CrmState {
   switch (action.type) {
     case 'SET_ACCOUNTS':
       return { ...state, accounts: action.accounts, loading: false };
+    case 'SET_GROUPS':
+      return { ...state, groups: action.groups };
+    case 'ADD_GROUP':
+      return { ...state, groups: [...state.groups, action.group] };
+    case 'UPDATE_GROUP':
+      return { ...state, groups: state.groups.map(g => g.id === action.group.id ? action.group : g) };
+    case 'DELETE_GROUP':
+      return { ...state, groups: state.groups.filter(g => g.id !== action.groupId) };
     case 'SET_LOADING':
       return { ...state, loading: action.loading };
     case 'SELECT_ACCOUNT':
@@ -110,14 +124,16 @@ const CrmContext = createContext<{
 export function CrmProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, {
     accounts: [],
+    groups: [],
     selectedAccountId: null,
     loading: true,
   });
 
-  // Load accounts from DB on mount
+  // Load accounts and groups from DB on mount
   useEffect(() => {
-    fetchAccounts().then(accounts => {
+    Promise.all([fetchAccounts(), fetchGroups()]).then(([accounts, groups]) => {
       dispatch({ type: 'SET_ACCOUNTS', accounts });
+      dispatch({ type: 'SET_GROUPS', groups });
       if (accounts.length > 0) dispatch({ type: 'SELECT_ACCOUNT', id: accounts[0].id });
     }).catch(() => dispatch({ type: 'SET_LOADING', loading: false }));
   }, []);
@@ -129,11 +145,20 @@ export function CrmProvider({ children }: { children: ReactNode }) {
 
     // For CREATE operations: don't apply optimistic update with temp IDs.
     // Instead wait for the API to return the real DB id, then reload.
-    const isCreate = ['ADD_ACCOUNT','ADD_TASK','ADD_STAKEHOLDER','ADD_OPPORTUNITY','ADD_PAST_PROJECT'].includes(action.type);
+    const isCreate = ['ADD_ACCOUNT','ADD_TASK','ADD_STAKEHOLDER','ADD_OPPORTUNITY','ADD_PAST_PROJECT','ADD_GROUP'].includes(action.type);
     let createdAccountId: string | null = null;
 
     try {
       switch (action.type) {
+        case 'ADD_GROUP':
+          await apiCreateGroup(action.group);
+          break;
+        case 'UPDATE_GROUP':
+          await apiUpdateGroup(action.group.id, action.group);
+          break;
+        case 'DELETE_GROUP':
+          await apiDeleteGroup(action.groupId);
+          break;
         case 'ADD_ACCOUNT': {
           const created = await apiCreateAccount(action.account);
           createdAccountId = created.id;
@@ -197,8 +222,9 @@ export function CrmProvider({ children }: { children: ReactNode }) {
 
       // After any CREATE, reload from DB to get real IDs (replaces temp IDs)
       if (isCreate) {
-        const accounts = await fetchAccounts();
+        const [accounts, groups] = await Promise.all([fetchAccounts(), fetchGroups()]);
         dispatch({ type: 'SET_ACCOUNTS', accounts });
+        dispatch({ type: 'SET_GROUPS', groups });
         if (createdAccountId) {
           // Newly created account — select it by its real DB id
           const found = accounts.find(a => a.id === createdAccountId);

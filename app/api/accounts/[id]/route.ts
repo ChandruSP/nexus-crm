@@ -5,7 +5,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const account = await prisma.account.findUnique({
     where: { id },
-    include: { contacts: true, tasks: true, opportunities: true, pastProjects: true },
+    include: { contacts: true, tasks: true, opportunities: true, pastProjects: true, group: true },
   });
   if (!account) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(account);
@@ -24,9 +24,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       location: body.location,
       website: body.website,
       description: body.description,
-      group: body.group ?? null,
+      groupId: body.groupId !== undefined ? (body.groupId ?? null) : undefined,
     },
-    include: { contacts: true, tasks: true, opportunities: true, pastProjects: true },
+    include: { contacts: true, tasks: true, opportunities: true, pastProjects: true, group: true },
   });
   return NextResponse.json(account);
 }
