@@ -1,5 +1,7 @@
 'use client';
 import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import { useCrm } from './CrmContext';
+import { persistConfig } from '@/lib/apiClient';
 
 export interface ConfigState {
   industries:    string[];
@@ -7,12 +9,6 @@ export interface ConfigState {
   oppStages:     string[];
   accountGroups: string[];
 }
-
-type Action =
-  | { type: 'SET_CONFIG'; config: ConfigState }
-  | { type: 'ADD_ITEM';    list: keyof ConfigState; value: string }
-  | { type: 'REMOVE_ITEM'; list: keyof ConfigState; value: string }
-  | { type: 'MOVE_ITEM';   list: keyof ConfigState; from: number; to: number };
 
 const DEFAULT: ConfigState = {
   industries: [
@@ -24,6 +20,12 @@ const DEFAULT: ConfigState = {
   oppStages:     ['Prospecting', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'],
   accountGroups: [],
 };
+
+type Action =
+  | { type: 'SET_CONFIG'; config: ConfigState }
+  | { type: 'ADD_ITEM';    list: keyof ConfigState; value: string }
+  | { type: 'REMOVE_ITEM'; list: keyof ConfigState; value: string }
+  | { type: 'MOVE_ITEM';   list: keyof ConfigState; from: number; to: number };
 
 function reducer(state: ConfigState, action: Action): ConfigState {
   if (action.type === 'SET_CONFIG') return action.config;
@@ -43,36 +45,25 @@ function reducer(state: ConfigState, action: Action): ConfigState {
   }
 }
 
-async function persistConfig(list: keyof ConfigState, values: string[]) {
-  await fetch('/api/config', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key: list, values }),
-  });
-}
-
 const ConfigContext = createContext<{
   config: ConfigState;
   dispatch: React.Dispatch<Action>;
 } | null>(null);
 
-export function ConfigProvider({ children }: { children: ReactNode }) {
+export function ConfigProvider({ children, departmentId }: { children: ReactNode; departmentId: string }) {
+  const { state: crmState } = useCrm();
   const [config, dispatch] = useReducer(reducer, DEFAULT);
 
-  // Load from API on mount
+  // Sync config from CrmContext bootstrap payload whenever it loads
   useEffect(() => {
-    fetch('/api/config')
-      .then(r => r.json())
-      .then(data => dispatch({ type: 'SET_CONFIG', config: data }))
-      .catch(() => {/* keep defaults */});
-  }, []);
+    if (crmState.config && Object.keys(crmState.config).length > 0) {
+      dispatch({ type: 'SET_CONFIG', config: { ...DEFAULT, ...crmState.config } as ConfigState });
+    }
+  }, [crmState.config]);
 
-  // Wrap dispatch to also persist changes
   const apiDispatch: React.Dispatch<Action> = (action) => {
     dispatch(action);
     if (action.type === 'ADD_ITEM' || action.type === 'REMOVE_ITEM' || action.type === 'MOVE_ITEM') {
-      // Compute the new list after the action and persist it
-      // We re-run the reducer logic here to get the updated list
       const list = [...config[action.list]];
       let updated: string[];
       if (action.type === 'ADD_ITEM') {
@@ -85,7 +76,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         list.splice(action.to, 0, item);
         updated = list;
       }
-      persistConfig(action.list, updated).catch(console.error);
+      persistConfig(action.list, updated, departmentId).catch(console.error);
     }
   };
 

@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const departmentId = searchParams.get('d') ?? '';
   const accounts = await prisma.account.findMany({
+    where: { departmentId },
     include: { contacts: true, tasks: true, opportunities: true, pastProjects: true, group: true },
     orderBy: { createdAt: 'desc' },
   });
@@ -21,6 +24,7 @@ export async function POST(req: Request) {
       website: body.website,
       description: body.description,
       groupId: body.groupId ?? null,
+      departmentId: body.departmentId,
     },
     include: { contacts: true, tasks: true, opportunities: true, pastProjects: true, group: true },
   });

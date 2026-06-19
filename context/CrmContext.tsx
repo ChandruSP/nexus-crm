@@ -2,7 +2,7 @@
 import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { Account, Group, Task, Opportunity, Stakeholder, PastProject, Comment, Attachment } from '@/lib/crmTypes';
 import {
-  fetchAccounts, fetchGroups, apiCreateGroup, apiUpdateGroup, apiDeleteGroup,
+  fetchBootstrap, fetchAccounts, fetchGroups, apiCreateGroup, apiUpdateGroup, apiDeleteGroup,
   apiCreateAccount, apiUpdateAccount, apiDeleteAccount,
   apiCreateTask, apiUpdateTask, apiDeleteTask,
   apiCreateStakeholder, apiUpdateStakeholder, apiDeleteStakeholder,
@@ -13,6 +13,7 @@ import {
 interface CrmState {
   accounts: Account[];
   groups: Group[];
+  config: Record<string, string[]>;
   selectedAccountId: string | null;
   loading: boolean;
 }
@@ -20,6 +21,7 @@ interface CrmState {
 type Action =
   | { type: 'SET_ACCOUNTS'; accounts: Account[] }
   | { type: 'SET_GROUPS'; groups: Group[] }
+  | { type: 'SET_CONFIG'; config: Record<string, string[]> }
   | { type: 'ADD_GROUP'; group: Group }
   | { type: 'UPDATE_GROUP'; group: Group }
   | { type: 'DELETE_GROUP'; groupId: string }
@@ -55,6 +57,8 @@ function reducer(state: CrmState, action: Action): CrmState {
       return { ...state, accounts: action.accounts, loading: false };
     case 'SET_GROUPS':
       return { ...state, groups: action.groups };
+    case 'SET_CONFIG':
+      return { ...state, config: action.config };
     case 'ADD_GROUP':
       return { ...state, groups: [...state.groups, action.group] };
     case 'UPDATE_GROUP':
@@ -121,22 +125,25 @@ const CrmContext = createContext<{
   dispatch: React.Dispatch<Action>;
 } | null>(null);
 
-export function CrmProvider({ children }: { children: ReactNode }) {
+export function CrmProvider({ children, departmentId }: { children: ReactNode; departmentId: string }) {
   const [state, dispatch] = useReducer(reducer, {
     accounts: [],
     groups: [],
+    config: {},
     selectedAccountId: null,
     loading: true,
   });
 
-  // Load accounts and groups from DB on mount
+  // Single bootstrap call — one Neon cold start instead of three
   useEffect(() => {
-    Promise.all([fetchAccounts(), fetchGroups()]).then(([accounts, groups]) => {
+    dispatch({ type: 'SET_LOADING', loading: true });
+    fetchBootstrap(departmentId).then(({ accounts, groups, config }) => {
       dispatch({ type: 'SET_ACCOUNTS', accounts });
       dispatch({ type: 'SET_GROUPS', groups });
+      dispatch({ type: 'SET_CONFIG', config });
       if (accounts.length > 0) dispatch({ type: 'SELECT_ACCOUNT', id: accounts[0].id });
     }).catch(() => dispatch({ type: 'SET_LOADING', loading: false }));
-  }, []);
+  }, [departmentId]);
 
   // Wrap dispatch to also fire API calls
   const apiDispatch: React.Dispatch<Action> = async (action) => {
@@ -151,7 +158,7 @@ export function CrmProvider({ children }: { children: ReactNode }) {
     try {
       switch (action.type) {
         case 'ADD_GROUP':
-          await apiCreateGroup(action.group);
+          await apiCreateGroup(action.group, departmentId);
           break;
         case 'UPDATE_GROUP':
           await apiUpdateGroup(action.group.id, action.group);
@@ -160,7 +167,7 @@ export function CrmProvider({ children }: { children: ReactNode }) {
           await apiDeleteGroup(action.groupId);
           break;
         case 'ADD_ACCOUNT': {
-          const created = await apiCreateAccount(action.account);
+          const created = await apiCreateAccount(action.account, departmentId);
           createdAccountId = created.id;
           break;
         }
@@ -222,7 +229,7 @@ export function CrmProvider({ children }: { children: ReactNode }) {
 
       // After any CREATE, reload from DB to get real IDs (replaces temp IDs)
       if (isCreate) {
-        const [accounts, groups] = await Promise.all([fetchAccounts(), fetchGroups()]);
+        const { accounts, groups } = await fetchBootstrap(departmentId);
         dispatch({ type: 'SET_ACCOUNTS', accounts });
         dispatch({ type: 'SET_GROUPS', groups });
         if (createdAccountId) {
@@ -241,7 +248,11 @@ export function CrmProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error('API error, reloading data', err);
       // On error, reload from DB to restore consistent state
-      fetchAccounts().then(accounts => dispatch({ type: 'SET_ACCOUNTS', accounts }));
+      fetchBootstrap(departmentId).then(({ accounts, groups, config }) => {
+        dispatch({ type: 'SET_ACCOUNTS', accounts });
+        dispatch({ type: 'SET_GROUPS', groups });
+        dispatch({ type: 'SET_CONFIG', config });
+      });
     }
   };
 

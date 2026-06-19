@@ -7,29 +7,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Group {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  industry    String
-  description String?
-  createdAt   DateTime  @default(now())
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  color       String
+  icon        String
+  hasAccounts Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-  accounts    Account[]
+  accounts  Account[]
+  groups    Group[]
+  configs   Config[]
+}
+
+model Group {
+  id           String    @id @default(cuid())
+  name         String
+  industry     String
+  description  String?
+  departmentId String
+  createdAt    DateTime  @default(now())
+
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  accounts     Account[]
+
+  @@unique([name, departmentId])
 }
 
 model Account {
-  id          String   @id @default(cuid())
-  name        String
-  industry    String
-  segment     String
-  owner       String
-  location    String?
-  website     String?
-  description String?
-  groupId     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  industry     String
+  segment      String
+  owner        String
+  location     String?
+  website      String?
+  description  String?
+  groupId      String?
+  departmentId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
+  department    Department    @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   group         Group?        @relation(fields: [groupId], references: [id])
   contacts      Contact[]
   tasks         Task[]
@@ -98,7 +117,11 @@ model PastProject {
 }
 
 model Config {
-  id     String   @id @default(cuid())
-  key    String   @unique
-  values String[]
+  id           String     @id @default(cuid())
+  key          String
+  values       String[]
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([key, departmentId])
 }

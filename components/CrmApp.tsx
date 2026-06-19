@@ -7,11 +7,12 @@ import { ToastProvider } from '@/context/ToastContext';
 import { ToastContainer } from './Toast';
 import { AccountsView } from './crm/AccountsView';
 import { TasksView } from './crm/TasksView';
-import { GroupsView } from './crm/GroupsView';
 import { ConfigView } from './crm/ConfigView';
 import { SplashScreen } from './SplashScreen';
+import { DepartmentSelector } from './DepartmentSelector';
+import { Department } from '@/lib/apiClient';
 
-type AppView = 'accounts' | 'tasks' | 'groups' | 'config';
+type AppView = 'tasks' | 'accounts' | 'config';
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -61,33 +62,50 @@ function CrmBody({ view }: { view: AppView }) {
   }
   return (
     <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-      {view === 'accounts' && <AccountsView />}
       {view === 'tasks'    && <TasksView />}
-      {view === 'groups'   && <GroupsView />}
+      {view === 'accounts' && <AccountsView />}
       {view === 'config'   && <ConfigView />}
     </div>
   );
 }
 
-export function CrmApp() {
+function DeptDot({ color }: { color: string }) {
+  return <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: color, marginRight: 6, flexShrink: 0 }} />;
+}
+
+function CrmShell({ department, onBack }: { department: Department; onBack: () => void }) {
   const [view, setView] = useState<AppView>('tasks');
-  const [splash, setSplash] = useState(true);
 
   return (
-    <ToastProvider>
-    {splash && <SplashScreen onDone={() => setSplash(false)} />}
-    <ConfigProvider>
-      <CrmProvider>
+    <CrmProvider key={department.id} departmentId={department.id}>
+      <ConfigProvider key={department.id} departmentId={department.id}>
         <div style={{ display:'flex', flexDirection:'column', height:'100vh', background:'var(--bg)', fontFamily:'Instrument Sans, sans-serif', overflow:'hidden' }}>
 
           {/* Topbar */}
           <div style={{ height:48, flexShrink:0, background:'var(--bg2)', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'stretch', padding:'0 20px', gap:0, zIndex:100 }}>
-            <div style={{ display:'flex', alignItems:'center', marginRight:24 }}>
-              <span style={{ fontSize:18, color:'var(--accent)', fontWeight:800, letterSpacing:'0.08em', fontFamily: 'Poppins, sans-serif' }}>NEXUS</span>
+
+            {/* Back + logo + dept name */}
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginRight:20 }}>
+              <button
+                onClick={onBack}
+                title="All departments"
+                style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 8px', background:'none', border:'1px solid var(--border2)', borderRadius:'var(--r-sm)', cursor:'pointer', color:'var(--text3)', fontSize:12, transition:'color 0.12s, border-color 0.12s' }}
+                onMouseEnter={e => { const b = e.currentTarget; b.style.color = 'var(--text)'; b.style.borderColor = 'var(--text2)'; }}
+                onMouseLeave={e => { const b = e.currentTarget; b.style.color = 'var(--text3)'; b.style.borderColor = 'var(--border2)'; }}
+              >
+                ← Depts
+              </button>
+              <span style={{ fontSize:18, color:'var(--accent)', fontWeight:800, letterSpacing:'0.08em', fontFamily:'Poppins, sans-serif' }}>NEXUS</span>
+              <span style={{ fontSize:11, color:'var(--text3)', margin:'0 2px' }}>·</span>
+              <DeptDot color={department.color} />
+              <span style={{ fontSize:13, fontWeight:600, color:'var(--text2)', maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                {department.icon} {department.name}
+              </span>
             </div>
+
             <NavTab label="Tasks"    active={view === 'tasks'}    onClick={() => setView('tasks')} />
-            <NavTab label="Accounts" active={view === 'accounts'} onClick={() => setView('accounts')} />
-            <NavTab label="Groups"   active={view === 'groups'}   onClick={() => setView('groups')} />
+            {department.hasAccounts && <NavTab label="Accounts" active={view === 'accounts'} onClick={() => setView('accounts')} />}
+
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:4 }}>
               <button onClick={() => setView('config')} title="Settings"
                 style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
@@ -109,9 +127,23 @@ export function CrmApp() {
           {/* Body */}
           <CrmBody view={view} />
         </div>
-      </CrmProvider>
-    </ConfigProvider>
-    <ToastContainer />
+      </ConfigProvider>
+    </CrmProvider>
+  );
+}
+
+export function CrmApp() {
+  const [department, setDepartment] = useState<Department | null>(null);
+  const [splash, setSplash] = useState(true);
+
+  return (
+    <ToastProvider>
+      {splash && <SplashScreen onDone={() => setSplash(false)} />}
+      {!department
+        ? <DepartmentSelector onSelect={setDepartment} />
+        : <CrmShell department={department} onBack={() => setDepartment(null)} />
+      }
+      <ToastContainer />
     </ToastProvider>
   );
 }

@@ -97,17 +97,27 @@ function mapProject(p: Record<string, unknown>): PastProject {
 
 // ─── API calls ────────────────────────────────────────────────────────────────
 
-export async function fetchAccounts(): Promise<Account[]> {
-  const res = await fetch('/api/accounts');
+export async function fetchBootstrap(departmentId: string): Promise<{ accounts: Account[]; groups: Group[]; config: Record<string, string[]> }> {
+  const res = await fetch(`/api/bootstrap?d=${departmentId}`);
+  const data = await res.json();
+  return {
+    accounts: data.accounts.map(mapAccount),
+    groups:   data.groups.map((g: Record<string, unknown>) => ({ id: g.id, name: g.name, industry: g.industry, description: g.description })),
+    config:   data.config,
+  };
+}
+
+export async function fetchAccounts(departmentId: string): Promise<Account[]> {
+  const res = await fetch(`/api/accounts?d=${departmentId}`);
   const data = await res.json();
   return data.map(mapAccount);
 }
 
-export async function apiCreateAccount(body: Partial<Account>): Promise<Account> {
+export async function apiCreateAccount(body: Partial<Account>, departmentId: string): Promise<Account> {
   const res = await fetch('/api/accounts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, departmentId }),
   });
   return mapAccount(await res.json());
 }
@@ -221,8 +231,8 @@ export async function apiDeleteProject(accountId: string, projectId: string): Pr
   await fetch(`/api/accounts/${accountId}/projects/${projectId}`, { method: 'DELETE' });
 }
 
-export async function fetchGroups(): Promise<Group[]> {
-  const res = await fetch('/api/groups');
+export async function fetchGroups(departmentId: string): Promise<Group[]> {
+  const res = await fetch(`/api/groups?d=${departmentId}`);
   const data = await res.json();
   return data.map((g: Record<string, unknown>) => ({
     id: g.id as string,
@@ -232,11 +242,11 @@ export async function fetchGroups(): Promise<Group[]> {
   }));
 }
 
-export async function apiCreateGroup(g: { name: string; industry: string; description?: string }): Promise<Group> {
+export async function apiCreateGroup(g: { name: string; industry: string; description?: string }, departmentId: string): Promise<Group> {
   const res = await fetch('/api/groups', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(g),
+    body: JSON.stringify({ ...g, departmentId }),
   });
   const data = await res.json();
   return { id: data.id, name: data.name, industry: data.industry, description: data.description };
@@ -252,4 +262,55 @@ export async function apiUpdateGroup(id: string, g: Partial<Group>): Promise<voi
 
 export async function apiDeleteGroup(id: string): Promise<void> {
   await fetch(`/api/groups/${id}`, { method: 'DELETE' });
+}
+
+// ─── Departments ───────────────────────────────────────────────────────────────
+
+export interface Department {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  hasAccounts: boolean;
+}
+
+export async function fetchDepartments(): Promise<Department[]> {
+  const res = await fetch('/api/departments');
+  return res.json();
+}
+
+export async function apiCreateDepartment(d: { name: string; color: string; icon: string; hasAccounts: boolean }): Promise<Department> {
+  const res = await fetch('/api/departments', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(d),
+  });
+  return res.json();
+}
+
+export async function apiUpdateDepartment(id: string, d: Partial<Department>): Promise<void> {
+  await fetch(`/api/departments/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(d),
+  });
+}
+
+export async function apiDeleteDepartment(id: string): Promise<void> {
+  await fetch(`/api/departments/${id}`, { method: 'DELETE' });
+}
+
+// ─── Config ────────────────────────────────────────────────────────────────────
+
+export async function fetchConfig(departmentId: string): Promise<Record<string, string[]>> {
+  const res = await fetch(`/api/config?d=${departmentId}`);
+  return res.json();
+}
+
+export async function persistConfig(key: string, values: string[], departmentId: string): Promise<void> {
+  await fetch('/api/config', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, values, departmentId }),
+  });
 }

@@ -11,18 +11,20 @@ const DEFAULT_CONFIG: Record<string, string[]> = {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const departmentId = searchParams.get('d') ?? '';
-  const rows = await prisma.config.findMany({ where: { departmentId } });
-  const config = { ...DEFAULT_CONFIG };
-  for (const row of rows) config[row.key] = row.values;
-  return NextResponse.json(config);
-}
 
-export async function PATCH(req: Request) {
-  const body: { key: string; values: string[]; departmentId: string } = await req.json();
-  const row = await prisma.config.upsert({
-    where: { key_departmentId: { key: body.key, departmentId: body.departmentId } },
-    update: { values: body.values },
-    create: { key: body.key, values: body.values, departmentId: body.departmentId },
-  });
-  return NextResponse.json(row);
+  // Run all 3 queries in parallel — single cold start, one connection
+  const [accounts, groups, configRows] = await Promise.all([
+    prisma.account.findMany({
+      where: { departmentId },
+      include: { contacts: true, tasks: true, opportunities: true, pastProjects: true, group: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.group.findMany({ where: { departmentId }, orderBy: { name: 'asc' } }),
+    prisma.config.findMany({ where: { departmentId } }),
+  ]);
+
+  const config = { ...DEFAULT_CONFIG };
+  for (const row of configRows) config[row.key] = row.values;
+
+  return NextResponse.json({ accounts, groups, config });
 }
