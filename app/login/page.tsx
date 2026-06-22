@@ -4,8 +4,11 @@ import { PublicClientApplication } from '@azure/msal-browser';
 import { msalConfig, loginScopes } from '@/lib/msalConfig';
 
 let msalInstance: PublicClientApplication | null = null;
-function getMsal() {
-  if (!msalInstance) msalInstance = new PublicClientApplication(msalConfig);
+async function getMsal() {
+  if (!msalInstance) {
+    msalInstance = new PublicClientApplication(msalConfig);
+    await msalInstance.initialize();
+  }
   return msalInstance;
 }
 
@@ -17,16 +20,32 @@ export default function LoginPage() {
     setStatus('loading');
     setError('');
     try {
-      const msal = getMsal();
-      await msal.initialize();
-      // Store any callbackUrl so the callback page can redirect there
+      const msal = await getMsal();
+      const result = await msal.loginPopup({
+        scopes: loginScopes,
+        redirectUri: window.location.origin + '/auth/popup',
+      });
+
+      const res = await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: result.accessToken,
+          name:        result.account?.name     ?? '',
+          email:       result.account?.username ?? '',
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Session creation failed');
+      }
+
       const params = new URLSearchParams(window.location.search);
-      const callbackUrl = params.get('callbackUrl') || '/';
-      sessionStorage.setItem('nexus_callback_url', callbackUrl);
-      await msal.loginRedirect({ scopes: loginScopes });
+      window.location.href = params.get('callbackUrl') || '/';
     } catch (e: any) {
       setStatus('idle');
-      setError(e?.message ?? 'Failed to start sign-in');
+      setError(e?.message ?? 'Failed to sign in');
     }
   }
 
