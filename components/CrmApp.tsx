@@ -51,7 +51,7 @@ function NavTab({ label, active, onClick }: { label: string; active: boolean; on
   );
 }
 
-function CrmBody({ view }: { view: AppView }) {
+function CrmBody({ view, isKam }: { view: AppView; isKam: boolean }) {
   const { state } = useCrm();
   if (state.loading) {
     return (
@@ -64,7 +64,7 @@ function CrmBody({ view }: { view: AppView }) {
     <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
       {view === 'tasks'    && <TasksView />}
       {view === 'accounts' && <AccountsView />}
-      {view === 'config'   && <ConfigView />}
+      {view === 'config'   && <ConfigView isKam={isKam} />}
     </div>
   );
 }
@@ -125,23 +125,57 @@ function CrmShell({ department, onBack }: { department: Department; onBack: () =
           </div>
 
           {/* Body */}
-          <CrmBody view={view} />
+          <CrmBody view={view} isKam={department.hasAccounts} />
         </div>
       </ConfigProvider>
     </CrmProvider>
   );
 }
 
+function deptSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 export function CrmApp() {
   const [department, setDepartment] = useState<Department | null>(null);
   const [splash, setSplash] = useState(true);
+  // pendingSlug: read from URL on first load so DepartmentSelector can auto-select
+  const [pendingSlug, setPendingSlug] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const m = window.location.pathname.match(/^\/d\/(.+)/);
+    return m ? m[1] : null;
+  });
+
+  function enterDept(dept: Department) {
+    setDepartment(dept);
+    window.history.pushState({}, '', `/d/${deptSlug(dept.name)}`);
+  }
+
+  function leaveDept() {
+    setDepartment(null);
+    window.history.pushState({}, '', '/');
+  }
+
+  // Handle browser back/forward
+  useEffect(() => {
+    function onPop() {
+      const m = window.location.pathname.match(/^\/d\/(.+)/);
+      if (!m) setDepartment(null);
+    }
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   return (
     <ToastProvider>
       {splash && <SplashScreen onDone={() => setSplash(false)} />}
       {!department
-        ? <DepartmentSelector onSelect={setDepartment} />
-        : <CrmShell department={department} onBack={() => setDepartment(null)} />
+        ? <DepartmentSelector
+            onSelect={enterDept}
+            pendingSlug={pendingSlug}
+            onSlugResolved={() => setPendingSlug(null)}
+          />
+        : <CrmShell department={department} onBack={leaveDept} />
       }
       <ToastContainer />
     </ToastProvider>

@@ -158,9 +158,10 @@ function PicklistSection({ sectionKey, desc }: { sectionKey: keyof ConfigState; 
   );
 }
 
-export function ConfigView() {
-  const [activeSection, setActiveSection] = useState<keyof ConfigState>('industries');
-  const section = SECTIONS.find(s => s.key === activeSection)!;
+export function ConfigView({ isKam }: { isKam: boolean }) {
+  const visibleSections = isKam ? SECTIONS : SECTIONS.filter(s => s.key === 'teamMembers');
+  const [activeSection, setActiveSection] = useState<keyof ConfigState>('teamMembers');
+  const section = visibleSections.find(s => s.key === activeSection) ?? visibleSections[0];
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)', overflow: 'hidden' }}>
@@ -175,7 +176,7 @@ export function ConfigView() {
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Left nav */}
         <div style={{ width: 220, borderRight: '1px solid var(--border)', background: 'var(--bg2)', flexShrink: 0, padding: '16px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {SECTIONS.map(s => {
+          {visibleSections.map(s => {
             const active = s.key === activeSection;
             return (
               <button key={s.key} onClick={() => setActiveSection(s.key)} style={{

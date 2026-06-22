@@ -129,18 +129,25 @@ function getIconKey(deptName: string): string {
   return 'default';
 }
 
-function drawIcon(ctx: CanvasRenderingContext2D, deptName: string, cx: number, cy: number, iconSize: number) {
-  const key = getIconKey(deptName);
-  const draw = ICON_MAP[key] ?? ICON_MAP['default'];
+function drawIcon(ctx: CanvasRenderingContext2D, _deptName: string, cx: number, cy: number, iconSize: number) {
+  // Universal icon: simple grid of 4 squares (department/grid symbol)
   const s = iconSize / 18;
-  const savedAlpha = ctx.globalAlpha;
-  ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-  ctx.fillStyle = 'rgba(255,255,255,0.95)';
-  ctx.lineWidth = Math.max(1.2, s * 1.8);
+  ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+  ctx.lineWidth = Math.max(1.2, s * 1.9);
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  draw(ctx, cx, cy, s);
-  ctx.globalAlpha = savedAlpha;
+  const h = s * 5.5; // half-gap between squares
+  const sq = s * 4.5; // square size
+  const gap = s * 1.4;
+  // top-left, top-right, bottom-left, bottom-right squares
+  for (const [ox, oy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const x = cx + ox * (sq / 2 + gap / 2);
+    const y = cy + oy * (sq / 2 + gap / 2);
+    ctx.beginPath();
+    ctx.roundRect(x - sq / 2, y - sq / 2, sq, sq, s * 1.1);
+    ctx.stroke();
+  }
+  void h;
 }
 
 // ── Glass bubble renderer ─────────────────────────────────────────────────────
@@ -351,9 +358,17 @@ function NewDeptModal({ onClose, onCreate }: { onClose: () => void; onCreate: (d
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-interface Props { onSelect: (dept: Department) => void; }
+interface Props {
+  onSelect: (dept: Department) => void;
+  pendingSlug?: string | null;
+  onSlugResolved?: () => void;
+}
 
-export function DepartmentSelector({ onSelect }: Props) {
+function deptSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Props) {
   const { toast } = useToast();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [showNew, setShowNew] = useState(false);
@@ -372,6 +387,14 @@ export function DepartmentSelector({ onSelect }: Props) {
   useEffect(() => {
     fetchDepartments().then(d => { setDepartments(d); setLoading(false); }).catch(() => setLoading(false));
   }, []);
+
+  // Auto-select department from URL slug on first load
+  useEffect(() => {
+    if (!pendingSlug || loading || departments.length === 0) return;
+    const match = departments.find(d => deptSlug(d.name) === pendingSlug);
+    if (match) onSelect(match);
+    onSlugResolved?.();
+  }, [pendingSlug, loading, departments, onSelect, onSlugResolved]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
