@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Account, Task, TaskStatus, TaskPriority } from '@/lib/crmTypes';
 import { useCrm } from '@/context/CrmContext';
 import { useConfig } from '@/context/ConfigContext';
+import { AssigneeAutocomplete } from './AssigneeAutocomplete';
 import { useToast } from '@/context/ToastContext';
 import { TaskDetailDrawer, DrawerTask } from './TaskDetailDrawer';
 
@@ -46,10 +47,7 @@ function EditTaskModal({ task, accountId, onClose }: { task: Task; accountId: st
             </div>
             <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
             <div><label style={lbl}>Assignee</label>
-              <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
-                <option value="">Unassigned</option>
-                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
-              </select>
+              <AssigneeAutocomplete value={form.assignee} onChange={v => setForm(f => ({ ...f, assignee: v }))} />
             </div>
           </div>
           <div><label style={lbl}>Description</label><textarea style={{ ...inp, resize: 'vertical', minHeight: 72, lineHeight: 1.55 }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
@@ -118,10 +116,7 @@ function AddTaskForm({ account, onClose }: { account: Account; onClose: () => vo
             </div>
             <div><label style={lbl}>Due date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
             <div><label style={lbl}>Assignee</label>
-              <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
-                <option value="">Unassigned</option>
-                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
-              </select>
+              <AssigneeAutocomplete value={form.assignee} onChange={v => setForm(f => ({ ...f, assignee: v }))} />
             </div>
           </div>
           {account.opportunities.length > 0 && (

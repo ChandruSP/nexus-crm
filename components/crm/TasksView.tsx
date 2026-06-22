@@ -7,6 +7,7 @@ import { TaskPriority, TaskStatus } from '@/lib/crmTypes';
 import { TaskKanban } from './TaskKanban';
 import { TaskList } from './TaskList';
 import { TaskDetailDrawer, DrawerTask } from './TaskDetailDrawer';
+import { AssigneeAutocomplete } from './AssigneeAutocomplete';
 
 const STATUS_ORDER: TaskStatus[] = ['To do', 'In progress', 'Done', 'Blocked'];
 
@@ -45,10 +46,7 @@ function NewTaskModal({ onClose }: { onClose: () => void }) {
             </div>
             <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
             <div><label style={lbl}>Assignee</label>
-              <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
-                <option value="">Unassigned</option>
-                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
-              </select>
+              <AssigneeAutocomplete value={form.assignee} onChange={v => setForm(f => ({ ...f, assignee: v }))} />
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
