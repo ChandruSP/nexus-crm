@@ -6,6 +6,7 @@ const COOKIE   = 'nexus-session';
 const MAX_AGE  = 8 * 60 * 60;
 const TENANT   = process.env.NEXT_PUBLIC_AZURE_TENANT_ID!;
 const CLIENT   = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID!;
+const SECRET   = process.env.AZURE_CLIENT_SECRET!;
 const REDIRECT = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`;
 
 // POST — exchange PKCE code for tokens, create session
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         client_id:     CLIENT,
+        client_secret: SECRET,
         grant_type:    'authorization_code',
         code,
         redirect_uri:  REDIRECT,
