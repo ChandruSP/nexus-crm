@@ -24,8 +24,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       (session as any).accessToken = token.accessToken;
       return session;
     },
-    authorized({ auth }) {
-      return !!auth?.user;
+    authorized({ auth, request }) {
+      const isLoggedIn = !!auth?.user;
+      const isLoginPage = request.nextUrl.pathname === '/login';
+      const isApiAuth = request.nextUrl.pathname.startsWith('/api/auth');
+      if (isApiAuth) return true;
+      if (isLoginPage) return true; // let NextAuth handle redirect if already logged in
+      return isLoggedIn;
     },
   },
 });
