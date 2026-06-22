@@ -1,4 +1,15 @@
+'use client';
+import { useEffect, useState } from 'react';
+
 export default function LoginPage() {
+  const [csrfToken, setCsrfToken] = useState('');
+
+  useEffect(() => {
+    fetch('/api/auth/csrf')
+      .then(r => r.json())
+      .then(d => setCsrfToken(d.csrfToken ?? ''));
+  }, []);
+
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -18,24 +29,28 @@ export default function LoginPage() {
           Account Management Platform
         </div>
 
-        <a
-          href="/api/auth/signin/microsoft-entra-id?callbackUrl=%2F"
-          style={{
-            width: '100%', padding: '14px 20px', borderRadius: 12,
-            background: '#2563eb', color: '#fff', border: 'none',
-            fontWeight: 700, fontSize: 14, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-            textDecoration: 'none', boxSizing: 'border-box',
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-            <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-            <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-            <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-          </svg>
-          Sign in with Microsoft
-        </a>
+        <form action="/api/auth/signin/microsoft-entra-id" method="POST">
+          <input type="hidden" name="csrfToken" value={csrfToken} />
+          <input type="hidden" name="callbackUrl" value="/" />
+          <button
+            type="submit"
+            style={{
+              width: '100%', padding: '14px 20px', borderRadius: 12,
+              background: '#2563eb', color: '#fff', border: 'none',
+              fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+              boxSizing: 'border-box',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+              <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+              <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+              <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+            </svg>
+            Sign in with Microsoft
+          </button>
+        </form>
 
         <div style={{ marginTop: 24, fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
           Access restricted to authorised organisation members
