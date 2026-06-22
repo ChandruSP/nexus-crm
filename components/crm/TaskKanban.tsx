@@ -78,7 +78,7 @@ export function TaskKanban({ fAccount, fPriority, fAssignee, fDue, onTaskClick }
     allTasks.filter(t => {
       if (fAccount  && t.accountId !== fAccount)  return false;
       if (fPriority && t.priority  !== fPriority) return false;
-      if (fAssignee && t.assignee  !== fAssignee) return false;
+      if (fAssignee && !(t.assignee ?? '').toLowerCase().includes(fAssignee.toLowerCase())) return false;
       if (fDue === 'overdue') {
         if (!t.dueDate || t.status === 'Done') return false;
         return new Date(t.dueDate) < today;

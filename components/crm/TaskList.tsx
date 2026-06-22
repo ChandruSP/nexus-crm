@@ -1,7 +1,6 @@
 'use client';
 import { useState, useMemo, useEffect, Fragment } from 'react';
 import { useCrm } from '@/context/CrmContext';
-import { useConfig } from '@/context/ConfigContext';
 import { useToast } from '@/context/ToastContext';
 import { TaskStatus, TaskPriority } from '@/lib/crmTypes';
 import { AssigneeAutocomplete } from './AssigneeAutocomplete';
@@ -37,7 +36,6 @@ const PRIORITIES: TaskPriority[] = ['Low', 'Medium', 'High', 'Critical'];
 
 function EditTaskModal({ task, onClose }: { task: FlatTask; onClose: () => void }) {
   const { dispatch } = useCrm();
-  const { config } = useConfig();
   const { toast } = useToast();
   const [form, setForm] = useState({ title: task.title, description: task.description ?? '', status: task.status, priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' });
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 'var(--r-sm)', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
@@ -118,7 +116,7 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, fDue, onTaskC
   ].filter(t => {
       if (fAccount  && t.accountId !== fAccount)  return false;
       if (fPriority && t.priority  !== fPriority) return false;
-      if (fAssignee && t.assignee  !== fAssignee) return false;
+      if (fAssignee && !(t.assignee ?? '').toLowerCase().includes(fAssignee.toLowerCase())) return false;
       if (fDue) {
         const today = new Date(); today.setHours(0,0,0,0);
         if (fDue === 'overdue') {

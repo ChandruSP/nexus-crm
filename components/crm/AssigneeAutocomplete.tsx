@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Person { name: string; email: string }
 interface Props { value: string; onChange: (name: string) => void; style?: React.CSSProperties; }
@@ -13,8 +13,17 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
   const [results, setResults] = useState<Person[]>([]);
   const [open,    setOpen]    = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
   const debounce  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const container = useRef<HTMLDivElement>(null);
+  const inputRef  = useRef<HTMLInputElement>(null);
+
+  const updatePos = useCallback(() => {
+    const el = inputRef.current ?? container.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setDropPos({ top: r.bottom + 4, left: r.left, width: r.width });
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -90,23 +99,25 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
       {/* Search input — always rendered when no value or open */}
       {(!value || open) && (
         <input
+          ref={inputRef}
           type="text"
           placeholder="Search by name…"
           value={query}
           style={inputStyle}
           autoComplete="off"
-          onChange={e => { setQuery(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
+          onChange={e => { setQuery(e.target.value); setOpen(true); updatePos(); }}
+          onFocus={() => { setOpen(true); updatePos(); }}
           onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}
         />
       )}
 
-      {/* Dropdown */}
+      {/* Dropdown — fixed position so it escapes overflow:auto parents */}
       {open && (
         <div style={{
-          position: 'absolute', zIndex: 9999, top: '100%', left: 0, right: 0,
+          position: 'fixed', zIndex: 9999,
+          top: dropPos.top, left: dropPos.left, width: dropPos.width,
           background: 'var(--bg2)', border: '1px solid var(--border2)',
-          borderRadius: 'var(--r-sm)', marginTop: 2,
+          borderRadius: 'var(--r-sm)',
           boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
           maxHeight: 220, overflowY: 'auto',
         }}>
