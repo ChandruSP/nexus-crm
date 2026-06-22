@@ -1,15 +1,39 @@
 'use client';
 import { useState } from 'react';
-import { PublicClientApplication } from '@azure/msal-browser';
-import { msalConfig, loginScopes } from '@/lib/msalConfig';
 
-let msalInstance: PublicClientApplication | null = null;
-async function getMsal() {
-  if (!msalInstance) {
-    msalInstance = new PublicClientApplication(msalConfig);
-    await msalInstance.initialize();
-  }
-  return msalInstance;
+const CLIENT_ID  = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID!;
+const TENANT_ID  = process.env.NEXT_PUBLIC_AZURE_TENANT_ID!;
+const APP_URL    = process.env.NEXT_PUBLIC_APP_URL!;
+const SCOPES     = 'openid profile email User.Read People.Read';
+const REDIRECT   = `${APP_URL}/auth/callback`;
+
+function base64url(buf: ArrayBuffer) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+async function startPkce() {
+  const verifier = base64url(crypto.getRandomValues(new Uint8Array(32)));
+  const challenge = base64url(
+    await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))
+  );
+  const state = base64url(crypto.getRandomValues(new Uint8Array(16)));
+  const callbackUrl = new URLSearchParams(window.location.search).get('callbackUrl') || '/';
+  localStorage.setItem('pkce_verifier',      verifier);
+  localStorage.setItem('pkce_state',         state);
+  localStorage.setItem('pkce_callback_url',  callbackUrl);
+
+  const url = new URL(`https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/authorize`);
+  url.searchParams.set('client_id',             CLIENT_ID);
+  url.searchParams.set('response_type',         'code');
+  url.searchParams.set('redirect_uri',          REDIRECT);
+  url.searchParams.set('scope',                 SCOPES);
+  url.searchParams.set('code_challenge',        challenge);
+  url.searchParams.set('code_challenge_method', 'S256');
+  url.searchParams.set('state',                 state);
+  url.searchParams.set('response_mode',         'query');
+
+  window.location.href = url.toString();
 }
 
 export default function LoginPage() {
@@ -20,34 +44,10 @@ export default function LoginPage() {
     setStatus('loading');
     setError('');
     try {
-      const msal = await getMsal();
-      // Clear any stale interaction state left by previous loginRedirect attempts
-      await msal.handleRedirectPromise().catch(() => {});
-      const result = await msal.loginPopup({
-        scopes: loginScopes,
-        redirectUri: window.location.origin + '/auth/callback',
-      });
-
-      const res = await fetch('/api/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accessToken: result.accessToken,
-          name:        result.account?.name     ?? '',
-          email:       result.account?.username ?? '',
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? 'Session creation failed');
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      window.location.href = params.get('callbackUrl') || '/';
+      await startPkce();
     } catch (e: any) {
       setStatus('idle');
-      setError(e?.message ?? 'Failed to sign in');
+      setError(e?.message ?? 'Failed to start sign-in');
     }
   }
 

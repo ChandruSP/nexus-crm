@@ -1,13 +1,5 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { PublicClientApplication } from '@azure/msal-browser';
-import { msalConfig } from '@/lib/msalConfig';
-
-let msalInstance: PublicClientApplication | null = null;
-function getMsal() {
-  if (!msalInstance) msalInstance = new PublicClientApplication(msalConfig);
-  return msalInstance;
-}
 
 export default function AuthCallbackPage() {
   const [error, setError] = useState('');
@@ -15,31 +7,29 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function finish() {
       try {
-        const isPopup = !!window.opener;
-        const msal = getMsal();
-        await msal.initialize();
-        const result = await msal.handleRedirectPromise();
+        const params = new URLSearchParams(window.location.search);
+        const code     = params.get('code');
+        const state    = params.get('state');
+        const errParam = params.get('error');
+        const errDesc  = params.get('error_description');
 
-        if (isPopup) {
-          // MSAL posted the token back to the opener via postMessage; close the popup
-          window.close();
-          return;
-        }
+        if (errParam) { setError(`${errParam}: ${errDesc}`); return; }
+        if (!code)    { window.location.href = '/login'; return; }
 
-        if (!result) {
-          window.location.href = '/login';
-          return;
-        }
+        const verifier      = localStorage.getItem('pkce_verifier');
+        const savedState    = localStorage.getItem('pkce_state');
+        const callbackUrl   = localStorage.getItem('pkce_callback_url') || '/';
+        localStorage.removeItem('pkce_verifier');
+        localStorage.removeItem('pkce_state');
+        localStorage.removeItem('pkce_callback_url');
 
-        // Exchange MSAL token for a session cookie via our API
+        if (state !== savedState) { setError('State mismatch — possible CSRF. Please try again.'); return; }
+        if (!verifier)            { setError('PKCE verifier missing. Please try again.'); return; }
+
         const res = await fetch('/api/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            accessToken: result.accessToken,
-            name:        result.account?.name  ?? '',
-            email:       result.account?.username ?? '',
-          }),
+          body: JSON.stringify({ code, verifier }),
         });
 
         if (!res.ok) {
@@ -48,9 +38,7 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        const redirectTo = sessionStorage.getItem('nexus_callback_url') || '/';
-        sessionStorage.removeItem('nexus_callback_url');
-        window.location.href = redirectTo;
+        window.location.href = callbackUrl;
       } catch (e: any) {
         setError(e?.message ?? 'Unknown error during sign-in');
       }
