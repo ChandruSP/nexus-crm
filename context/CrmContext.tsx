@@ -87,6 +87,9 @@ function reducer(state: CrmState, action: Action): CrmState {
     case 'ADD_TASK':
       return patchAccount(state, action.accountId, a => ({ ...a, tasks: [...a.tasks, action.task] }));
     case 'UPDATE_TASK':
+      if (!action.accountId) {
+        return { ...state, deptTasks: state.deptTasks.map(t => t.id === action.task.id ? action.task : t) };
+      }
       return patchAccount(state, action.accountId, a => ({ ...a, tasks: a.tasks.map(t => t.id === action.task.id ? action.task : t) }));
     case 'DELETE_TASK':
       if (!action.accountId) {
@@ -202,7 +205,15 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
           await apiCreateTask(action.accountId, action.task);
           break;
         case 'UPDATE_TASK':
-          await apiUpdateTask(action.accountId, action.task);
+          if (!action.accountId) {
+            await fetch(`/api/departments/${departmentId}/tasks/${action.task.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title: action.task.title, description: action.task.description, status: action.task.status, priority: action.task.priority, assignee: action.task.assignee, dueDate: action.task.dueDate }),
+            });
+          } else {
+            await apiUpdateTask(action.accountId, action.task);
+          }
           break;
         case 'ADD_COMMENT': {
           const account = state.accounts.find(a => a.id === action.accountId);
