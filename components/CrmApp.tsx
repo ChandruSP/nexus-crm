@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { CrmProvider } from '@/context/CrmContext';
 import { useCrm } from '@/context/CrmContext';
 import { ConfigProvider } from '@/context/ConfigContext';
@@ -69,6 +70,24 @@ function CrmBody({ view, isKam }: { view: AppView; isKam: boolean }) {
   );
 }
 
+function UserChip() {
+  const { data: session } = useSession();
+  const name = session?.user?.name || session?.user?.email || '';
+  const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+      <div style={{ width:28, height:28, borderRadius:'50%', background:'var(--accent)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff', flexShrink:0 }}>
+        {session?.user?.image
+          ? <img src={session.user.image} style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover' }} alt="" />
+          : initials}
+      </div>
+      <span style={{ fontSize:12, color:'var(--text2)', fontWeight:500, maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+        {name}
+      </span>
+    </div>
+  );
+}
+
 function DeptDot({ color }: { color: string }) {
   return <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: color, marginRight: 6, flexShrink: 0 }} />;
 }
@@ -107,8 +126,9 @@ function CrmShell({ department, onBack }: { department: Department; onBack: () =
             {department.hasAccounts && <NavTab label="Accounts" active={view === 'accounts'} onClick={() => setView('accounts')} />}
             <NavTab label="Settings" active={view === 'config'}   onClick={() => setView('config')} />
 
-            <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:4 }}>
+            <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:12 }}>
               <ThemeToggle />
+              <UserChip />
             </div>
           </div>
 

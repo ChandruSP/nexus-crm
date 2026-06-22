@@ -36,7 +36,6 @@ const GroupsIcon = () => (
 
 const SECTIONS: { key: keyof ConfigState; label: string; Icon: React.FC; desc: string }[] = [
   { key: 'industries',    label: 'Industries',        Icon: IndustriesIcon, desc: 'Available industry options when creating or editing accounts.' },
-  { key: 'teamMembers',   label: 'Team Members',       Icon: TeamIcon,       desc: 'People that can be assigned to tasks and opportunities.' },
   { key: 'oppStages',     label: 'Opportunity Stages', Icon: StagesIcon,     desc: 'Pipeline stages for opportunities. Order here controls the kanban column order.' },
   { key: 'accountGroups', label: 'Account Groups',     Icon: GroupsIcon,     desc: 'Named groups for clustering related accounts (subsidiaries, sister companies, etc.).' },
 ];
@@ -159,8 +158,8 @@ function PicklistSection({ sectionKey, desc }: { sectionKey: keyof ConfigState; 
 }
 
 export function ConfigView({ isKam }: { isKam: boolean }) {
-  const visibleSections = isKam ? SECTIONS : SECTIONS.filter(s => s.key === 'teamMembers');
-  const [activeSection, setActiveSection] = useState<keyof ConfigState>('teamMembers');
+  const visibleSections = isKam ? SECTIONS : SECTIONS.filter(s => s.key === 'industries');
+  const [activeSection, setActiveSection] = useState<keyof ConfigState>('industries');
   const section = visibleSections.find(s => s.key === activeSection) ?? visibleSections[0];
 
   return (
