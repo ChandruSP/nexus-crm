@@ -7,7 +7,7 @@ export const msalConfig: Configuration = {
     redirectUri: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
   },
   cache: {
-    cacheLocation: 'sessionStorage',
+    cacheLocation: 'localStorage',
   },
 };
 
