@@ -15,6 +15,13 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function finish() {
       try {
+        // If this page loaded inside a popup, MSAL handles it automatically on initialize()
+        if (window.opener) {
+          const msal = getMsal();
+          await msal.initialize();
+          return; // MSAL posts result back to opener; popup closes itself
+        }
+
         const msal = getMsal();
         await msal.initialize();
         const result = await msal.handleRedirectPromise();

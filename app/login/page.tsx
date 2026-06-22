@@ -25,7 +25,7 @@ export default function LoginPage() {
       await msal.handleRedirectPromise().catch(() => {});
       const result = await msal.loginPopup({
         scopes: loginScopes,
-        redirectUri: window.location.origin + '/auth/popup',
+        redirectUri: window.location.origin + '/auth/callback',
       });
 
       const res = await fetch('/api/session', {
