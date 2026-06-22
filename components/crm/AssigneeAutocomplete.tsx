@@ -10,23 +10,24 @@ function initials(name: string) {
 }
 
 export function AssigneeAutocomplete({ value, onChange, style }: Props) {
-  const [query,   setQuery]   = useState('');
+  const [query,   setQuery]   = useState(value);
   const [results, setResults] = useState<Person[]>([]);
   const [open,    setOpen]    = useState(false);
   const [loading, setLoading] = useState(false);
   const [dropPos, setDropPos] = useState<{ top: number; left: number; width: number } | null>(null);
-  const debounce  = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const container = useRef<HTMLDivElement>(null);
-  const inputRef  = useRef<HTMLInputElement>(null);
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const rootRef  = useRef<HTMLDivElement>(null);
+
+  // Keep query in sync with value (e.g. when form resets)
+  useEffect(() => { setQuery(value); }, [value]);
 
   const updatePos = useCallback(() => {
-    const el = inputRef.current ?? container.current;
+    const el = inputRef.current ?? rootRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
     const dropH = 220;
-    const top = (window.innerHeight - r.bottom) >= dropH
-      ? r.bottom + 4
-      : r.top - dropH - 4;
+    const top = (window.innerHeight - r.bottom) >= dropH ? r.bottom + 4 : r.top - dropH - 4;
     setDropPos({ top, left: r.left, width: r.width });
   }, []);
 
@@ -41,21 +42,9 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
     };
   }, [open, updatePos]);
 
+  // Fetch suggestions when query changes
   useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (container.current && !container.current.contains(e.target as Node)) {
-        // also allow clicks inside the portal dropdown
-        const portal = document.getElementById('assignee-portal');
-        if (portal && portal.contains(e.target as Node)) return;
-        setOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
+    if (!open || !query.trim()) { setResults([]); return; }
     if (debounce.current) clearTimeout(debounce.current);
     debounce.current = setTimeout(async () => {
       setLoading(true);
@@ -65,19 +54,33 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
         setResults(Array.isArray(data) ? data : []);
       } catch { setResults([]); }
       setLoading(false);
-    }, 250);
+    }, 300);
   }, [query, open]);
 
-  function select(p: Person) {
-    onChange(p.name);
-    setQuery('');
-    setOpen(false);
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    setQuery(v);
+    onChange(v);          // update form immediately on every keystroke
+    setOpen(v.length > 0);
   }
 
-  function clear() {
-    onChange('');
-    setQuery('');
+  function pickResult(p: Person) {
+    setQuery(p.name);
+    onChange(p.name);
+    setOpen(false);
+    setResults([]);
   }
+
+  function handleBlur() {
+    // small delay so clicks on portal results register first
+    setTimeout(() => setOpen(false), 150);
+  }
+
+  const avatarStyle: React.CSSProperties = {
+    width: 22, height: 22, borderRadius: '50%', background: 'var(--accent)', color: '#fff',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 9, fontWeight: 700, flexShrink: 0,
+  };
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '7px 10px', fontSize: 13,
@@ -86,35 +89,19 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
     boxSizing: 'border-box', fontFamily: 'inherit',
   };
 
-  const avatarStyle: React.CSSProperties = {
-    width: 22, height: 22, borderRadius: '50%',
-    background: 'var(--accent)', color: '#fff',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 9, fontWeight: 700, flexShrink: 0,
-  };
-
-  const dropdown = open && dropPos ? createPortal(
-    <div
-      id="assignee-portal"
-      style={{
-        position: 'fixed', zIndex: 99999,
-        top: dropPos.top, left: dropPos.left, width: dropPos.width,
-        background: 'var(--bg2)', border: '1px solid var(--border2)',
-        borderRadius: 'var(--r-sm)',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-        maxHeight: 220, overflowY: 'auto',
-      }}
-    >
+  const dropdown = open && dropPos && (results.length > 0 || loading) ? createPortal(
+    <div style={{
+      position: 'fixed', zIndex: 99999,
+      top: dropPos.top, left: dropPos.left, width: dropPos.width,
+      background: 'var(--bg2)', border: '1px solid var(--border2)',
+      borderRadius: 'var(--r-sm)', boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+      maxHeight: 220, overflowY: 'auto',
+    }}>
       {loading && <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)' }}>Searching…</div>}
-      {!loading && results.length === 0 && (
-        <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)' }}>
-          {query ? 'No results' : 'Type a name to search…'}
-        </div>
-      )}
       {results.map(p => (
         <div
           key={p.email || p.name}
-          onMouseDown={() => select(p)}
+          onMouseDown={e => { e.preventDefault(); pickResult(p); }}
           style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg4)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -131,35 +118,34 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
   ) : null;
 
   return (
-    <div ref={container} style={{ position: 'relative', ...style }}>
-      {value && !open && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', background: 'var(--bg)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)' }}>
-          <div style={avatarStyle}>{initials(value)}</div>
-          <span style={{ fontSize: 13, fontWeight: 600, flex: 1, color: 'var(--text)' }}>{value}</span>
-          <button type="button" onClick={clear}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16, lineHeight: 1, padding: '0 2px' }}
-            title="Clear">×</button>
-          <button type="button"
-            onClick={() => { setQuery(''); setOpen(true); }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 11, padding: '1px 4px', borderLeft: '1px solid var(--border2)' }}
-          >Change</button>
-        </div>
-      )}
-
-      {(!value || open) && (
+    <div ref={rootRef} style={{ position: 'relative', ...style }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        {query && (
+          <div style={{ ...avatarStyle, position: 'absolute', left: 8, pointerEvents: 'none' }}>
+            {initials(query)}
+          </div>
+        )}
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search by name…"
+          placeholder="Search or type a name…"
           value={query}
-          style={inputStyle}
+          style={{ ...inputStyle, paddingLeft: query ? 38 : 10 }}
           autoComplete="off"
-          onChange={e => { setQuery(e.target.value); setOpen(true); updatePos(); }}
-          onFocus={() => { setOpen(true); updatePos(); }}
+          onChange={handleChange}
+          onFocus={() => { setOpen(query.length > 0); updatePos(); }}
+          onBlur={handleBlur}
           onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}
         />
-      )}
-
+        {query && (
+          <button
+            type="button"
+            onMouseDown={e => { e.preventDefault(); setQuery(''); onChange(''); setOpen(false); }}
+            style={{ position: 'absolute', right: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16, lineHeight: 1, padding: 0 }}
+            title="Clear"
+          >×</button>
+        )}
+      </div>
       {dropdown}
     </div>
   );
