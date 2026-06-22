@@ -27,7 +27,8 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
       setLoading(true);
       try {
         const res = await fetch(`/api/ad-users?q=${encodeURIComponent(query)}`);
-        setResults(await res.json());
+        const data = await res.json();
+        setResults(Array.isArray(data) ? data : []);
       } catch { setResults([]); }
       setLoading(false);
     }, 250);
