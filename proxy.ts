@@ -1,12 +1,12 @@
 import { auth } from '@/auth';
 
-export default auth((req) => {
+export const proxy = auth((req) => {
   const { nextUrl, auth: session } = req;
   const isLoggedIn = !!session?.user;
   const isLoginPage = nextUrl.pathname === '/login';
   const isApiAuth = nextUrl.pathname.startsWith('/api/auth');
 
-  if (isApiAuth) return; // always allow auth callbacks
+  if (isApiAuth) return;
   if (isLoginPage && isLoggedIn) {
     return Response.redirect(new URL('/', nextUrl));
   }
