@@ -10,7 +10,13 @@ export default function LoginPage() {
     setStatus('loading');
     setErrMsg('');
     try {
-      const result = await signIn('microsoft-entra-id', { callbackUrl: '/', redirect: false });
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timed out after 10s — auth API unreachable')), 10000)
+      );
+      const result = await Promise.race([
+        signIn('microsoft-entra-id', { callbackUrl: '/', redirect: false }),
+        timeout,
+      ]) as Awaited<ReturnType<typeof signIn>>;
       // If we get here, signIn resolved instead of redirecting — something went wrong
       if (result?.error) {
         setStatus('error');
