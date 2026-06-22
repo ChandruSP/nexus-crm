@@ -17,6 +17,8 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
+    "@fluentui/react-components": "^9.74.1",
+    "@fluentui/react-icons": "^2.0.330",
     "@prisma/client": "^5.22.0",
     "@types/pg": "^8.20.0",
     "dotenv": "^17.4.2",
