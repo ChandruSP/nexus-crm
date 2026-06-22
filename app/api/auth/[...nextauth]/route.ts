@@ -1,20 +1,17 @@
 import { handlers } from '@/auth';
 
-const originalGET = handlers.GET;
-const originalPOST = handlers.POST;
-
-export async function GET(req: Request, ctx: any) {
+export async function GET(req: Request) {
   try {
-    return await originalGET(req, ctx);
+    return await handlers.GET(req);
   } catch (e: any) {
     console.error('[AUTH ERROR]', e?.message, e?.stack);
     return Response.json({ error: e?.message }, { status: 500 });
   }
 }
 
-export async function POST(req: Request, ctx: any) {
+export async function POST(req: Request) {
   try {
-    return await originalPOST(req, ctx);
+    return await handlers.POST(req);
   } catch (e: any) {
     console.error('[AUTH ERROR]', e?.message, e?.stack);
     return Response.json({ error: e?.message }, { status: 500 });
