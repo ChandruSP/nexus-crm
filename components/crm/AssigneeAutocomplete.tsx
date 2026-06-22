@@ -23,19 +23,23 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
     if (!el) return;
     const r = el.getBoundingClientRect();
     const dropHeight = 220;
-    const spaceBelow = window.innerHeight - r.bottom;
-    const top = spaceBelow < dropHeight && r.top > dropHeight
-      ? r.top - dropHeight - 4   // flip above
-      : r.bottom + 4;            // below (default)
+    // Prefer below; flip above if not enough room below but enough above
+    const top = (window.innerHeight - r.bottom) >= dropHeight
+      ? r.bottom + 4
+      : r.top - dropHeight - 4;
     setDropPos({ top, left: r.left, width: r.width });
   }, []);
 
-  // Recalculate dropdown position whenever it opens
+  // Recalculate dropdown position whenever it opens, and on scroll/resize
   useEffect(() => {
-    if (open) {
-      // Use rAF to let DOM settle after open state change
-      requestAnimationFrame(updatePos);
-    }
+    if (!open) return;
+    requestAnimationFrame(updatePos);
+    window.addEventListener('scroll', updatePos, true);
+    window.addEventListener('resize', updatePos);
+    return () => {
+      window.removeEventListener('scroll', updatePos, true);
+      window.removeEventListener('resize', updatePos);
+    };
   }, [open, updatePos]);
 
   // Close dropdown on outside click
