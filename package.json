@@ -17,6 +17,7 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
+    "@azure/msal-browser": "^5.14.0",
     "@prisma/client": "^5.22.0",
     "@types/pg": "^8.20.0",
     "dotenv": "^17.4.2",

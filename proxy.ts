@@ -1,25 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const PUBLIC = ['/login', '/auth/callback', '/api/session', '/api/auth'];
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Always allow auth API routes and login page
-  if (pathname.startsWith('/api/auth') || pathname === '/login') {
-    return NextResponse.next();
-  }
+  // Allow public routes
+  if (PUBLIC.some(p => pathname.startsWith(p))) return NextResponse.next();
 
-  // NextAuth v5 uses different cookie names for HTTP vs HTTPS
-  const sessionToken =
-    request.cookies.get('__Secure-authjs.session-token') ??
-    request.cookies.get('authjs.session-token');
+  // Check session cookie (MSAL flow)
+  if (request.cookies.get('nexus-session')) return NextResponse.next();
 
-  if (!sessionToken) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  return NextResponse.next();
+  // Redirect to login
+  const loginUrl = new URL('/login', request.url);
+  loginUrl.searchParams.set('callbackUrl', pathname);
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {

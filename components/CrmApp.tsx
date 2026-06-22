@@ -1,6 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useEffect, useState, useCallback } from 'react';
 import { CrmProvider } from '@/context/CrmContext';
 import { useCrm } from '@/context/CrmContext';
 import { ConfigProvider } from '@/context/ConfigContext';
@@ -71,21 +70,28 @@ function CrmBody({ view, isKam }: { view: AppView; isKam: boolean }) {
 }
 
 function UserChip() {
-  const { data: session } = useSession();
-  const name = session?.user?.name || session?.user?.email || '';
+  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+  useEffect(() => {
+    fetch('/api/session').then(r => r.json()).then(d => setUser(d.user));
+  }, []);
+  const name = user?.name || user?.email || '';
   const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+
+  async function handleSignOut() {
+    await fetch('/api/session', { method: 'DELETE' });
+    window.location.href = '/login';
+  }
+
   return (
     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
       <div style={{ width:28, height:28, borderRadius:'50%', background:'var(--accent)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff', flexShrink:0 }}>
-        {session?.user?.image
-          ? <img src={session.user.image} style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover' }} alt="" />
-          : initials}
+        {initials}
       </div>
       <span style={{ fontSize:12, color:'var(--text2)', fontWeight:500, maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
         {name}
       </span>
       <button
-        onClick={() => signOut({ callbackUrl: '/login' })}
+        onClick={handleSignOut}
         style={{ marginLeft:4, padding:'3px 10px', fontSize:11, fontWeight:600, color:'var(--text3)', background:'transparent', border:'1px solid var(--border2)', borderRadius:6, cursor:'pointer' }}
         onMouseEnter={e => { e.currentTarget.style.color='var(--text)'; e.currentTarget.style.borderColor='var(--text3)'; }}
         onMouseLeave={e => { e.currentTarget.style.color='var(--text3)'; e.currentTarget.style.borderColor='var(--border2)'; }}
