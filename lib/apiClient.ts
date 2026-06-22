@@ -134,6 +134,19 @@ export async function apiDeleteAccount(id: string): Promise<void> {
   await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
 }
 
+export async function apiCreateDeptTask(departmentId: string, task: Task): Promise<Task> {
+  const res = await fetch(`/api/departments/${departmentId}/tasks`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: task.title, description: task.description,
+      priority: task.priority, status: task.status,
+      dueDate: task.dueDate, assignee: task.assignee,
+    }),
+  });
+  return mapTask(await res.json());
+}
+
 export async function apiCreateTask(accountId: string, task: Task): Promise<Task> {
   const res = await fetch(`/api/accounts/${accountId}/tasks`, {
     method: 'POST',

@@ -18,6 +18,7 @@ model Department {
   accounts  Account[]
   groups    Group[]
   configs   Config[]
+  tasks     Task[]
 }
 
 model Group {
@@ -84,8 +85,10 @@ model Task {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  accountId String
-  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId    String?
+  departmentId String?
+  account      Account?    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 }
 
 model Opportunity {

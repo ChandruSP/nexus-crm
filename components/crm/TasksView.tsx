@@ -20,9 +20,7 @@ function NewTaskModal({ onClose }: { onClose: () => void }) {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title.trim()) return;
-    // Tasks created here are department-level (no account); use a sentinel accountId
-    const accountId = state.accounts[0]?.id ?? 'dept';
-    dispatch({ type: 'ADD_TASK', accountId, task: { id: `t-${Date.now()}`, title: form.title.trim(), description: form.description.trim() || undefined, status: form.status, priority: form.priority, dueDate: form.dueDate || undefined, assignee: form.assignee || undefined, createdAt: Date.now(), comments: [] } });
+    dispatch({ type: 'ADD_DEPT_TASK', task: { id: `t-${Date.now()}`, title: form.title.trim(), description: form.description.trim() || undefined, status: form.status, priority: form.priority, dueDate: form.dueDate || undefined, assignee: form.assignee || undefined, createdAt: Date.now(), comments: [] } });
     toast('Task added');
     onClose();
   }

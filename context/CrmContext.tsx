@@ -4,7 +4,7 @@ import { Account, Group, Task, Opportunity, Stakeholder, PastProject, Comment, A
 import {
   fetchBootstrap, fetchAccounts, fetchGroups, apiCreateGroup, apiUpdateGroup, apiDeleteGroup,
   apiCreateAccount, apiUpdateAccount, apiDeleteAccount,
-  apiCreateTask, apiUpdateTask, apiDeleteTask,
+  apiCreateTask, apiUpdateTask, apiDeleteTask, apiCreateDeptTask,
   apiCreateStakeholder, apiUpdateStakeholder, apiDeleteStakeholder,
   apiCreateOpportunity, apiUpdateOpportunity, apiDeleteOpportunity,
   apiCreateProject, apiUpdateProject, apiDeleteProject,
@@ -16,6 +16,7 @@ interface CrmState {
   config: Record<string, string[]>;
   selectedAccountId: string | null;
   loading: boolean;
+  deptTasks: Task[];
 }
 
 type Action =
@@ -31,6 +32,8 @@ type Action =
   | { type: 'UPDATE_ACCOUNT'; account: Account }
   | { type: 'DELETE_ACCOUNT'; accountId: string }
   | { type: 'ADD_TASK'; accountId: string; task: Task }
+  | { type: 'ADD_DEPT_TASK'; task: Task }
+  | { type: 'SET_DEPT_TASKS'; tasks: Task[] }
   | { type: 'UPDATE_TASK'; accountId: string; task: Task }
   | { type: 'DELETE_TASK'; accountId: string; taskId: string }
   | { type: 'ADD_STAKEHOLDER'; accountId: string; stakeholder: Stakeholder }
@@ -77,6 +80,10 @@ function reducer(state: CrmState, action: Action): CrmState {
       const remaining = state.accounts.filter(a => a.id !== action.accountId);
       return { ...state, accounts: remaining, selectedAccountId: remaining[0]?.id ?? null };
     }
+    case 'ADD_DEPT_TASK':
+      return { ...state, deptTasks: [...state.deptTasks, action.task] };
+    case 'SET_DEPT_TASKS':
+      return { ...state, deptTasks: action.tasks };
     case 'ADD_TASK':
       return patchAccount(state, action.accountId, a => ({ ...a, tasks: [...a.tasks, action.task] }));
     case 'UPDATE_TASK':
@@ -132,15 +139,20 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
     config: {},
     selectedAccountId: null,
     loading: true,
+    deptTasks: [],
   });
 
   // Single bootstrap call — one Neon cold start instead of three
   useEffect(() => {
     dispatch({ type: 'SET_LOADING', loading: true });
-    fetchBootstrap(departmentId).then(({ accounts, groups, config }) => {
+    Promise.all([
+      fetchBootstrap(departmentId),
+      fetch(`/api/departments/${departmentId}/tasks`).then(r => r.json()).catch(() => []),
+    ]).then(([{ accounts, groups, config }, deptTasks]) => {
       dispatch({ type: 'SET_ACCOUNTS', accounts });
       dispatch({ type: 'SET_GROUPS', groups });
       dispatch({ type: 'SET_CONFIG', config });
+      dispatch({ type: 'SET_DEPT_TASKS', tasks: Array.isArray(deptTasks) ? deptTasks : [] });
       if (accounts.length > 0) dispatch({ type: 'SELECT_ACCOUNT', id: accounts[0].id });
     }).catch(() => dispatch({ type: 'SET_LOADING', loading: false }));
   }, [departmentId]);
@@ -152,7 +164,7 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
 
     // For CREATE operations: don't apply optimistic update with temp IDs.
     // Instead wait for the API to return the real DB id, then reload.
-    const isCreate = ['ADD_ACCOUNT','ADD_TASK','ADD_STAKEHOLDER','ADD_OPPORTUNITY','ADD_PAST_PROJECT','ADD_GROUP'].includes(action.type);
+    const isCreate = ['ADD_ACCOUNT','ADD_TASK','ADD_DEPT_TASK','ADD_STAKEHOLDER','ADD_OPPORTUNITY','ADD_PAST_PROJECT','ADD_GROUP'].includes(action.type);
     let createdAccountId: string | null = null;
 
     try {
@@ -179,6 +191,9 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
           break;
         case 'DELETE_ACCOUNT':
           await apiDeleteAccount(action.accountId);
+          break;
+        case 'ADD_DEPT_TASK':
+          await apiCreateDeptTask(departmentId, action.task);
           break;
         case 'ADD_TASK':
           await apiCreateTask(action.accountId, action.task);

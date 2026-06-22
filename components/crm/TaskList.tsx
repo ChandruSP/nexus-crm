@@ -105,8 +105,8 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, fDue, onTaskC
   const [groupPages, setGroupPages] = useState<Record<string, number>>({});
   const [collapsed,  setCollapsed]  = useState<Set<string>>(new Set());
 
-  const allTasks = useMemo<FlatTask[]>(() =>
-    state.accounts.flatMap(acc =>
+  const allTasks = useMemo<FlatTask[]>(() => [
+    ...state.accounts.flatMap(acc =>
       acc.tasks.map(t => ({
         ...t,
         accountId: acc.id,
@@ -115,7 +115,9 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, fDue, onTaskC
           ? acc.opportunities.find(o => o.id === t.opportunityId)?.name
           : undefined,
       }))
-    ).filter(t => {
+    ),
+    ...(state.deptTasks ?? []).map(t => ({ ...t, accountId: '', accountName: '', opportunityName: undefined })),
+  ].filter(t => {
       if (fAccount  && t.accountId !== fAccount)  return false;
       if (fPriority && t.priority  !== fPriority) return false;
       if (fAssignee && t.assignee  !== fAssignee) return false;

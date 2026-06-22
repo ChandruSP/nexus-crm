@@ -43,9 +43,9 @@ interface KanbanProps { fAccount: string; fPriority: string; fAssignee: string; 
 export function TaskKanban({ fAccount, fPriority, fAssignee, fDue, onTaskClick }: KanbanProps) {
   const { state, dispatch } = useCrm();
 
-  // Flat list of all tasks across all accounts
-  const allTasks = useMemo<FlatTask[]>(() =>
-    state.accounts.flatMap(acc =>
+  // Flat list of all tasks: account-linked + dept-level
+  const allTasks = useMemo<FlatTask[]>(() => [
+    ...state.accounts.flatMap(acc =>
       acc.tasks.map(t => ({
         ...t,
         accountId: acc.id,
@@ -54,7 +54,9 @@ export function TaskKanban({ fAccount, fPriority, fAssignee, fDue, onTaskClick }
           ? acc.opportunities.find(o => o.id === t.opportunityId)?.name
           : undefined,
       }))
-    ), [state.accounts]);
+    ),
+    ...(state.deptTasks ?? []).map(t => ({ ...t, accountId: '', accountName: '' })),
+  ], [state.accounts, state.deptTasks]);
 
   // Presentation order — initialised by priority, then maintained manually by drag
   const [manualOrder, setManualOrder] = useState<string[]>([]);
