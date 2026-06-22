@@ -21,6 +21,8 @@ export default function LoginPage() {
     setError('');
     try {
       const msal = await getMsal();
+      // Clear any stale interaction state left by previous loginRedirect attempts
+      await msal.handleRedirectPromise().catch(() => {});
       const result = await msal.loginPopup({
         scopes: loginScopes,
         redirectUri: window.location.origin + '/auth/popup',
