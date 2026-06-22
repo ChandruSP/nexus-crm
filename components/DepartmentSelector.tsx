@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { fetchDepartments, apiCreateDepartment, apiUpdateDepartment, apiDeleteDepartment, Department } from '@/lib/apiClient';
 import { useToast } from '@/context/ToastContext';
 
-const ICONS_LIST = ['🎯','📊','💼','🏗️','👥','📦','🔧','💡','🌐','📈','🤝','⚡','🏦','🛒','🏥','✈️','🎨','🔬','📱','🏆','🌿','🚀'];
+const ICONS_LIST = ['🎯','📊','💼','🏗️','👥','📦','🔧','💡','🌐','📈','🤝','⚡','🏦','🛒','🏥','✈️','🎨','🔬','📱','🏆'];
 const COLORS_LIST = ['#6366f1','#8b5cf6','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#a855f7','#84cc16'];
 function randomIcon() { return ICONS_LIST[Math.floor(Math.random() * ICONS_LIST.length)]; }
 function randomColor() { return COLORS_LIST[Math.floor(Math.random() * COLORS_LIST.length)]; }
@@ -234,6 +234,32 @@ function makeBubbles(depts: Department[], w: number, h: number): Bubble[] {
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 
+function IconPicker({ value, onChange }: { value: string; onChange: (icon: string) => void }) {
+  return (
+    <div>
+      <div style={{ fontSize:12, fontWeight:600, color:'var(--text3)', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.08em' }}>Icon</div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(10, 1fr)', gap:6 }}>
+        {ICONS_LIST.map(icon => (
+          <button
+            key={icon}
+            type="button"
+            onClick={() => onChange(icon)}
+            style={{
+              width:36, height:36, fontSize:18, display:'flex', alignItems:'center', justifyContent:'center',
+              borderRadius:8, border: value === icon ? '2px solid var(--accent)' : '1.5px solid var(--border2)',
+              background: value === icon ? 'var(--accent-dim)' : 'var(--bg3)',
+              cursor:'pointer', transition:'border-color 0.12s, background 0.12s',
+              boxShadow: value === icon ? '0 0 0 2px rgba(99,102,241,0.2)' : 'none',
+            }}
+          >
+            {icon}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ConfirmDeleteModal({ dept, onClose, onConfirm }: { dept: Department; onClose: () => void; onConfirm: () => Promise<void> }) {
   const [loading, setLoading] = useState(false);
   async function handleDelete() {
@@ -267,6 +293,7 @@ function ConfirmDeleteModal({ dept, onClose, onConfirm }: { dept: Department; on
 
 function EditDeptModal({ dept, onClose, onSave }: { dept: Department; onClose: () => void; onSave: (d: Department) => void }) {
   const [name, setName] = useState(dept.name);
+  const [icon, setIcon] = useState(dept.icon || ICONS_LIST[0]);
   const [hasAccounts, setHasAccounts] = useState(dept.hasAccounts);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
@@ -276,8 +303,8 @@ function EditDeptModal({ dept, onClose, onSave }: { dept: Department; onClose: (
     if (!name.trim()) { setErr('Name is required'); return; }
     setLoading(true);
     try {
-      await apiUpdateDepartment(dept.id, { name: name.trim(), hasAccounts });
-      onSave({ ...dept, name: name.trim(), hasAccounts });
+      await apiUpdateDepartment(dept.id, { name: name.trim(), icon, hasAccounts });
+      onSave({ ...dept, name: name.trim(), icon, hasAccounts });
       onClose();
     } catch { setErr('Failed to save'); } finally { setLoading(false); }
   }
@@ -285,15 +312,16 @@ function EditDeptModal({ dept, onClose, onSave }: { dept: Department; onClose: (
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:600, backdropFilter:'blur(6px)' }} />
-      <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', zIndex:601, background:'var(--bg2)', borderRadius:20, border:'1px solid var(--border2)', padding:'32px', width:420, maxWidth:'92vw', boxShadow:'0 32px 80px rgba(0,0,0,0.3)' }}>
+      <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', zIndex:601, background:'var(--bg2)', borderRadius:20, border:'1px solid var(--border2)', padding:'32px', width:460, maxWidth:'94vw', boxShadow:'0 32px 80px rgba(0,0,0,0.3)' }}>
         <div style={{ fontSize:17, fontWeight:700, color:'var(--text)', marginBottom:4 }}>Edit Department</div>
-        <div style={{ fontSize:13, color:'var(--text3)', marginBottom:24 }}>{dept.icon} {dept.name}</div>
-        <form onSubmit={submit} style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        <div style={{ fontSize:13, color:'var(--text3)', marginBottom:20 }}>{icon} {dept.name}</div>
+        <form onSubmit={submit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
           <div>
             <input style={{ width:'100%', padding:'11px 14px', fontSize:14, borderRadius:10, background:'var(--bg3)', border:`1.5px solid ${err?'var(--red)':'var(--border2)'}`, color:'var(--text)', outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
               value={name} onChange={e => { setName(e.target.value); setErr(''); }} placeholder="Department name" autoFocus />
             {err && <div style={{ fontSize:12, color:'var(--red)', marginTop:5 }}>{err}</div>}
           </div>
+          <IconPicker value={icon} onChange={setIcon} />
           <label style={{ display:'flex', alignItems:'flex-start', gap:10, cursor:'pointer', padding:'12px 14px', background:'var(--bg3)', borderRadius:10, border:`1.5px solid ${hasAccounts?'var(--accent)':'var(--border)'}` }}>
             <input type="checkbox" checked={hasAccounts} onChange={e => setHasAccounts(e.target.checked)} style={{ accentColor:'var(--accent)', width:15, height:15, cursor:'pointer', marginTop:2, flexShrink:0 }} />
             <div>
@@ -301,7 +329,7 @@ function EditDeptModal({ dept, onClose, onSave }: { dept: Department; onClose: (
               <div style={{ fontSize:12, color:'var(--text3)', lineHeight:1.5 }}>Adds full CRM: accounts, contacts, opportunities & pipeline</div>
             </div>
           </label>
-          <div style={{ display:'flex', gap:8, marginTop:4 }}>
+          <div style={{ display:'flex', gap:8, marginTop:2 }}>
             <button type="submit" disabled={loading} style={{ flex:1, padding:'11px', background:'var(--accent)', color:'#fff', border:'none', borderRadius:10, fontWeight:700, fontSize:13, cursor:'pointer', opacity:loading?.7:1 }}>{loading ? 'Saving…' : 'Save Changes'}</button>
             <button type="button" onClick={onClose} style={{ padding:'11px 18px', background:'transparent', color:'var(--text3)', border:'1px solid var(--border2)', borderRadius:10, fontSize:13, cursor:'pointer' }}>Cancel</button>
           </div>
@@ -313,6 +341,7 @@ function EditDeptModal({ dept, onClose, onSave }: { dept: Department; onClose: (
 
 function NewDeptModal({ onClose, onCreate }: { onClose: () => void; onCreate: (d: Department) => void }) {
   const [name, setName] = useState('');
+  const [icon, setIcon] = useState(randomIcon);
   const [hasAccounts, setHasAccounts] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
@@ -322,7 +351,7 @@ function NewDeptModal({ onClose, onCreate }: { onClose: () => void; onCreate: (d
     if (!name.trim()) { setErr('Name is required'); return; }
     setLoading(true);
     try {
-      const dept = await apiCreateDepartment({ name: name.trim(), color: randomColor(), icon: randomIcon(), hasAccounts });
+      const dept = await apiCreateDepartment({ name: name.trim(), color: randomColor(), icon, hasAccounts });
       onCreate(dept); onClose();
     } finally { setLoading(false); }
   }
@@ -330,15 +359,16 @@ function NewDeptModal({ onClose, onCreate }: { onClose: () => void; onCreate: (d
   return (
     <>
       <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:600, backdropFilter:'blur(6px)' }} />
-      <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', zIndex:601, background:'var(--bg2)', borderRadius:20, border:'1px solid var(--border2)', padding:'32px', width:420, maxWidth:'92vw', boxShadow:'0 32px 80px rgba(0,0,0,0.3)' }}>
+      <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', zIndex:601, background:'var(--bg2)', borderRadius:20, border:'1px solid var(--border2)', padding:'32px', width:460, maxWidth:'94vw', boxShadow:'0 32px 80px rgba(0,0,0,0.3)' }}>
         <div style={{ fontSize:17, fontWeight:700, color:'var(--text)', marginBottom:4 }}>New Department</div>
-        <div style={{ fontSize:13, color:'var(--text3)', marginBottom:24 }}>A random icon and color will be assigned</div>
-        <form onSubmit={submit} style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        <div style={{ fontSize:13, color:'var(--text3)', marginBottom:20 }}>Choose an icon and name for your department</div>
+        <form onSubmit={submit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
           <div>
             <input style={{ width:'100%', padding:'11px 14px', fontSize:14, borderRadius:10, background:'var(--bg3)', border:`1.5px solid ${err?'var(--red)':'var(--border2)'}`, color:'var(--text)', outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
               value={name} onChange={e => { setName(e.target.value); setErr(''); }} placeholder="e.g. HR, Finance, Operations" autoFocus />
             {err && <div style={{ fontSize:12, color:'var(--red)', marginTop:5 }}>{err}</div>}
           </div>
+          <IconPicker value={icon} onChange={setIcon} />
           <label style={{ display:'flex', alignItems:'flex-start', gap:10, cursor:'pointer', padding:'12px 14px', background:'var(--bg3)', borderRadius:10, border:`1.5px solid ${hasAccounts?'var(--accent)':'var(--border)'}` }}>
             <input type="checkbox" checked={hasAccounts} onChange={e => setHasAccounts(e.target.checked)} style={{ accentColor:'var(--accent)', width:15, height:15, cursor:'pointer', marginTop:2, flexShrink:0 }} />
             <div>
@@ -346,7 +376,7 @@ function NewDeptModal({ onClose, onCreate }: { onClose: () => void; onCreate: (d
               <div style={{ fontSize:12, color:'var(--text3)', lineHeight:1.5 }}>Adds full CRM: accounts, contacts, opportunities & pipeline</div>
             </div>
           </label>
-          <div style={{ display:'flex', gap:8, marginTop:4 }}>
+          <div style={{ display:'flex', gap:8, marginTop:2 }}>
             <button type="submit" disabled={loading} style={{ flex:1, padding:'11px', background:'var(--accent)', color:'#fff', border:'none', borderRadius:10, fontWeight:700, fontSize:13, cursor:'pointer', opacity:loading?.7:1 }}>{loading ? 'Creating…' : 'Create Department'}</button>
             <button type="button" onClick={onClose} style={{ padding:'11px 18px', background:'transparent', color:'var(--text3)', border:'1px solid var(--border2)', borderRadius:10, fontSize:13, cursor:'pointer' }}>Cancel</button>
           </div>
