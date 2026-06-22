@@ -15,18 +15,18 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function finish() {
       try {
-        // If this page loaded inside a popup, MSAL handles it automatically on initialize()
-        if (window.opener) {
-          const msal = getMsal();
-          await msal.initialize();
-          return; // MSAL posts result back to opener; popup closes itself
-        }
-
+        const isPopup = !!window.opener;
         const msal = getMsal();
         await msal.initialize();
         const result = await msal.handleRedirectPromise();
+
+        if (isPopup) {
+          // MSAL posted the token back to the opener via postMessage; close the popup
+          window.close();
+          return;
+        }
+
         if (!result) {
-          // No auth result — redirect to login
           window.location.href = '/login';
           return;
         }
