@@ -4,6 +4,7 @@ import { useCrm } from '@/context/CrmContext';
 import { useConfig } from '@/context/ConfigContext';
 import { useToast } from '@/context/ToastContext';
 import { TaskStatus, TaskPriority } from '@/lib/crmTypes';
+import { AssigneeAutocomplete } from './AssigneeAutocomplete';
 
 const STATUS_COLOR: Record<TaskStatus, string> = {
   'To do': 'var(--text3)', 'In progress': 'var(--blue)', 'Blocked': 'var(--red)', 'Done': 'var(--green)',
@@ -71,10 +72,7 @@ function EditTaskModal({ task, onClose }: { task: FlatTask; onClose: () => void 
             </div>
             <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></div>
             <div><label style={lbl}>Assignee</label>
-              <select style={{ ...inp, cursor: 'pointer' }} value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}>
-                <option value="">Unassigned</option>
-                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
-              </select>
+              <AssigneeAutocomplete value={form.assignee} onChange={v => setForm(f => ({ ...f, assignee: v }))} />
             </div>
           </div>
           <div><label style={lbl}>Description</label><textarea style={{ ...inp, resize: 'vertical', minHeight: 72, lineHeight: 1.55 }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>

@@ -4,6 +4,7 @@ import { useCrm } from '@/context/CrmContext';
 import { useConfig } from '@/context/ConfigContext';
 import { useToast } from '@/context/ToastContext';
 import { Task, TaskStatus, TaskPriority, Comment } from '@/lib/crmTypes';
+import { AssigneeAutocomplete } from './AssigneeAutocomplete';
 
 const STATUS_COLOR: Record<TaskStatus, string> = {
   'To do': 'var(--text3)', 'In progress': 'var(--blue)', 'Done': 'var(--green)', 'Blocked': 'var(--red)',
@@ -219,10 +220,7 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
                 </div>
                 <div>
                   <span style={lbl}>Assignee</span>
-                  <select style={{ ...inp, cursor: 'pointer' }} value={editForm.assignee} onChange={e => setEditForm(f => ({ ...f, assignee: e.target.value }))}>
-                    <option value="">Unassigned</option>
-                    {config.teamMembers.map(m => <option key={m}>{m}</option>)}
-                  </select>
+                  <AssigneeAutocomplete value={editForm.assignee} onChange={v => setEditForm(f => ({ ...f, assignee: v }))} />
                 </div>
                 <div>
                   <span style={lbl}>Description</span>
