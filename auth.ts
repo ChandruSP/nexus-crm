@@ -7,11 +7,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId:     process.env.AUTH_MICROSOFT_ENTRA_ID_ID!,
       clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET!,
       issuer: `https://login.microsoftonline.com/${process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID}/v2.0`,
-      authorization: {
-        params: {
-          scope: 'openid profile email offline_access https://graph.microsoft.com/People.Read',
-        },
-      },
     }),
   ],
   pages: { signIn: '/login' },
@@ -21,16 +16,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      (session as any).accessToken = token.accessToken;
+      (session as any).accessToken = (token as any).accessToken;
       return session;
-    },
-    authorized({ auth, request }) {
-      const isLoggedIn = !!auth?.user;
-      const isLoginPage = request.nextUrl.pathname === '/login';
-      const isApiAuth = request.nextUrl.pathname.startsWith('/api/auth');
-      if (isApiAuth) return true;
-      if (isLoginPage) return true; // let NextAuth handle redirect if already logged in
-      return isLoggedIn;
     },
   },
 });
