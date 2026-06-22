@@ -89,6 +89,9 @@ function reducer(state: CrmState, action: Action): CrmState {
     case 'UPDATE_TASK':
       return patchAccount(state, action.accountId, a => ({ ...a, tasks: a.tasks.map(t => t.id === action.task.id ? action.task : t) }));
     case 'DELETE_TASK':
+      if (!action.accountId) {
+        return { ...state, deptTasks: state.deptTasks.filter(t => t.id !== action.taskId) };
+      }
       return patchAccount(state, action.accountId, a => ({ ...a, tasks: a.tasks.filter(t => t.id !== action.taskId) }));
     case 'ADD_STAKEHOLDER':
       return patchAccount(state, action.accountId, a => ({ ...a, stakeholders: [...a.stakeholders, action.stakeholder] }));
@@ -211,7 +214,11 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
           break;
         }
         case 'DELETE_TASK':
-          await apiDeleteTask(action.accountId, action.taskId);
+          if (!action.accountId) {
+            await fetch(`/api/departments/${departmentId}/tasks/${action.taskId}`, { method: 'DELETE' });
+          } else {
+            await apiDeleteTask(action.accountId, action.taskId);
+          }
           break;
         case 'ADD_STAKEHOLDER':
           await apiCreateStakeholder(action.accountId, action.stakeholder);
