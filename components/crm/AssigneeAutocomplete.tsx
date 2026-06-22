@@ -22,7 +22,12 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
     const el = inputRef.current ?? container.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setDropPos({ top: r.bottom + 4, left: r.left, width: r.width });
+    const dropHeight = 220;
+    const spaceBelow = window.innerHeight - r.bottom;
+    const top = spaceBelow < dropHeight && r.top > dropHeight
+      ? r.top - dropHeight - 4   // flip above
+      : r.bottom + 4;            // below (default)
+    setDropPos({ top, left: r.left, width: r.width });
   }, []);
 
   // Recalculate dropdown position whenever it opens
