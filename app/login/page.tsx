@@ -1,89 +1,98 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function LoginPage() {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [errMsg, setErrMsg] = useState('');
+const ERROR_MESSAGES: Record<string, string> = {
+  MissingCSRF:     'Session expired — please try again.',
+  Configuration:   'Server configuration error. Contact your admin.',
+  AccessDenied:    'Access denied by your organisation.',
+  Verification:    'Sign-in link expired. Try again.',
+  OAuthSignin:     'Could not start Microsoft sign-in.',
+  OAuthCallback:   'Error during Microsoft callback.',
+  OAuthCreateAccount: 'Could not create account.',
+  Default:         'Sign-in failed. Please try again.',
+};
+
+function LoginCard() {
+  const params = useSearchParams();
+  const urlError = params.get('error');
+  const [loading, setLoading] = useState(false);
 
   async function handleSignIn() {
-    setStatus('loading');
-    setErrMsg('');
-    try {
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Timed out after 10s — auth API unreachable')), 10000)
-      );
-      const result = await Promise.race([
-        signIn('microsoft-entra-id', { callbackUrl: '/', redirect: false }),
-        timeout,
-      ]) as Awaited<ReturnType<typeof signIn>>;
-      // If we get here, signIn resolved instead of redirecting — something went wrong
-      if (result?.error) {
-        setStatus('error');
-        setErrMsg(`Auth error: ${result.error} (url: ${result.url ?? 'none'})`);
-      } else if (result?.url) {
-        // Manually redirect if signIn returned a URL instead of redirecting
-        window.location.href = result.url;
-      } else {
-        setStatus('error');
-        setErrMsg(`signIn resolved unexpectedly: ${JSON.stringify(result)}`);
-      }
-    } catch (e: any) {
-      setStatus('error');
-      setErrMsg(e?.message ?? String(e));
-    }
+    setLoading(true);
+    await signIn('microsoft-entra-id', { callbackUrl: '/' });
+    // If we get here, signIn didn't redirect (error case)
+    setLoading(false);
   }
 
+  const errorMsg = urlError
+    ? (ERROR_MESSAGES[urlError] ?? `Error: ${urlError}`)
+    : null;
+
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
+      borderRadius: 24, padding: '48px 40px', width: 360, maxWidth: '92vw',
+      boxShadow: '0 32px 80px rgba(0,0,0,0.4)', backdropFilter: 'blur(20px)',
+      textAlign: 'center',
+    }}>
+      <div style={{ fontSize: 28, fontWeight: 800, color: '#a5b4fc', letterSpacing: '0.12em', fontFamily: 'Poppins, sans-serif', marginBottom: 8 }}>
+        NEXUS
+      </div>
+      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 40 }}>
+        Account Management Platform
+      </div>
+
+      <button
+        onClick={handleSignIn}
+        disabled={loading}
+        style={{
+          width: '100%', padding: '14px 20px', borderRadius: 12,
+          background: loading ? '#1d4ed8' : '#2563eb',
+          color: '#fff', border: 'none',
+          fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+          boxSizing: 'border-box', opacity: loading ? 0.8 : 1,
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 21 21" fill="none">
+          <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+          <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+          <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+          <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+        </svg>
+        {loading ? 'Redirecting to Microsoft…' : 'Sign in with Microsoft'}
+      </button>
+
+      {errorMsg && (
+        <div style={{
+          marginTop: 16, padding: '10px 14px',
+          background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)',
+          borderRadius: 8, fontSize: 12, color: '#fca5a5',
+        }}>
+          {errorMsg}
+        </div>
+      )}
+
+      <div style={{ marginTop: 24, fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+        Access restricted to authorised organisation members
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
       fontFamily: 'Instrument Sans, system-ui, sans-serif',
     }}>
-      <div style={{
-        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-        borderRadius: 24, padding: '48px 40px', width: 360, maxWidth: '92vw',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.4)', backdropFilter: 'blur(20px)',
-        textAlign: 'center',
-      }}>
-        <div style={{ fontSize: 28, fontWeight: 800, color: '#a5b4fc', letterSpacing: '0.12em', fontFamily: 'Poppins, sans-serif', marginBottom: 8 }}>
-          NEXUS
-        </div>
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 40 }}>
-          Account Management Platform
-        </div>
-
-        <button
-          onClick={handleSignIn}
-          disabled={status === 'loading'}
-          style={{
-            width: '100%', padding: '14px 20px', borderRadius: 12,
-            background: status === 'loading' ? '#1d4ed8' : '#2563eb',
-            color: '#fff', border: 'none',
-            fontWeight: 700, fontSize: 14, cursor: status === 'loading' ? 'wait' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-            boxSizing: 'border-box', opacity: status === 'loading' ? 0.8 : 1,
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-            <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-            <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-            <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-          </svg>
-          {status === 'loading' ? 'Redirecting…' : 'Sign in with Microsoft'}
-        </button>
-
-        {status === 'error' && (
-          <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, fontSize: 12, color: '#fca5a5', textAlign: 'left', wordBreak: 'break-all' }}>
-            {errMsg || 'An unknown error occurred. Check the browser console for details.'}
-          </div>
-        )}
-
-        <div style={{ marginTop: 24, fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
-          Access restricted to authorised organisation members
-        </div>
-      </div>
+      <Suspense fallback={null}>
+        <LoginCard />
+      </Suspense>
     </div>
   );
 }
