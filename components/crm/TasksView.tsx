@@ -144,7 +144,7 @@ export function TasksView() {
           placeholder="Filter by assignee…"
           value={fAssignee}
           onChange={e => setFAssignee(e.target.value)}
-          style={{ ...selectStyle, width: 160 }}
+          style={{ ...selectStyle, width: 160, cursor: 'text' }}
         />
 
         <select style={selectStyle} value={fDue} onChange={e => setFDue(e.target.value)}>

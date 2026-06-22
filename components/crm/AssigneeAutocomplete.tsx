@@ -25,6 +25,14 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
     setDropPos({ top: r.bottom + 4, left: r.left, width: r.width });
   }, []);
 
+  // Recalculate dropdown position whenever it opens
+  useEffect(() => {
+    if (open) {
+      // Use rAF to let DOM settle after open state change
+      requestAnimationFrame(updatePos);
+    }
+  }, [open, updatePos]);
+
   // Close dropdown on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -90,7 +98,7 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
           >×</button>
           <button
             type="button"
-            onClick={() => { setQuery(''); setOpen(true); }}
+            onClick={() => { setQuery(''); setOpen(true); requestAnimationFrame(updatePos); }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 11, padding: '1px 4px', borderLeft: '1px solid var(--border2)' }}
           >Change</button>
         </div>
