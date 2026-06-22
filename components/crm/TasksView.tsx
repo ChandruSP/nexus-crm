@@ -14,13 +14,15 @@ function NewTaskModal({ onClose }: { onClose: () => void }) {
   const { state, dispatch } = useCrm();
   const { config } = useConfig();
   const { toast } = useToast();
-  const [form, setForm] = useState({ accountId: '', title: '', description: '', status: 'To do' as TaskStatus, priority: 'Medium' as TaskPriority, dueDate: '', assignee: '' });
+  const [form, setForm] = useState({ title: '', description: '', status: 'To do' as TaskStatus, priority: 'Medium' as TaskPriority, dueDate: '', assignee: '' });
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 'var(--r-sm)', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
   const lbl: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--text3)', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' };
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.accountId || !form.title.trim()) return;
-    dispatch({ type: 'ADD_TASK', accountId: form.accountId, task: { id: `t-${Date.now()}`, title: form.title.trim(), description: form.description.trim() || undefined, status: form.status, priority: form.priority, dueDate: form.dueDate || undefined, assignee: form.assignee || undefined, createdAt: Date.now(), comments: [] } });
+    if (!form.title.trim()) return;
+    // Tasks created here are department-level (no account); use a sentinel accountId
+    const accountId = state.accounts[0]?.id ?? 'dept';
+    dispatch({ type: 'ADD_TASK', accountId, task: { id: `t-${Date.now()}`, title: form.title.trim(), description: form.description.trim() || undefined, status: form.status, priority: form.priority, dueDate: form.dueDate || undefined, assignee: form.assignee || undefined, createdAt: Date.now(), comments: [] } });
     toast('Task added');
     onClose();
   }
@@ -30,13 +32,7 @@ function NewTaskModal({ onClose }: { onClose: () => void }) {
       <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 501, background: 'var(--bg2)', borderRadius: 'var(--r)', border: '1px solid var(--border2)', padding: '24px 28px', width: 480, maxWidth: '90vw', boxShadow: '0 16px 48px rgba(0,0,0,0.18)' }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>New Task</div>
         <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
-          <div><label style={lbl}>Account *</label>
-            <select style={{ ...inp, cursor: 'pointer' }} value={form.accountId} onChange={e => setForm(f => ({ ...f, accountId: e.target.value }))} autoFocus>
-              <option value="">Select account…</option>
-              {state.accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </div>
-          <div><label style={lbl}>Title *</label><input style={inp} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="What needs to be done?" /></div>
+          <div><label style={lbl}>Title *</label><input style={inp} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="What needs to be done?" autoFocus /></div>
           <div><label style={lbl}>Description</label><textarea style={{ ...inp, minHeight: 56, resize: 'vertical' }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div><label style={lbl}>Priority</label>
@@ -92,7 +88,7 @@ export function TasksView() {
   const [view,       setView]       = useState<ViewMode>('kanban');
   const [newTask,    setNewTask]    = useState(false);
   const [search,     setSearch]     = useState('');
-  const [fAccount,   setFAccount]   = useState('');
+  const fAccount = '';
   const [drawerTask, setDrawerTask] = useState<DrawerTask | null>(null);
   const [fPriority, setFPriority] = useState('');
   const [fAssignee, setFAssignee] = useState('');
@@ -101,10 +97,10 @@ export function TasksView() {
 
   const allAssignees = config.teamMembers;
 
-  const hasFilters = !!(search || fAccount || fPriority || fAssignee || fDue);
+  const hasFilters = !!(search || fPriority || fAssignee || fDue);
 
   function clearAll() {
-    setSearch(''); setFAccount(''); setFPriority(''); setFAssignee(''); setFDue('');
+    setSearch(''); setFPriority(''); setFAssignee(''); setFDue('');
   }
 
   const selectStyle: React.CSSProperties = {
@@ -145,11 +141,6 @@ export function TasksView() {
             }}
           />
         </div>
-
-        <select style={selectStyle} value={fAccount} onChange={e => setFAccount(e.target.value)}>
-          <option value="">All accounts</option>
-          {state.accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-        </select>
 
         <select style={selectStyle} value={fPriority} onChange={e => setFPriority(e.target.value)}>
           <option value="">All priorities</option>
