@@ -11,7 +11,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       issuer: `https://login.microsoftonline.com/${tenantId}/v2.0`,
       authorization: {
         url: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`,
-        params: { scope: 'openid profile email User.Read People.Read' },
+        params: { scope: 'openid profile email User.Read' },
       },
       token: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
       userinfo: 'https://graph.microsoft.com/oidc/userinfo',
