@@ -1,35 +1,57 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { signIn } from 'next-auth/react';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
 const ERROR_MESSAGES: Record<string, string> = {
-  MissingCSRF:     'Session expired — please try again.',
-  Configuration:   'Server configuration error. Contact your admin.',
-  AccessDenied:    'Access denied by your organisation.',
-  Verification:    'Sign-in link expired. Try again.',
-  OAuthSignin:     'Could not start Microsoft sign-in.',
-  OAuthCallback:   'Error during Microsoft callback.',
+  MissingCSRF:        'Session expired — please try again.',
+  Configuration:      'Server configuration error. Contact your admin.',
+  AccessDenied:       'Access denied by your organisation.',
+  OAuthSignin:        'Could not start Microsoft sign-in.',
+  OAuthCallback:      'Error during Microsoft callback.',
   OAuthCreateAccount: 'Could not create account.',
-  Default:         'Sign-in failed. Please try again.',
 };
 
 function LoginCard() {
-  const params = useSearchParams();
+  const params   = useSearchParams();
   const urlError = params.get('error');
   const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState('');
 
   async function handleSignIn() {
     setLoading(true);
-    await signIn('microsoft-entra-id', { callbackUrl: '/' });
-    // If we get here, signIn didn't redirect (error case)
-    setLoading(false);
+    setError('');
+    try {
+      // Fetch CSRF token (with its cookie)
+      const res = await fetch('/api/auth/csrf');
+      const { csrfToken } = await res.json();
+
+      // Submit a real form POST — browser follows the 302 to Microsoft natively,
+      // no CORS or window.location issues possible.
+      const form = document.createElement('form');
+      form.method  = 'POST';
+      form.action  = '/api/auth/signin/microsoft-entra-id';
+
+      for (const [name, value] of [
+        ['csrfToken',   csrfToken],
+        ['callbackUrl', '/'],
+      ] as [string, string][]) {
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = name;
+        input.value = value;
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit(); // browser takes over here
+    } catch (e: any) {
+      setLoading(false);
+      setError(e?.message ?? 'Unexpected error — please try again.');
+    }
   }
 
-  const errorMsg = urlError
-    ? (ERROR_MESSAGES[urlError] ?? `Error: ${urlError}`)
-    : null;
+  const errorMsg = error || (urlError ? (ERROR_MESSAGES[urlError] ?? `Error: ${urlError}`) : '');
 
   return (
     <div style={{
@@ -70,7 +92,7 @@ function LoginCard() {
         <div style={{
           marginTop: 16, padding: '10px 14px',
           background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)',
-          borderRadius: 8, fontSize: 12, color: '#fca5a5',
+          borderRadius: 8, fontSize: 12, color: '#fca5a5', textAlign: 'left',
         }}>
           {errorMsg}
         </div>
