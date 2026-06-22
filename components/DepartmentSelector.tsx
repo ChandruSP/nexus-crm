@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useSession, signOut } from 'next-auth/react';
 import { fetchDepartments, apiCreateDepartment, apiUpdateDepartment, apiDeleteDepartment, Department } from '@/lib/apiClient';
 import { useToast } from '@/context/ToastContext';
 
@@ -154,17 +153,19 @@ function drawIcon(ctx: CanvasRenderingContext2D, _deptName: string, cx: number, 
 // ── Glass bubble renderer ─────────────────────────────────────────────────────
 
 function drawGlassBubble(
-  ctx: CanvasRenderingContext2D, x: number, y: number, r: number, alpha: number, hot: boolean
+  ctx: CanvasRenderingContext2D, x: number, y: number, r: number, alpha: number, hot: boolean, teal = false
 ) {
-  // Main glass gradient
+  const c0 = teal ? `rgba(100,230,220,${(alpha * 1.0).toFixed(2)})` : `rgba(155,140,255,${(alpha * 1.0).toFixed(2)})`;
+  const c1 = teal ? `rgba(20,184,166,${(alpha * 0.92).toFixed(2)})` : `rgba(99,102,241,${(alpha * 0.92).toFixed(2)})`;
+  const c2 = teal ? `rgba(13,120,110,${(alpha * 0.88).toFixed(2)})` : `rgba(52,40,180,${(alpha * 0.88).toFixed(2)})`;
+  const glow = teal ? '20,184,166' : '99,102,241';
+  const shadow = teal ? '10,60,55' : '20,10,80';
+
   const g1 = ctx.createRadialGradient(x - r*0.32, y - r*0.36, r*0.04, x + r*0.1, y + r*0.1, r*1.05);
-  g1.addColorStop(0,   `rgba(155,140,255,${(alpha * 1.0).toFixed(2)})`);
-  g1.addColorStop(0.4, `rgba(99,102,241,${(alpha * 0.92).toFixed(2)})`);
-  g1.addColorStop(1,   `rgba(52,40,180,${(alpha * 0.88).toFixed(2)})`);
+  g1.addColorStop(0, c0); g1.addColorStop(0.4, c1); g1.addColorStop(1, c2);
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
   ctx.fillStyle = g1; ctx.fill();
 
-  // Specular top-left highlight
   const g2 = ctx.createRadialGradient(x - r*0.4, y - r*0.45, r*0.01, x - r*0.15, y - r*0.15, r*0.7);
   g2.addColorStop(0, 'rgba(255,255,255,0.26)');
   g2.addColorStop(0.6, 'rgba(255,255,255,0.04)');
@@ -172,23 +173,20 @@ function drawGlassBubble(
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
   ctx.fillStyle = g2; ctx.fill();
 
-  // Thin bright rim at top arc
   ctx.beginPath();
   ctx.arc(x, y, r - 1, Math.PI*1.1, Math.PI*1.9);
   ctx.strokeStyle = 'rgba(255,255,255,0.32)';
   ctx.lineWidth = 1.5; ctx.stroke();
 
-  // Deep shadow rim at bottom arc
   ctx.beginPath();
   ctx.arc(x, y, r - 1, Math.PI*0.1, Math.PI*0.9);
-  ctx.strokeStyle = 'rgba(20,10,80,0.22)';
+  ctx.strokeStyle = `rgba(${shadow},0.22)`;
   ctx.lineWidth = 2; ctx.stroke();
 
-  // Hover: pulsing glow rings
   if (hot) {
     for (const [off, a] of [[14, 0.22], [24, 0.12], [36, 0.05]] as [number, number][]) {
       ctx.beginPath(); ctx.arc(x, y, r + off, 0, Math.PI*2);
-      ctx.strokeStyle = `rgba(99,102,241,${a})`;
+      ctx.strokeStyle = `rgba(${glow},${a})`;
       ctx.lineWidth = 1.5; ctx.stroke();
     }
   }
@@ -400,21 +398,29 @@ function deptSlug(name: string) {
 }
 
 function TopbarUser() {
-  const { data: session } = useSession();
-  const name = session?.user?.name || session?.user?.email || '';
+  const [name, setName] = useState('');
+  useEffect(() => {
+    fetch('/api/session').then(r => r.json()).then(d => setName(d.user?.name || d.user?.email || '')).catch(() => {});
+  }, []);
   const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+  async function handleSignOut() {
+    await fetch('/api/session', { method: 'DELETE' });
+    window.location.href = '/login';
+  }
   return (
     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-      <div style={{ width:28, height:28, borderRadius:'50%', background:'#6366f1', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff', flexShrink:0 }}>
-        {session?.user?.image
-          ? <img src={session.user.image} style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover' }} alt="" />
-          : initials}
-      </div>
-      <span style={{ fontSize:12, color:'var(--text2)', fontWeight:500, maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-        {name}
-      </span>
+      {name && (
+        <div style={{ width:28, height:28, borderRadius:'50%', background:'#6366f1', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff', flexShrink:0 }}>
+          {initials}
+        </div>
+      )}
+      {name && (
+        <span style={{ fontSize:12, color:'var(--text2)', fontWeight:500, maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+          {name}
+        </span>
+      )}
       <button
-        onClick={() => signOut({ callbackUrl: '/login' })}
+        onClick={handleSignOut}
         style={{ padding:'3px 10px', fontSize:11, fontWeight:600, color:'var(--text3)', background:'transparent', border:'1px solid var(--border2)', borderRadius:6, cursor:'pointer' }}
         onMouseEnter={e => { e.currentTarget.style.color='var(--text)'; e.currentTarget.style.borderColor='var(--text3)'; }}
         onMouseLeave={e => { e.currentTarget.style.color='var(--text3)'; e.currentTarget.style.borderColor='var(--border2)'; }}
@@ -602,11 +608,14 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
       for (const b of bubbles) {
         if (!b.dept) continue;
         const cr = b.r * b.scale;
+        const isKam = b.dept.name.toLowerCase().includes('kam');
+        const nameColor = isKam ? 'rgba(20,184,166,1)' : 'rgba(99,102,241,1)';
+        const nameFade  = isKam ? 'rgba(20,184,166,0.65)' : 'rgba(99,102,241,0.65)';
 
-        drawGlassBubble(ctx, b.x, b.y, cr, b.alpha, b.hovered);
+        drawGlassBubble(ctx, b.x, b.y, cr, b.alpha, b.hovered, isKam);
 
-        if (b.hovered) {
-          // ── Hover state: show edit + delete in centre ──────────────────────
+        if (b.hovered && isKam) {
+          // ── KAM hover: show edit + delete ─────────────────────────────────
           const btnR = cr * 0.26;
           const gap  = cr * 0.38;
 
@@ -615,20 +624,15 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
           ctx.beginPath(); ctx.arc(ex, ey, btnR, 0, Math.PI*2);
           ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill();
           ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.2; ctx.stroke();
-          // Pencil icon
           ctx.save();
           ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1.2, btnR*0.18);
           ctx.lineCap = 'round'; ctx.lineJoin = 'round';
           const ps = btnR * 0.52;
           ctx.beginPath();
-          ctx.moveTo(ex - ps*0.6, ey + ps*0.6);
-          ctx.lineTo(ex + ps*0.5, ey - ps*0.5);
-          ctx.moveTo(ex + ps*0.15, ey - ps*0.85);
-          ctx.lineTo(ex + ps*0.85, ey - ps*0.15);
-          ctx.moveTo(ex - ps*0.6, ey + ps*0.6);
-          ctx.lineTo(ex - ps*0.85, ey + ps*0.85);
-          ctx.stroke();
-          ctx.restore();
+          ctx.moveTo(ex - ps*0.6, ey + ps*0.6); ctx.lineTo(ex + ps*0.5, ey - ps*0.5);
+          ctx.moveTo(ex + ps*0.15, ey - ps*0.85); ctx.lineTo(ex + ps*0.85, ey - ps*0.15);
+          ctx.moveTo(ex - ps*0.6, ey + ps*0.6); ctx.lineTo(ex - ps*0.85, ey + ps*0.85);
+          ctx.stroke(); ctx.restore();
           ctx.textAlign = 'center'; ctx.textBaseline = 'top';
           ctx.font = `500 ${Math.max(9, btnR*0.55)}px -apple-system,sans-serif`;
           ctx.fillStyle = 'rgba(255,255,255,0.75)';
@@ -639,7 +643,6 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
           ctx.beginPath(); ctx.arc(dx2, dy2, btnR, 0, Math.PI*2);
           ctx.fillStyle = 'rgba(239,68,68,0.22)'; ctx.fill();
           ctx.strokeStyle = 'rgba(239,100,100,0.6)'; ctx.lineWidth = 1.2; ctx.stroke();
-          // Trash icon
           ctx.save();
           ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1.2, btnR*0.18);
           ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -653,17 +656,22 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
           ctx.lineTo(dx2 - ts*0.45, dy2 + ts*0.7);
           ctx.lineTo(dx2 + ts*0.45, dy2 + ts*0.7);
           ctx.lineTo(dx2 + ts*0.6, dy2 - ts*0.4);
-          ctx.stroke();
-          ctx.restore();
+          ctx.stroke(); ctx.restore();
           ctx.textAlign = 'center'; ctx.textBaseline = 'top';
           ctx.font = `500 ${Math.max(9, btnR*0.55)}px -apple-system,sans-serif`;
           ctx.fillStyle = 'rgba(255,255,255,0.75)';
           ctx.fillText('Delete', dx2, dy2 + btnR + 4);
 
-          // Dept name below bubble
           ctx.textAlign = 'center'; ctx.textBaseline = 'top';
           ctx.font = `700 13px -apple-system,sans-serif`;
-          ctx.fillStyle = 'rgba(99,102,241,1)';
+          ctx.fillStyle = nameColor;
+          ctx.fillText(b.dept.name, b.x, b.y + cr + 10);
+
+        } else if (b.hovered) {
+          // ── Non-KAM hover: just show name, no settings ────────────────────
+          ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+          ctx.font = `700 13px -apple-system,sans-serif`;
+          ctx.fillStyle = nameColor;
           ctx.fillText(b.dept.name, b.x, b.y + cr + 10);
 
         } else {
@@ -675,7 +683,7 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
 
           ctx.textAlign = 'center'; ctx.textBaseline = 'top';
           ctx.font = `600 11.5px -apple-system,sans-serif`;
-          ctx.fillStyle = 'rgba(99,102,241,0.65)';
+          ctx.fillStyle = nameFade;
           ctx.fillText(b.dept.name, b.x, b.y + cr + 10);
         }
       }
@@ -692,9 +700,10 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
     }
 
     function hit(mx: number, my: number) {
-      // Check edit/delete buttons on hovered bubbles first
+      // Check edit/delete buttons on hovered KAM bubbles only
       for (const b of state.bubbles) {
         if (!b.dept || !b.hovered) continue;
+        if (!b.dept.name.toLowerCase().includes('kam')) continue;
         const { edit, del, btnR } = getBtnCenters(b);
         if (Math.hypot(mx - edit.x, my - edit.y) < btnR) return { type:'edit' as const, b };
         if (Math.hypot(mx - del.x,  my - del.y)  < btnR) return { type:'delete' as const, b };
