@@ -3,7 +3,6 @@ import { prisma } from '@/lib/db';
 
 const DEFAULT_CONFIG: Record<string, string[]> = {
   industries:  ['Banking & Finance','Supply Chain & Logistics','Healthcare & Life Sciences','Media & Entertainment','Technology','Manufacturing','Retail','Real Estate','Education','Government','Telecom','Energy'],
-  teamMembers: ['Priya Nair','Dev Sharma','Tanvi Kapila','Tech Team','Finance'],
   oppStages:   ['Prospecting','Qualified','Proposal','Negotiation','Closed Won','Closed Lost'],
   accountGroups: [],
 };

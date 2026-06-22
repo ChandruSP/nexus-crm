@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { useCrm } from '@/context/CrmContext';
-import { useConfig } from '@/context/ConfigContext';
 import { useToast } from '@/context/ToastContext';
 import { TaskPriority, TaskStatus } from '@/lib/crmTypes';
 import { TaskKanban } from './TaskKanban';
@@ -13,7 +12,6 @@ const STATUS_ORDER: TaskStatus[] = ['To do', 'In progress', 'Done', 'Blocked'];
 
 function NewTaskModal({ onClose }: { onClose: () => void }) {
   const { state, dispatch } = useCrm();
-  const { config } = useConfig();
   const { toast } = useToast();
   const [form, setForm] = useState({ title: '', description: '', status: 'To do' as TaskStatus, priority: 'Medium' as TaskPriority, dueDate: '', assignee: '' });
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', fontSize: 13, borderRadius: 'var(--r-sm)', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
@@ -80,7 +78,6 @@ const ListIcon = () => (
 
 export function TasksView() {
   const { state } = useCrm();
-  const { config } = useConfig();
   const [view,       setView]       = useState<ViewMode>('kanban');
   const [newTask,    setNewTask]    = useState(false);
   const [search,     setSearch]     = useState('');
@@ -90,8 +87,6 @@ export function TasksView() {
   const [fAssignee, setFAssignee] = useState('');
 
   const [fDue, setFDue] = useState('');
-
-  const allAssignees = config.teamMembers;
 
   const hasFilters = !!(search || fPriority || fAssignee || fDue);
 
@@ -144,10 +139,13 @@ export function TasksView() {
             <option key={p} value={p}>{p}</option>)}
         </select>
 
-        <select style={selectStyle} value={fAssignee} onChange={e => setFAssignee(e.target.value)}>
-          <option value="">All assignees</option>
-          {allAssignees.map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
+        <input
+          type="text"
+          placeholder="Filter by assignee…"
+          value={fAssignee}
+          onChange={e => setFAssignee(e.target.value)}
+          style={{ ...selectStyle, width: 160 }}
+        />
 
         <select style={selectStyle} value={fDue} onChange={e => setFDue(e.target.value)}>
           <option value="">All due dates</option>

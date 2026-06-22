@@ -5,7 +5,6 @@ import { persistConfig } from '@/lib/apiClient';
 
 export interface ConfigState {
   industries:    string[];
-  teamMembers:   string[];
   oppStages:     string[];
   accountGroups: string[];
 }
@@ -16,7 +15,6 @@ const DEFAULT: ConfigState = {
     'Media & Entertainment', 'Technology', 'Manufacturing', 'Retail',
     'Real Estate', 'Education', 'Government', 'Telecom', 'Energy',
   ],
-  teamMembers:   ['Priya Nair', 'Dev Sharma', 'Tanvi Kapila', 'Tech Team', 'Finance'],
   oppStages:     ['Prospecting', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'],
   accountGroups: [],
 };

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useCrm } from '@/context/CrmContext';
 import { useConfig } from '@/context/ConfigContext';
+import { AssigneeAutocomplete } from './AssigneeAutocomplete';
 import { Account, OppStage } from '@/lib/crmTypes';
 
 const STAGES: OppStage[] = ['Prospecting','Qualified','Proposal','Negotiation','Closed Won','Closed Lost'];
@@ -101,10 +102,7 @@ export function EditAccountPanel({ account, onDone, onCancel }: Props) {
             </div>
             <div>
               <Label t="Account Owner" req />
-              <select style={inp(!!errors.owner)} value={basic.owner} onChange={e => setB('owner', e.target.value)}>
-                <option value="">Select owner…</option>
-                {config.teamMembers.map(m => <option key={m}>{m}</option>)}
-              </select>
+              <AssigneeAutocomplete value={basic.owner} onChange={v => setB('owner', v)} style={{ width: '100%' }} />
               {errors.owner && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 3 }}>{errors.owner}</div>}
             </div>
             <div>
