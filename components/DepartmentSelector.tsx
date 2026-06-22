@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { fetchDepartments, apiCreateDepartment, apiUpdateDepartment, apiDeleteDepartment, Department } from '@/lib/apiClient';
+import { useToast } from '@/context/ToastContext';
 
 const ICONS_LIST = ['🎯','📊','💼','🏗️','👥','📦','🔧','💡','🌐','📈','🤝','⚡','🏦','🛒','🏥','✈️','🎨','🔬','📱','🏆','🌿','🚀'];
 const COLORS_LIST = ['#6366f1','#8b5cf6','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#a855f7','#84cc16'];
@@ -226,6 +227,37 @@ function makeBubbles(depts: Department[], w: number, h: number): Bubble[] {
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 
+function ConfirmDeleteModal({ dept, onClose, onConfirm }: { dept: Department; onClose: () => void; onConfirm: () => Promise<void> }) {
+  const [loading, setLoading] = useState(false);
+  async function handleDelete() {
+    setLoading(true);
+    try { await onConfirm(); } finally { setLoading(false); }
+  }
+  return (
+    <>
+      <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:600, backdropFilter:'blur(6px)' }} />
+      <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', zIndex:601, background:'var(--bg2)', borderRadius:20, border:'1px solid rgba(239,68,68,0.35)', padding:'32px', width:400, maxWidth:'92vw', boxShadow:'0 32px 80px rgba(0,0,0,0.35)' }}>
+        {/* Icon */}
+        <div style={{ width:52, height:52, borderRadius:14, background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:20 }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(239,68,68,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </div>
+        <div style={{ fontSize:17, fontWeight:700, color:'var(--text)', marginBottom:6 }}>Delete {dept.icon} {dept.name}?</div>
+        <div style={{ fontSize:13, color:'var(--text3)', lineHeight:1.6, marginBottom:28 }}>
+          This will permanently delete the department and <strong style={{ color:'var(--text2)' }}>all associated accounts, tasks, contacts, and opportunities</strong>. This cannot be undone.
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={handleDelete} disabled={loading} style={{ flex:1, padding:'11px', background:'rgb(239,68,68)', color:'#fff', border:'none', borderRadius:10, fontWeight:700, fontSize:13, cursor:'pointer', opacity:loading?0.7:1, transition:'opacity 0.15s' }}>
+            {loading ? 'Deleting…' : 'Yes, delete permanently'}
+          </button>
+          <button onClick={onClose} disabled={loading} style={{ padding:'11px 18px', background:'transparent', color:'var(--text3)', border:'1px solid var(--border2)', borderRadius:10, fontSize:13, cursor:'pointer' }}>Cancel</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function EditDeptModal({ dept, onClose, onSave }: { dept: Department; onClose: () => void; onSave: (d: Department) => void }) {
   const [name, setName] = useState(dept.name);
   const [hasAccounts, setHasAccounts] = useState(dept.hasAccounts);
@@ -322,11 +354,14 @@ function NewDeptModal({ onClose, onCreate }: { onClose: () => void; onCreate: (d
 interface Props { onSelect: (dept: Department) => void; }
 
 export function DepartmentSelector({ onSelect }: Props) {
+  const { toast } = useToast();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [showNew, setShowNew] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
+  const [deletingDept, setDeletingDept] = useState<Department | null>(null);
   const [loading, setLoading] = useState(true);
   const [speedLabel, setSpeedLabel] = useState('1.0×');
+  const [exporting, setExporting] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const speedRef = useRef<number>(1);
@@ -626,11 +661,7 @@ export function DepartmentSelector({ onSelect }: Props) {
       if (h.type === 'edit' && h.b.dept) {
         setEditingDept(h.b.dept);
       } else if (h.type === 'delete' && h.b.dept) {
-        const { id, name } = h.b.dept;
-        if (!confirm(`Delete "${name}"? All data will be permanently deleted.`)) return;
-        await apiDeleteDepartment(id);
-        state.bubbles = state.bubbles.filter(b => b.dept?.id !== id);
-        setDepartments(prev => prev.filter(d => d.id !== id));
+        setDeletingDept(h.b.dept);
       } else if (h.type === 'select' && h.b.dept) {
         onSelect(h.b.dept);
       }
@@ -660,6 +691,32 @@ export function DepartmentSelector({ onSelect }: Props) {
               {departments.length} departments · hover to explore · click to enter
             </span>
           )}
+          <button
+            onClick={async () => {
+              setExporting(true);
+              try {
+                const res = await fetch('/api/export');
+                if (!res.ok) throw new Error('Export failed');
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `nexus-export-${new Date().toISOString().slice(0,10)}.xlsx`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast('Export downloaded successfully', 'success');
+              } catch {
+                toast('Export failed — please try again', 'error');
+              } finally {
+                setExporting(false);
+              }
+            }}
+            disabled={exporting}
+            style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', background:'transparent', color:'var(--text2)', border:'1px solid var(--border2)', borderRadius:9, fontWeight:600, fontSize:13, cursor:'pointer', opacity:exporting?0.6:1 }}
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v7M3.5 5.5l3 3 3-3M1 10h11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            {exporting ? 'Exporting…' : 'Export Excel'}
+          </button>
           <button onClick={() => setShowNew(true)} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 18px', background:'var(--accent)', color:'#fff', border:'none', borderRadius:9, fontWeight:600, fontSize:13, cursor:'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
             New Department
@@ -724,12 +781,26 @@ export function DepartmentSelector({ onSelect }: Props) {
           dept={editingDept}
           onClose={() => setEditingDept(null)}
           onSave={updated => {
-            // Update bubble dept reference
             for (const b of stateRef.current.bubbles) {
               if (b.dept?.id === updated.id) b.dept = updated;
             }
             setDepartments(prev => prev.map(d => d.id === updated.id ? updated : d));
             setEditingDept(null);
+            toast(`${updated.name} updated`, 'success');
+          }}
+        />
+      )}
+      {deletingDept && (
+        <ConfirmDeleteModal
+          dept={deletingDept}
+          onClose={() => setDeletingDept(null)}
+          onConfirm={async () => {
+            const { id, name } = deletingDept;
+            await apiDeleteDepartment(id);
+            stateRef.current.bubbles = stateRef.current.bubbles.filter(b => b.dept?.id !== id);
+            setDepartments(prev => prev.filter(d => d.id !== id));
+            setDeletingDept(null);
+            toast(`"${name}" deleted`, 'success');
           }}
         />
       )}
