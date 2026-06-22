@@ -10,7 +10,18 @@ export default function LoginPage() {
     setStatus('loading');
     setErrMsg('');
     try {
-      await signIn('microsoft-entra-id', { callbackUrl: '/' });
+      const result = await signIn('microsoft-entra-id', { callbackUrl: '/', redirect: false });
+      // If we get here, signIn resolved instead of redirecting — something went wrong
+      if (result?.error) {
+        setStatus('error');
+        setErrMsg(`Auth error: ${result.error} (url: ${result.url ?? 'none'})`);
+      } else if (result?.url) {
+        // Manually redirect if signIn returned a URL instead of redirecting
+        window.location.href = result.url;
+      } else {
+        setStatus('error');
+        setErrMsg(`signIn resolved unexpectedly: ${JSON.stringify(result)}`);
+      }
     } catch (e: any) {
       setStatus('error');
       setErrMsg(e?.message ?? String(e));
