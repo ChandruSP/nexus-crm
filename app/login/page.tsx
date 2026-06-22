@@ -1,6 +1,3 @@
-'use client';
-import { signIn } from 'next-auth/react';
-
 export default function LoginPage() {
   return (
     <div style={{
@@ -21,19 +18,16 @@ export default function LoginPage() {
           Account Management Platform
         </div>
 
-        <button
-          onClick={() => signIn('microsoft-entra-id', { callbackUrl: '/' })}
+        <a
+          href="/api/auth/signin/microsoft-entra-id?callbackUrl=%2F"
           style={{
             width: '100%', padding: '14px 20px', borderRadius: 12,
             background: '#2563eb', color: '#fff', border: 'none',
             fontWeight: 700, fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-            transition: 'background 0.15s',
+            textDecoration: 'none', boxSizing: 'border-box',
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
-          onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
         >
-          {/* Microsoft logo */}
           <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
             <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
@@ -41,7 +35,7 @@ export default function LoginPage() {
             <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
           </svg>
           Sign in with Microsoft
-        </button>
+        </a>
 
         <div style={{ marginTop: 24, fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
           Access restricted to authorised organisation members
