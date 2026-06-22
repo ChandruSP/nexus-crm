@@ -7,13 +7,15 @@ const APP_URL    = process.env.NEXT_PUBLIC_APP_URL!;
 const SCOPES     = 'openid profile email User.Read People.Read';
 const REDIRECT   = `${APP_URL}/auth/callback`;
 
-function base64url(buf: ArrayBuffer) {
-  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+function base64url(buf: Uint8Array | ArrayBuffer) {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 async function startPkce() {
-  const verifier = base64url(crypto.getRandomValues(new Uint8Array(32)));
+  const verifierBytes = crypto.getRandomValues(new Uint8Array(32));
+  const verifier  = base64url(verifierBytes);
   const challenge = base64url(
     await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))
   );
