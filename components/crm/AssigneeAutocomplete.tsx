@@ -2,40 +2,21 @@
 import { useState, useEffect, useRef } from 'react';
 
 interface Person { name: string; email: string }
-
-interface Props {
-  value: string;
-  onChange: (name: string) => void;
-  style?: React.CSSProperties;
-}
+interface Props { value: string; onChange: (name: string) => void; style?: React.CSSProperties; }
 
 function initials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
 export function AssigneeAutocomplete({ value, onChange, style }: Props) {
-  const [query, setQuery]     = useState('');
+  const [query,   setQuery]   = useState('');
   const [results, setResults] = useState<Person[]>([]);
-  const [open, setOpen]       = useState(false);
+  const [open,    setOpen]    = useState(false);
   const [loading, setLoading] = useState(false);
-  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounce  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const container = useRef<HTMLDivElement>(null);
-  const inputRef  = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (debounce.current) clearTimeout(debounce.current);
-    if (!open) return;
-    debounce.current = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/ad-users?q=${encodeURIComponent(query)}`);
-        const data = await res.json();
-        setResults(Array.isArray(data) ? data : []);
-      } catch { setResults([]); }
-      setLoading(false);
-    }, 250);
-  }, [query, open]);
-
+  // Close dropdown on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (container.current && !container.current.contains(e.target as Node)) setOpen(false);
@@ -44,11 +25,20 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  function openPicker() {
-    setQuery('');
-    setOpen(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
-  }
+  // Fetch results when query changes
+  useEffect(() => {
+    if (!open) return;
+    if (debounce.current) clearTimeout(debounce.current);
+    debounce.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res  = await fetch(`/api/ad-users?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        setResults(Array.isArray(data) ? data : []);
+      } catch { setResults([]); }
+      setLoading(false);
+    }, 250);
+  }, [query, open]);
 
   function select(p: Person) {
     onChange(p.name);
@@ -56,86 +46,77 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
     setOpen(false);
   }
 
-  function clear(e: React.MouseEvent) {
-    e.stopPropagation();
+  function clear() {
     onChange('');
-    setOpen(false);
+    setQuery('');
   }
-
-  const chipStyle: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', gap: 7,
-    padding: '4px 10px 4px 6px',
-    background: 'var(--bg4)', border: '1px solid var(--border2)',
-    borderRadius: 99, fontSize: 13, color: 'var(--text)',
-  };
-
-  const avatarStyle: React.CSSProperties = {
-    width: 24, height: 24, borderRadius: '50%',
-    background: 'var(--accent)', color: '#fff',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 9, fontWeight: 700, flexShrink: 0,
-  };
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '7px 10px', fontSize: 13,
     background: 'var(--bg)', border: '1px solid var(--border2)',
     borderRadius: 'var(--r-sm)', color: 'var(--text)', outline: 'none',
-    boxSizing: 'border-box',
+    boxSizing: 'border-box', fontFamily: 'inherit',
+  };
+
+  const avatarStyle: React.CSSProperties = {
+    width: 22, height: 22, borderRadius: '50%',
+    background: 'var(--accent)', color: '#fff',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 9, fontWeight: 700, flexShrink: 0,
   };
 
   return (
     <div ref={container} style={{ position: 'relative', ...style }}>
-      {value && !open ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={chipStyle}>
-            <div style={avatarStyle}>{initials(value)}</div>
-            <span style={{ fontWeight: 600 }}>{value}</span>
-            <button
-              onMouseDown={clear}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16, lineHeight: 1, padding: '0 0 0 2px' }}
-              title="Remove"
-            >×</button>
-          </div>
+
+      {/* Selected pill */}
+      {value && !open && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', background: 'var(--bg)', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', cursor: 'default' }}>
+          <div style={avatarStyle}>{initials(value)}</div>
+          <span style={{ fontSize: 13, fontWeight: 600, flex: 1, color: 'var(--text)' }}>{value}</span>
           <button
-            onMouseDown={openPicker}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 11, padding: '2px 4px' }}
+            type="button"
+            onClick={clear}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16, lineHeight: 1, padding: '0 2px' }}
+            title="Clear"
+          >×</button>
+          <button
+            type="button"
+            onClick={() => { setQuery(''); setOpen(true); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 11, padding: '1px 4px', borderLeft: '1px solid var(--border2)' }}
           >Change</button>
         </div>
-      ) : open ? (
+      )}
+
+      {/* Search input — always rendered when no value or open */}
+      {(!value || open) && (
         <input
-          ref={inputRef}
           type="text"
           placeholder="Search by name…"
           value={query}
           style={inputStyle}
-          onChange={e => setQuery(e.target.value)}
           autoComplete="off"
-          onKeyDown={e => e.key === 'Escape' && setOpen(false)}
+          onChange={e => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}
         />
-      ) : (
-        <div
-          onMouseDown={openPicker}
-          style={{ ...inputStyle, color: 'var(--text3)', cursor: 'text' }}
-        >
-          Search and assign…
-        </div>
       )}
 
+      {/* Dropdown */}
       {open && (
         <div style={{
-          position: 'absolute', zIndex: 999, top: '100%', left: 0, right: 0,
+          position: 'absolute', zIndex: 9999, top: '100%', left: 0, right: 0,
           background: 'var(--bg2)', border: '1px solid var(--border2)',
           borderRadius: 'var(--r-sm)', marginTop: 2,
           boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-          maxHeight: 240, overflowY: 'auto',
+          maxHeight: 220, overflowY: 'auto',
         }}>
           {loading && <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)' }}>Searching…</div>}
           {!loading && results.length === 0 && (
             <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)' }}>
-              {query ? 'No results found' : 'Type to search directory…'}
+              {query ? 'No results' : 'Type a name to search…'}
             </div>
           )}
-          {!loading && results.map(p => (
+          {results.map(p => (
             <div
               key={p.email || p.name}
               onMouseDown={() => select(p)}
@@ -143,7 +124,7 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg4)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              <div style={{ ...avatarStyle, width: 30, height: 30, fontSize: 11 }}>{initials(p.name)}</div>
+              <div style={{ ...avatarStyle, width: 28, height: 28, fontSize: 10 }}>{initials(p.name)}</div>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{p.name}</div>
                 {p.email && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.email}</div>}
