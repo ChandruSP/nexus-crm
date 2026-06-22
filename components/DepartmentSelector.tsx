@@ -771,6 +771,15 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
               {departments.length} departments · hover to explore · click to enter
             </span>
           )}
+          <a
+            href="/my-tasks"
+            style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', background:'transparent', color:'var(--text2)', border:'1px solid var(--border2)', borderRadius:9, fontWeight:600, fontSize:13, cursor:'pointer', textDecoration:'none' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor='var(--accent)'; (e.currentTarget as HTMLElement).style.color='var(--accent)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor='var(--border2)'; (e.currentTarget as HTMLElement).style.color='var(--text2)'; }}
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 3h11M1 6.5h8M1 10h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="11" cy="10" r="2" stroke="currentColor" strokeWidth="1.5"/></svg>
+            My Tasks
+          </a>
           <button
             onClick={async () => {
               setExporting(true);
