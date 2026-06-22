@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 import { fetchDepartments, apiCreateDepartment, apiUpdateDepartment, apiDeleteDepartment, Department } from '@/lib/apiClient';
 import { useToast } from '@/context/ToastContext';
 
@@ -398,6 +399,32 @@ function deptSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+function TopbarUser() {
+  const { data: session } = useSession();
+  const name = session?.user?.name || session?.user?.email || '';
+  const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+      <div style={{ width:28, height:28, borderRadius:'50%', background:'#6366f1', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff', flexShrink:0 }}>
+        {session?.user?.image
+          ? <img src={session.user.image} style={{ width:28, height:28, borderRadius:'50%', objectFit:'cover' }} alt="" />
+          : initials}
+      </div>
+      <span style={{ fontSize:12, color:'var(--text2)', fontWeight:500, maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+        {name}
+      </span>
+      <button
+        onClick={() => signOut({ callbackUrl: '/login' })}
+        style={{ padding:'3px 10px', fontSize:11, fontWeight:600, color:'var(--text3)', background:'transparent', border:'1px solid var(--border2)', borderRadius:6, cursor:'pointer' }}
+        onMouseEnter={e => { e.currentTarget.style.color='var(--text)'; e.currentTarget.style.borderColor='var(--text3)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color='var(--text3)'; e.currentTarget.style.borderColor='var(--border2)'; }}
+      >
+        Sign out
+      </button>
+    </div>
+  );
+}
+
 export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Props) {
   const { toast } = useToast();
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -774,6 +801,7 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
             New Department
           </button>
+          <TopbarUser />
         </div>
       </div>
 

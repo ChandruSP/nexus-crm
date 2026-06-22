@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { CrmProvider } from '@/context/CrmContext';
 import { useCrm } from '@/context/CrmContext';
 import { ConfigProvider } from '@/context/ConfigContext';
@@ -84,6 +84,14 @@ function UserChip() {
       <span style={{ fontSize:12, color:'var(--text2)', fontWeight:500, maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
         {name}
       </span>
+      <button
+        onClick={() => signOut({ callbackUrl: '/login' })}
+        style={{ marginLeft:4, padding:'3px 10px', fontSize:11, fontWeight:600, color:'var(--text3)', background:'transparent', border:'1px solid var(--border2)', borderRadius:6, cursor:'pointer' }}
+        onMouseEnter={e => { e.currentTarget.style.color='var(--text)'; e.currentTarget.style.borderColor='var(--text3)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color='var(--text3)'; e.currentTarget.style.borderColor='var(--border2)'; }}
+      >
+        Sign out
+      </button>
     </div>
   );
 }
