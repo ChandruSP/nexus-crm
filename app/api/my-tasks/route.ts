@@ -39,6 +39,8 @@ export async function GET(req: NextRequest) {
       dueDate:     t.dueDate?.toISOString() ?? null,
       description: t.description ?? '',
       assignee:    t.assignee ?? '',
+      comments:    t.comments ?? [],
+      createdAt:   t.createdAt.getTime(),
       accountId:   t.accountId ?? '',
       accountName: t.account?.name ?? '',
       departmentId:   dept?.id   ?? '',

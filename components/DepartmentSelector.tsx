@@ -614,8 +614,8 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
 
         drawGlassBubble(ctx, b.x, b.y, cr, b.alpha, b.hovered, isKam);
 
-        if (b.hovered && isKam) {
-          // ── KAM hover: show edit + delete ─────────────────────────────────
+        if (b.hovered) {
+          // ── Hover state: show edit + delete ───────────────────────────────
           const btnR = cr * 0.26;
           const gap  = cr * 0.38;
 
@@ -667,13 +667,6 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
           ctx.fillStyle = nameColor;
           ctx.fillText(b.dept.name, b.x, b.y + cr + 10);
 
-        } else if (b.hovered) {
-          // ── Non-KAM hover: just show name, no settings ────────────────────
-          ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-          ctx.font = `700 13px -apple-system,sans-serif`;
-          ctx.fillStyle = nameColor;
-          ctx.fillText(b.dept.name, b.x, b.y + cr + 10);
-
         } else {
           // ── Normal state: icon + name ──────────────────────────────────────
           const iconSize = cr * 0.72;
@@ -700,10 +693,9 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
     }
 
     function hit(mx: number, my: number) {
-      // Check edit/delete buttons on hovered KAM bubbles only
+      // Check edit/delete buttons on hovered bubbles
       for (const b of state.bubbles) {
         if (!b.dept || !b.hovered) continue;
-        if (!b.dept.name.toLowerCase().includes('kam')) continue;
         const { edit, del, btnR } = getBtnCenters(b);
         if (Math.hypot(mx - edit.x, my - edit.y) < btnR) return { type:'edit' as const, b };
         if (Math.hypot(mx - del.x,  my - del.y)  < btnR) return { type:'delete' as const, b };
