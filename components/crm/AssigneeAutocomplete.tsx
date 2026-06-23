@@ -3,13 +3,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Person { name: string; email: string }
-interface Props { value: string; onChange: (name: string) => void; style?: React.CSSProperties; placeholder?: string; }
+interface Props { value: string; onChange: (name: string) => void; onSelect?: (name: string) => void; style?: React.CSSProperties; placeholder?: string; }
 
 function initials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
-export function AssigneeAutocomplete({ value, onChange, style, placeholder }: Props) {
+export function AssigneeAutocomplete({ value, onChange, onSelect, style, placeholder }: Props) {
   const [query,   setQuery]   = useState(value);
   const [results, setResults] = useState<Person[]>([]);
   const [open,    setOpen]    = useState(false);
@@ -67,6 +67,7 @@ export function AssigneeAutocomplete({ value, onChange, style, placeholder }: Pr
   function pickResult(p: Person) {
     setQuery(p.name);
     onChange(p.name);
+    onSelect?.(p.name);
     setOpen(false);
     setResults([]);
   }

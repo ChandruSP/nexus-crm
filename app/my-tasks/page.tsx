@@ -743,10 +743,8 @@ export default function MyTasksPage() {
           <div style={{ width: 200 }}>
             <AssigneeAutocomplete
               value={userInput}
-              onChange={name => {
-                setUserInput(name);
-                if (name) { setViewingUser(name); loadTasks(name); }
-              }}
+              onChange={name => setUserInput(name)}
+              onSelect={name => { setViewingUser(name); loadTasks(name); }}
               placeholder="Search AD user…"
             />
           </div>
