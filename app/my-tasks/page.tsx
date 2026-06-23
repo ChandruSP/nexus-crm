@@ -182,15 +182,23 @@ function TaskDrawer({ task, onClose, onUpdate, onDelete }: { task: MyTask; onClo
     if (!commentText.trim() || submitting) return;
     setSubmitting(true);
     const newComment: ParsedComment = { id: `c-${Date.now()}`, text: commentText.trim(), author, createdAt: Date.now() };
-    const updatedComments = [...task.comments, JSON.stringify(newComment)];
-    const updated: MyTask = { ...task, comments: updatedComments };
-    onUpdate(updated);
-    setCommentText('');
     const commentUrl = task.accountId
       ? `/api/accounts/${task.accountId}/tasks/${task.id}/comments`
       : `/api/departments/${task.departmentId}/tasks/${task.id}/comments`;
-    await fetch(commentUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newComment) });
-    setSubmitting(false);
+    try {
+      const res = await fetch(commentUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newComment) });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const savedTask = await res.json();
+      // Use authoritative DB state so comments are always accurate
+      const fresh: MyTask = { ...task, comments: savedTask.comments ?? [] };
+      onUpdate(fresh);
+      setCommentText('');
+    } catch (err) {
+      console.error('Failed to post comment', err);
+      alert('Failed to save comment. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const btnStyle: React.CSSProperties = { width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text2)', transition: 'color 0.12s, border-color 0.12s, background 0.12s' };

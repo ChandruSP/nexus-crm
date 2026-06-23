@@ -223,11 +223,20 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
           const commentUrl = action.accountId
             ? `/api/accounts/${action.accountId}/tasks/${action.taskId}/comments`
             : `/api/departments/${departmentId}/tasks/${action.taskId}/comments`;
-          await fetch(commentUrl, {
+          const res = await fetch(commentUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(action.comment),
           });
+          if (!res.ok) throw new Error(`comment POST failed: ${res.status}`);
+          // After successful save, sync authoritative state from DB
+          if (!action.accountId) {
+            const fresh = await fetch(`/api/departments/${departmentId}/tasks`).then(r => r.json()).catch(() => null);
+            if (Array.isArray(fresh)) dispatch({ type: 'SET_DEPT_TASKS', tasks: fresh.map(mapTask) });
+          } else {
+            const { accounts } = await fetchBootstrap(departmentId);
+            dispatch({ type: 'SET_ACCOUNTS', accounts });
+          }
           break;
         }
         case 'DELETE_TASK':
