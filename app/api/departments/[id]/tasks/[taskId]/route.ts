@@ -19,6 +19,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ taskId
       ...(body.assignee    !== undefined && { assignee: body.assignee }),
       ...(body.dueDate     !== undefined && { dueDate: body.dueDate ? new Date(body.dueDate) : null }),
       ...(body.description !== undefined && { description: body.description }),
+      ...(body.comments    !== undefined && { comments: body.comments }),
     },
   });
   return NextResponse.json(task);

@@ -117,6 +117,9 @@ function reducer(state: CrmState, action: Action): CrmState {
     case 'UPDATE_ACCOUNT_DESC':
       return patchAccount(state, action.accountId, a => ({ ...a, description: action.description }));
     case 'ADD_COMMENT':
+      if (!action.accountId) {
+        return { ...state, deptTasks: state.deptTasks.map(t => t.id === action.taskId ? { ...t, comments: [...(t.comments ?? []), action.comment] } : t) };
+      }
       return patchAccount(state, action.accountId, a => ({
         ...a,
         tasks: a.tasks.map(t => t.id === action.taskId
@@ -216,11 +219,23 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
           }
           break;
         case 'ADD_COMMENT': {
-          const account = state.accounts.find(a => a.id === action.accountId);
-          const task = account?.tasks.find(t => t.id === action.taskId);
-          if (task) {
-            const updated = { ...task, comments: [...(task.comments ?? []), action.comment] };
-            await apiUpdateTask(action.accountId, updated);
+          if (!action.accountId) {
+            const deptTask = state.deptTasks.find(t => t.id === action.taskId);
+            if (deptTask) {
+              const updatedComments = [...(deptTask.comments ?? []), action.comment];
+              await fetch(`/api/departments/${departmentId}/tasks/${action.taskId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comments: updatedComments }),
+              });
+            }
+          } else {
+            const account = state.accounts.find(a => a.id === action.accountId);
+            const task = account?.tasks.find(t => t.id === action.taskId);
+            if (task) {
+              const updated = { ...task, comments: [...(task.comments ?? []), action.comment] };
+              await apiUpdateTask(action.accountId, updated);
+            }
           }
           break;
         }
