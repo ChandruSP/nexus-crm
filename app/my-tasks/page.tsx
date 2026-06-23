@@ -141,13 +141,54 @@ function DeleteConfirm({ task, onDelete, onClose }: { task: MyTask; onDelete: ()
   );
 }
 
+// ── Comment helpers ───────────────────────────────────────────────────────────
+
+interface ParsedComment { id: string; text: string; author: string; createdAt: number; }
+
+function parseComment(raw: string): ParsedComment {
+  try { return JSON.parse(raw); } catch { return { id: raw, text: raw, author: '', createdAt: 0 }; }
+}
+
+function fmtCommentTime(ts: number) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function initials(name: string) {
+  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+}
+
 // ── Task Detail Drawer ────────────────────────────────────────────────────────
 
 function TaskDrawer({ task, onClose, onUpdate, onDelete }: { task: MyTask; onClose: () => void; onUpdate: (t: MyTask) => void; onDelete: () => void }) {
-  const [editing, setEditing]       = useState(false);
-  const [delConfirm, setDelConfirm] = useState(false);
+  const [editing,     setEditing]     = useState(false);
+  const [delConfirm,  setDelConfirm]  = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [submitting,  setSubmitting]  = useState(false);
+  const [author,      setAuthor]      = useState('');
+  const bottomRef = useRef<HTMLDivElement>(null);
   const overdue = isOverdue(task.dueDate, task.status);
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', fontSize: 12, borderRadius: 'var(--r-sm)', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
+
+  useEffect(() => {
+    fetch('/api/session').then(r => r.json()).then(d => { if (d.user?.name) setAuthor(d.user.name); }).catch(() => {});
+  }, []);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [task.comments.length]);
+
+  const comments = task.comments.map(parseComment);
+
+  async function submitComment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!commentText.trim() || submitting) return;
+    setSubmitting(true);
+    const newComment: ParsedComment = { id: `c-${Date.now()}`, text: commentText.trim(), author, createdAt: Date.now() };
+    const updatedComments = [...task.comments, JSON.stringify(newComment)];
+    const updated: MyTask = { ...task, comments: updatedComments };
+    onUpdate(updated);
+    setCommentText('');
+    await patchTask(task, { comments: updatedComments });
+    setSubmitting(false);
+  }
 
   const btnStyle: React.CSSProperties = { width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text2)', transition: 'color 0.12s, border-color 0.12s, background 0.12s' };
 
@@ -192,23 +233,47 @@ function TaskDrawer({ task, onClose, onUpdate, onDelete }: { task: MyTask; onClo
           )}
         </div>
 
-        {/* Comments — read only (stored as plain strings in Prisma) */}
+        {/* Comments list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 14 }}>
-            Comments ({task.comments.length})
+            Comments ({comments.length})
           </div>
-          {task.comments.length === 0 && (
+          {comments.length === 0 && (
             <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '24px 0' }}>No comments yet.</div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {task.comments.map((c, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: `hsl(${i*53%360},50%,48%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff' }}>💬</div>
-                <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.55 }}>{c}</div>
+            {comments.map(c => (
+              <div key={c.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: `hsl(${c.author.split('').reduce((n, ch) => n + ch.charCodeAt(0), 0) % 360},50%,48%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff' }}>
+                  {initials(c.author)}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{c.author || 'Unknown'}</span>
+                    {c.createdAt > 0 && <span style={{ fontSize: 10, color: 'var(--text3)' }}>{fmtCommentTime(c.createdAt)}</span>}
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.55 }}>{c.text}</div>
+                </div>
               </div>
             ))}
           </div>
+          <div ref={bottomRef} />
         </div>
+
+        {/* Comment input */}
+        <form onSubmit={submitComment} style={{ padding: '12px 20px', borderTop: '1px solid var(--border)', flexShrink: 0, display: 'flex', gap: 8 }}>
+          <input
+            type="text"
+            placeholder="Add a comment…"
+            value={commentText}
+            onChange={e => setCommentText(e.target.value)}
+            style={{ flex: 1, padding: '8px 10px', fontSize: 12, borderRadius: 'var(--r-sm)', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', outline: 'none', fontFamily: 'inherit' }}
+          />
+          <button type="submit" disabled={!commentText.trim() || submitting}
+            style={{ padding: '8px 14px', fontSize: 12, fontWeight: 600, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', cursor: 'pointer', opacity: (!commentText.trim() || submitting) ? 0.5 : 1, flexShrink: 0 }}>
+            {submitting ? '…' : 'Post'}
+          </button>
+        </form>
       </div>
 
       {editing && <EditTaskModal task={task} onClose={() => setEditing(false)} onSave={t => { onUpdate(t); setEditing(false); }} />}
@@ -255,22 +320,8 @@ function KanbanView({ tasks, onEdit, onDelete, onTaskClick, onStatusChange }: {
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border2)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
                     {/* Priority badge */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <div style={{ marginBottom: 8 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, color: PRIORITY_COLOR[t.priority], background: PRIORITY_BG[t.priority], border: `1px solid ${PRIORITY_COLOR[t.priority]}33` }}>{t.priority}</span>
-                      <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
-                        <button onClick={() => onEdit(t)} title="Edit"
-                          style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)' }}
-                          onMouseEnter={e => { const b = e.currentTarget; b.style.color='var(--accent)'; b.style.borderColor='var(--accent)'; b.style.background='var(--accent-dim)'; }}
-                          onMouseLeave={e => { const b = e.currentTarget; b.style.color='var(--text3)'; b.style.borderColor='var(--border2)'; b.style.background='transparent'; }}>
-                          <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L5 12H2V9L9.5 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </button>
-                        <button onClick={() => onDelete(t)} title="Delete"
-                          style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--r-xs)', cursor: 'pointer', color: 'var(--text3)' }}
-                          onMouseEnter={e => { const b = e.currentTarget; b.style.color='var(--red)'; b.style.borderColor='var(--red)'; b.style.background='var(--red-dim)'; }}
-                          onMouseLeave={e => { const b = e.currentTarget; b.style.color='var(--text3)'; b.style.borderColor='var(--border2)'; b.style.background='transparent'; }}>
-                          <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2.5 4h9M6 4V2.5h2V4M5 4v8h4V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </button>
-                      </div>
                     </div>
                     {/* Title */}
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.4, marginBottom: 10 }}>{t.title}</div>
