@@ -38,9 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const tokens = await tokenRes.json();
-  const accessToken: string  = tokens.access_token;
-  const refreshToken: string = tokens.refresh_token ?? '';
-  const tokenExpiry: number  = Date.now() + (tokens.expires_in ?? 3600) * 1000;
+  const accessToken: string = tokens.access_token;
 
   // Get user info from Graph
   const meRes = await fetch('https://graph.microsoft.com/v1.0/me', {
@@ -49,7 +47,7 @@ export async function POST(req: NextRequest) {
   if (!meRes.ok) return NextResponse.json({ error: 'graph_me_failed' }, { status: 401 });
   const me = await meRes.json();
 
-  const jwt = await new SignJWT({ name: me.displayName, email: me.userPrincipalName, accessToken, refreshToken, tokenExpiry })
+  const jwt = await new SignJWT({ name: me.displayName, email: me.userPrincipalName, accessToken })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('8h')
