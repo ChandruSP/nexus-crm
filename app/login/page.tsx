@@ -4,7 +4,7 @@ import { useState } from 'react';
 const CLIENT_ID  = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID!;
 const TENANT_ID  = process.env.NEXT_PUBLIC_AZURE_TENANT_ID!;
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL!;
-const SCOPES     = 'openid profile email User.Read People.Read';
+const SCOPES     = 'openid profile email offline_access User.Read People.Read';
 const REDIRECT   = `${APP_URL}/auth/callback`;
 
 function base64url(buf: Uint8Array | ArrayBuffer) {
