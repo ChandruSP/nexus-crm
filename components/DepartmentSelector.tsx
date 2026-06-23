@@ -129,25 +129,12 @@ function getIconKey(deptName: string): string {
   return 'default';
 }
 
-function drawIcon(ctx: CanvasRenderingContext2D, _deptName: string, cx: number, cy: number, iconSize: number) {
-  // Universal icon: simple grid of 4 squares (department/grid symbol)
-  const s = iconSize / 18;
-  ctx.strokeStyle = 'rgba(255,255,255,0.92)';
-  ctx.lineWidth = Math.max(1.2, s * 1.9);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  const h = s * 5.5; // half-gap between squares
-  const sq = s * 4.5; // square size
-  const gap = s * 1.4;
-  // top-left, top-right, bottom-left, bottom-right squares
-  for (const [ox, oy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-    const x = cx + ox * (sq / 2 + gap / 2);
-    const y = cy + oy * (sq / 2 + gap / 2);
-    ctx.beginPath();
-    ctx.roundRect(x - sq / 2, y - sq / 2, sq, sq, s * 1.1);
-    ctx.stroke();
-  }
-  void h;
+function drawIcon(ctx: CanvasRenderingContext2D, emoji: string, cx: number, cy: number, iconSize: number) {
+  const fontSize = Math.round(iconSize * 0.58);
+  ctx.font = `${fontSize}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji || '🏢', cx, cy);
 }
 
 // ── Glass bubble renderer ─────────────────────────────────────────────────────
@@ -671,7 +658,7 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
           // ── Normal state: icon + name ──────────────────────────────────────
           const iconSize = cr * 0.72;
           ctx.save();
-          drawIcon(ctx, b.dept.name, b.x, b.y - iconSize*0.08, iconSize);
+          drawIcon(ctx, b.dept.icon ?? b.dept.name, b.x, b.y - iconSize*0.08, iconSize);
           ctx.restore();
 
           ctx.textAlign = 'center'; ctx.textBaseline = 'top';
