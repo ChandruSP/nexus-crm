@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchDepartments, apiCreateDepartment, apiUpdateDepartment, apiDeleteDepartment, Department } from '@/lib/apiClient';
 import { useToast } from '@/context/ToastContext';
+import { AssigneeAutocomplete } from '@/components/crm/AssigneeAutocomplete';
 
 const ICONS_LIST = ['🎯','📊','💼','🏗️','👥','📦','🔧','💡','🌐','📈','🤝','⚡','🏦','🛒','🏥','✈️','🎨','🔬','📱','🏆'];
 const COLORS_LIST = ['#6366f1','#8b5cf6','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#a855f7','#84cc16'];
@@ -759,9 +760,17 @@ export function DepartmentSelector({ onSelect, pendingSlug, onSlugResolved }: Pr
               {departments.length} departments · hover to explore · click to enter
             </span>
           )}
+          <div style={{ width: 220 }}>
+            <AssigneeAutocomplete
+              value=""
+              onChange={() => {}}
+              onSelect={name => { window.location.href = `/my-tasks?assignee=${encodeURIComponent(name)}`; }}
+              placeholder="🔍 View someone's tasks…"
+            />
+          </div>
           <a
             href="/my-tasks"
-            style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', background:'transparent', color:'var(--text2)', border:'1px solid var(--border2)', borderRadius:9, fontWeight:600, fontSize:13, cursor:'pointer', textDecoration:'none' }}
+            style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', background:'transparent', color:'var(--text2)', border:'1px solid var(--border2)', borderRadius:9, fontWeight:600, fontSize:13, cursor:'pointer', textDecoration:'none', whiteSpace:'nowrap' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor='var(--accent)'; (e.currentTarget as HTMLElement).style.color='var(--accent)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor='var(--border2)'; (e.currentTarget as HTMLElement).style.color='var(--text2)'; }}
           >

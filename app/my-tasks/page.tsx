@@ -645,7 +645,10 @@ export default function MyTasksPage() {
 
   useEffect(() => {
     fetch('/api/session').then(r => r.json()).then(d => setSessionName(d.user?.name ?? '')).catch(() => {});
-    loadTasks();
+    const params = new URLSearchParams(window.location.search);
+    const assigneeParam = params.get('assignee') ?? '';
+    if (assigneeParam) { setViewingUser(assigneeParam); setUserInput(assigneeParam); loadTasks(assigneeParam); }
+    else loadTasks();
   }, []);
 
   const departments = useMemo(() => {
