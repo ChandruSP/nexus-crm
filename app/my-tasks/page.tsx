@@ -716,21 +716,6 @@ export default function MyTasksPage() {
             ← Back to my tasks
           </button>
         )}
-        <div style={{ flex: 1 }} />
-        {/* AD user picker */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap' }}>View tasks for:</span>
-          <div style={{ width: 220 }}>
-            <AssigneeAutocomplete
-              value={userInput}
-              onChange={name => {
-                setUserInput(name);
-                if (name) { setViewingUser(name); loadTasks(name); }
-              }}
-              placeholder="Search AD user…"
-            />
-          </div>
-        </div>
       </div>
 
       {/* Stats strip */}
@@ -752,6 +737,27 @@ export default function MyTasksPage() {
 
       {/* Filter bar */}
       <div style={{ padding: '12px 28px', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
+        {/* AD user picker */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap' }}>Viewing:</span>
+          <div style={{ width: 200 }}>
+            <AssigneeAutocomplete
+              value={userInput}
+              onChange={name => {
+                setUserInput(name);
+                if (name) { setViewingUser(name); loadTasks(name); }
+              }}
+              placeholder="Search AD user…"
+            />
+          </div>
+          {viewingUser && (
+            <button onClick={() => { setViewingUser(''); setUserInput(''); loadTasks(); }}
+              style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', padding: '4px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              ✕ My tasks
+            </button>
+          )}
+        </div>
+        <div style={{ width: 1, height: 20, background: 'var(--border2)', flexShrink: 0 }} />
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ position: 'absolute', left: 9, pointerEvents: 'none', color: 'var(--text3)' }}>
             <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.4"/>
