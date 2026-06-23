@@ -8,6 +8,7 @@ import {
   apiCreateStakeholder, apiUpdateStakeholder, apiDeleteStakeholder,
   apiCreateOpportunity, apiUpdateOpportunity, apiDeleteOpportunity,
   apiCreateProject, apiUpdateProject, apiDeleteProject,
+  mapTask,
 } from '@/lib/apiClient';
 
 interface CrmState {
@@ -161,7 +162,7 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
       dispatch({ type: 'SET_ACCOUNTS', accounts });
       dispatch({ type: 'SET_GROUPS', groups });
       dispatch({ type: 'SET_CONFIG', config });
-      dispatch({ type: 'SET_DEPT_TASKS', tasks: Array.isArray(deptTasks) ? deptTasks : [] });
+      dispatch({ type: 'SET_DEPT_TASKS', tasks: Array.isArray(deptTasks) ? deptTasks.map(mapTask) : [] });
       if (accounts.length > 0) dispatch({ type: 'SELECT_ACCOUNT', id: accounts[0].id });
     }).catch(() => dispatch({ type: 'SET_LOADING', loading: false }));
   }, [departmentId]);
@@ -222,7 +223,8 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
           if (!action.accountId) {
             const deptTask = state.deptTasks.find(t => t.id === action.taskId);
             if (deptTask) {
-              const updatedComments = [...(deptTask.comments ?? []), action.comment];
+              // comments in state are Comment[] (parsed); serialize back to String[] for the API
+              const updatedComments = [...(deptTask.comments ?? []), action.comment].map(c => JSON.stringify(c));
               await fetch(`/api/departments/${departmentId}/tasks/${action.taskId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },

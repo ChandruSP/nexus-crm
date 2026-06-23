@@ -52,7 +52,7 @@ function mapContact(c: Record<string, unknown>): Stakeholder {
   };
 }
 
-function mapTask(t: Record<string, unknown>): Task {
+export function mapTask(t: Record<string, unknown>): Task {
   const rawComments = (t.comments as string[]) || [];
   const comments: Comment[] = rawComments.map(c => {
     try { return JSON.parse(c) as Comment; }

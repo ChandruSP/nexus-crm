@@ -33,7 +33,9 @@ export function TaskDetailDrawer({ task, onClose }: Props) {
   const { state, dispatch } = useCrm();
   const { config } = useConfig();
   const { toast }    = useToast();
-  const liveTask = state.accounts.find(a => a.id === task.accountId)?.tasks.find(t => t.id === task.id);
+  const liveTask = task.accountId
+    ? state.accounts.find(a => a.id === task.accountId)?.tasks.find(t => t.id === task.id)
+    : state.deptTasks.find(t => t.id === task.id);
   const comments = (liveTask ?? task).comments ?? [];
   const [author,      setAuthor]      = useState('');
   const [commentText, setCommentText] = useState('');
