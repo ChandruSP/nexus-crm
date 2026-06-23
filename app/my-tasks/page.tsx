@@ -302,6 +302,8 @@ const KANBAN_COLUMNS = [
   { status: 'Blocked'     as TaskStatus, color: 'var(--red)'   },
 ];
 
+interface KanbanDropTarget { colStatus: TaskStatus; insertBeforeId: string | null; }
+
 function KanbanView({ tasks, onEdit, onDelete, onTaskClick, onStatusChange }: {
   tasks: MyTask[];
   onEdit: (t: MyTask) => void;
@@ -309,12 +311,74 @@ function KanbanView({ tasks, onEdit, onDelete, onTaskClick, onStatusChange }: {
   onTaskClick: (t: MyTask) => void;
   onStatusChange: (t: MyTask, s: TaskStatus) => void;
 }) {
+  const [dragId,     setDragId]     = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<KanbanDropTarget | null>(null);
+  const [order,      setOrder]      = useState<string[]>(() => tasks.map(t => t.id));
+
+  // Keep order in sync when tasks list changes (filter/search)
+  useMemo(() => {
+    setOrder(prev => {
+      const ids = new Set(tasks.map(t => t.id));
+      const kept = prev.filter(id => ids.has(id));
+      const added = tasks.filter(t => !prev.includes(t.id)).map(t => t.id);
+      return [...kept, ...added];
+    });
+  }, [tasks]);
+
+  function colCards(status: TaskStatus) {
+    return order.map(id => tasks.find(t => t.id === id)).filter((t): t is MyTask => !!t && t.status === status);
+  }
+  function cardAfter(cardId: string, status: TaskStatus) {
+    const cards = colCards(status);
+    const idx = cards.findIndex(t => t.id === cardId);
+    return idx < cards.length - 1 ? cards[idx + 1].id : null;
+  }
+
+  function onDragStart(e: React.DragEvent, id: string) {
+    setDragId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    const ghost = document.createElement('div');
+    ghost.style.position = 'fixed'; ghost.style.top = '-9999px';
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, 0, 0);
+    setTimeout(() => document.body.removeChild(ghost), 0);
+  }
+  function onDragOverCard(e: React.DragEvent, cardId: string, colStatus: TaskStatus) {
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const isTop = e.clientY < rect.top + rect.height / 2;
+    setDropTarget({ colStatus, insertBeforeId: isTop ? cardId : cardAfter(cardId, colStatus) });
+  }
+  function onDragOverCol(e: React.DragEvent, colStatus: TaskStatus) {
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    if (!(e.target as HTMLElement).closest('[data-card]'))
+      setDropTarget({ colStatus, insertBeforeId: null });
+  }
+  function onDrop(colStatus: TaskStatus) {
+    if (!dragId) return;
+    const dragTask = tasks.find(t => t.id === dragId);
+    if (dragTask && dragTask.status !== colStatus) onStatusChange(dragTask, colStatus);
+    const insertBefore = dropTarget?.insertBeforeId ?? null;
+    setOrder(prev => {
+      const without = prev.filter(id => id !== dragId);
+      if (insertBefore === null) return [...without, dragId];
+      const idx = without.indexOf(insertBefore);
+      return idx === -1 ? [...without, dragId] : [...without.slice(0, idx), dragId, ...without.slice(idx)];
+    });
+    setDragId(null); setDropTarget(null);
+  }
+  function onDragEnd() { setDragId(null); setDropTarget(null); }
+
   return (
     <div style={{ flex: 1, display: 'flex', gap: 12, padding: '16px 20px', overflowX: 'auto', overflowY: 'hidden', alignItems: 'flex-start' }}>
       {KANBAN_COLUMNS.map(col => {
-        const colTasks = tasks.filter(t => t.status === col.status);
+        const colTasks = colCards(col.status);
+        const isColOver = dropTarget?.colStatus === col.status;
         return (
-          <div key={col.status} style={{ flex: '0 0 260px', display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '100%' }}>
+          <div key={col.status}
+            onDragOver={e => onDragOverCol(e, col.status)}
+            onDrop={() => onDrop(col.status)}
+            style={{ flex: '0 0 260px', display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '100%', borderRadius: 'var(--r)', background: isColOver && colTasks.length === 0 ? 'var(--bg3)' : 'transparent', transition: 'background 0.1s' }}>
             {/* Column header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 2px', flexShrink: 0 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: col.color, display: 'inline-block' }} />
@@ -325,38 +389,48 @@ function KanbanView({ tasks, onEdit, onDelete, onTaskClick, onStatusChange }: {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', paddingBottom: 8 }}>
               {colTasks.map(t => {
                 const overdue = isOverdue(t.dueDate, t.status);
+                const isDragging = dragId === t.id;
+                const isDropBefore = dropTarget?.colStatus === col.status && dropTarget?.insertBeforeId === t.id;
                 return (
-                  <div key={t.id} onClick={() => onTaskClick(t)}
-                    style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '12px 14px', cursor: 'pointer', transition: 'border-color 0.12s, box-shadow 0.12s' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border2)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
-                    {/* Priority badge */}
-                    <div style={{ marginBottom: 8 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, color: PRIORITY_COLOR[t.priority], background: PRIORITY_BG[t.priority], border: `1px solid ${PRIORITY_COLOR[t.priority]}33` }}>{t.priority}</span>
+                  <Fragment key={t.id}>
+                    {isDropBefore && <div style={{ height: 3, borderRadius: 2, background: 'var(--accent)', margin: '0 2px', flexShrink: 0 }} />}
+                    <div
+                      data-card
+                      draggable
+                      onDragStart={e => onDragStart(e, t.id)}
+                      onDragOver={e => onDragOverCard(e, t.id, col.status)}
+                      onDragEnd={onDragEnd}
+                      onClick={() => onTaskClick(t)}
+                      style={{ background: 'var(--bg2)', border: `1px solid ${isDragging ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--r)', padding: '12px 14px', cursor: 'grab', opacity: isDragging ? 0.4 : 1, transition: 'border-color 0.12s, box-shadow 0.12s, opacity 0.12s' }}
+                      onMouseEnter={e => { if (!isDragging) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border2)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; } }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = isDragging ? 'var(--accent)' : 'var(--border)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
+                      <div style={{ marginBottom: 8 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, color: PRIORITY_COLOR[t.priority], background: PRIORITY_BG[t.priority], border: `1px solid ${PRIORITY_COLOR[t.priority]}33` }}>{t.priority}</span>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.4, marginBottom: 10 }}>{t.title}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        {t.accountName && <span style={{ fontSize: 10, color: 'var(--text3)', background: 'var(--bg3)', padding: '1px 6px', borderRadius: 99 }}>{t.accountName}</span>}
+                        <span style={{ fontSize: 10, color: 'var(--text3)', background: 'var(--bg3)', padding: '1px 6px', borderRadius: 99 }}>{t.departmentIcon} {t.departmentName}</span>
+                        {t.dueDate && (
+                          <span style={{ fontSize: 10, color: overdue ? 'var(--red)' : 'var(--text3)', fontWeight: overdue ? 700 : 400, marginLeft: 'auto' }}>
+                            {overdue ? '⚠ ' : ''}{fmtDateShort(t.dueDate)}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ marginTop: 8 }} onClick={e => e.stopPropagation()}>
+                        <select value={t.status} onChange={e => onStatusChange(t, e.target.value as TaskStatus)}
+                          style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 99, border: `1px solid ${STATUS_COLOR[t.status]}40`, background: STATUS_COLOR[t.status]+'18', color: STATUS_COLOR[t.status], cursor: 'pointer', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'inherit', width: '100%' }}>
+                          {STATUSES.map(s => <option key={s} value={s} style={{ background: 'var(--bg2)', color: 'var(--text)' }}>{s}</option>)}
+                        </select>
+                      </div>
                     </div>
-                    {/* Title */}
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.4, marginBottom: 10 }}>{t.title}</div>
-                    {/* Footer */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      {t.accountName && <span style={{ fontSize: 10, color: 'var(--text3)', background: 'var(--bg3)', padding: '1px 6px', borderRadius: 99 }}>{t.accountName}</span>}
-                      <span style={{ fontSize: 10, color: 'var(--text3)', background: 'var(--bg3)', padding: '1px 6px', borderRadius: 99 }}>{t.departmentIcon} {t.departmentName}</span>
-                      {t.dueDate && (
-                        <span style={{ fontSize: 10, color: overdue ? 'var(--red)' : 'var(--text3)', fontWeight: overdue ? 700 : 400, marginLeft: 'auto' }}>
-                          {overdue ? '⚠ ' : ''}{fmtDateShort(t.dueDate)}
-                        </span>
-                      )}
-                    </div>
-                    {/* Status change */}
-                    <div style={{ marginTop: 8 }} onClick={e => e.stopPropagation()}>
-                      <select value={t.status} onChange={e => onStatusChange(t, e.target.value as TaskStatus)}
-                        style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 99, border: `1px solid ${STATUS_COLOR[t.status]}40`, background: STATUS_COLOR[t.status]+'18', color: STATUS_COLOR[t.status], cursor: 'pointer', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'inherit', width: '100%' }}>
-                        {STATUSES.map(s => <option key={s} value={s} style={{ background: 'var(--bg2)', color: 'var(--text)' }}>{s}</option>)}
-                      </select>
-                    </div>
-                  </div>
+                  </Fragment>
                 );
               })}
-              {colTasks.length === 0 && (
+              {dropTarget?.colStatus === col.status && dropTarget?.insertBeforeId === null && colTasks.length > 0 && (
+                <div style={{ height: 3, borderRadius: 2, background: 'var(--accent)', margin: '0 2px' }} />
+              )}
+              {colTasks.length === 0 && !isColOver && (
                 <div style={{ border: '1px dashed var(--border2)', borderRadius: 'var(--r)', padding: '20px', textAlign: 'center', color: 'var(--text3)', fontSize: 12 }}>No tasks</div>
               )}
             </div>
