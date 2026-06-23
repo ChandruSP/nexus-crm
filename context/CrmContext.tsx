@@ -220,25 +220,14 @@ export function CrmProvider({ children, departmentId }: { children: ReactNode; d
           }
           break;
         case 'ADD_COMMENT': {
-          if (!action.accountId) {
-            const deptTask = state.deptTasks.find(t => t.id === action.taskId);
-            if (deptTask) {
-              // comments in state are Comment[] (parsed); serialize back to String[] for the API
-              const updatedComments = [...(deptTask.comments ?? []), action.comment].map(c => JSON.stringify(c));
-              await fetch(`/api/departments/${departmentId}/tasks/${action.taskId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ comments: updatedComments }),
-              });
-            }
-          } else {
-            const account = state.accounts.find(a => a.id === action.accountId);
-            const task = account?.tasks.find(t => t.id === action.taskId);
-            if (task) {
-              const updated = { ...task, comments: [...(task.comments ?? []), action.comment] };
-              await apiUpdateTask(action.accountId, updated);
-            }
-          }
+          const commentUrl = action.accountId
+            ? `/api/accounts/${action.accountId}/tasks/${action.taskId}/comments`
+            : `/api/departments/${departmentId}/tasks/${action.taskId}/comments`;
+          await fetch(commentUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(action.comment),
+          });
           break;
         }
         case 'DELETE_TASK':

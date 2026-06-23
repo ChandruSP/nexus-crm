@@ -186,7 +186,10 @@ function TaskDrawer({ task, onClose, onUpdate, onDelete }: { task: MyTask; onClo
     const updated: MyTask = { ...task, comments: updatedComments };
     onUpdate(updated);
     setCommentText('');
-    await patchTask(task, { comments: updatedComments });
+    const commentUrl = task.accountId
+      ? `/api/accounts/${task.accountId}/tasks/${task.id}/comments`
+      : `/api/departments/${task.departmentId}/tasks/${task.id}/comments`;
+    await fetch(commentUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newComment) });
     setSubmitting(false);
   }
 
