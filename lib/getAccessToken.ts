@@ -27,13 +27,16 @@ export async function getAccessToken(
 
   const { accessToken, refreshToken, tokenExpiry, name, email } = payload as any;
 
+  if (!accessToken) return null;
+
+  // If no expiry info, just use the token as-is.
+  if (!tokenExpiry) return { accessToken, res };
+
   // If token is still valid for more than 5 minutes, use it as-is.
-  if (accessToken && tokenExpiry && Date.now() < tokenExpiry - 5 * 60 * 1000) {
-    return { accessToken, res };
-  }
+  if (Date.now() < tokenExpiry - 5 * 60 * 1000) return { accessToken, res };
 
   // Access token expired or about to expire — try to refresh.
-  if (!refreshToken) return null;
+  if (!refreshToken) return { accessToken, res };
 
   const tokenRes = await fetch(
     `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token`,
