@@ -15,9 +15,12 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
   const [open,    setOpen]    = useState(false);
   const [loading, setLoading] = useState(false);
   const [dropPos, setDropPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const rootRef  = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Keep query in sync with value (e.g. when form resets)
   useEffect(() => { setQuery(value); }, [value]);
@@ -89,7 +92,7 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
     boxSizing: 'border-box', fontFamily: 'inherit',
   };
 
-  const dropdown = open && dropPos && (results.length > 0 || loading) ? createPortal(
+  const dropdown = mounted && open && dropPos && (results.length > 0 || loading) ? createPortal(
     <div style={{
       position: 'fixed', zIndex: 99999,
       top: dropPos.top, left: dropPos.left, width: dropPos.width,
