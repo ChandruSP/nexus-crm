@@ -274,22 +274,6 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, fDue, onTaskC
         <td style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap' }}>
           {task.assignee ?? '—'}
         </td>
-        <td style={{ padding: '10px 12px', maxWidth: 220 }}>
-          {task.comments && task.comments.length > 0 ? (() => {
-            const last = task.comments[task.comments.length - 1];
-            return (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1, background: `hsl(${last.author.split('').reduce((n, ch) => n + ch.charCodeAt(0), 0) % 360},50%,48%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#fff' }}>
-                  {last.author.slice(0, 2).toUpperCase()}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 11, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>{last.text}</div>
-                  {task.comments.length > 1 && <div style={{ fontSize: 10, color: 'var(--text3)', opacity: 0.6 }}>+{task.comments.length - 1} more</div>}
-                </div>
-              </div>
-            );
-          })() : <span style={{ fontSize: 11, color: 'var(--text3)', opacity: 0.4 }}>—</span>}
-        </td>
       </tr>
     );
   }
@@ -391,7 +375,6 @@ export function TaskList({ search, fAccount, fPriority, fAssignee, fDue, onTaskC
               <th style={thStyle} onClick={() => changeSort('status')}>Status <SortArrow k="status" /></th>
               <th style={thStyle} onClick={() => changeSort('dueDate')}>Due <SortArrow k="dueDate" /></th>
               <th style={thStyle} onClick={() => changeSort('assignee')}>Assignee <SortArrow k="assignee" /></th>
-              <th style={{ ...thStyle, cursor: 'default' }}>Last comment</th>
             </tr>
           </thead>
           <tbody>

@@ -473,12 +473,6 @@ function ListView({ tasks, onEdit, onDelete, onTaskClick, onStatusChange }: {
         </td>
         {/* Assignee */}
         <td style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap' }}>{t.assignee || '—'}</td>
-        {/* Comments */}
-        <td style={{ padding: '10px 12px' }}>
-          {t.comments.length > 0
-            ? <span style={{ fontSize: 11, color: 'var(--text3)' }}>💬 {t.comments.length}</span>
-            : <span style={{ fontSize: 11, color: 'var(--text3)', opacity: 0.4 }}>—</span>}
-        </td>
       </tr>
     );
   }
@@ -555,7 +549,6 @@ function ListView({ tasks, onEdit, onDelete, onTaskClick, onStatusChange }: {
               <th style={thStyle} onClick={() => changeSort('status')}>Status <SortArrow k="status" /></th>
               <th style={thStyle} onClick={() => changeSort('dueDate')}>Due <SortArrow k="dueDate" /></th>
               <th style={thStyle} onClick={() => changeSort('assignee')}>Assignee <SortArrow k="assignee" /></th>
-              <th style={{ ...thStyle, cursor: 'default' }}>Comments</th>
             </tr>
           </thead>
           <tbody>

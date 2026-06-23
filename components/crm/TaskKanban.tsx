@@ -292,30 +292,6 @@ export function TaskKanban({ fAccount, fPriority, fAssignee, fDue, onTaskClick }
                           )}
                         </div>
 
-                        {/* Trailing comments preview */}
-                        {task.comments && task.comments.length > 0 && (() => {
-                          const last = task.comments[task.comments.length - 1];
-                          return (
-                            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                              <div style={{
-                                width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: 1,
-                                background: `hsl(${last.author.split('').reduce((n, ch) => n + ch.charCodeAt(0), 0) % 360},50%,48%)`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: 7, fontWeight: 700, color: '#fff',
-                              }}>
-                                {last.author.slice(0, 2).toUpperCase()}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 10, color: 'var(--text2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {last.text}
-                                </div>
-                                {task.comments.length > 1 && (
-                                  <div style={{ fontSize: 9, color: 'var(--text3)', marginTop: 1 }}>+{task.comments.length - 1} more</div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })()}
                       </div>
                     </div>
                   );
