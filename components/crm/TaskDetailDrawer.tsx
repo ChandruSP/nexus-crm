@@ -29,22 +29,20 @@ export interface DrawerTask extends Task {
 
 interface Props { task: DrawerTask; onClose: () => void; }
 
-const AUTHOR_KEY = 'nexus-comment-author';
-
-function detectAuthor(): string {
-  const stored = localStorage.getItem(AUTHOR_KEY);
-  if (stored) return stored;
-  return 'You';
-}
-
 export function TaskDetailDrawer({ task, onClose }: Props) {
   const { state, dispatch } = useCrm();
   const { config } = useConfig();
   const { toast }    = useToast();
   const liveTask = state.accounts.find(a => a.id === task.accountId)?.tasks.find(t => t.id === task.id);
   const comments = (liveTask ?? task).comments ?? [];
-  const author = detectAuthor();
+  const [author,      setAuthor]      = useState('');
   const [commentText, setCommentText] = useState('');
+
+  useEffect(() => {
+    fetch('/api/session').then(r => r.json()).then(d => {
+      if (d.user?.name) setAuthor(d.user.name);
+    }).catch(() => {});
+  }, []);
   const [editing,     setEditing]     = useState(false);
   const [delConfirm,  setDelConfirm]  = useState(false);
   const [editForm,    setEditForm]    = useState({ title: task.title, description: task.description ?? '', status: task.status, priority: task.priority, dueDate: task.dueDate ?? '', assignee: task.assignee ?? '' });
