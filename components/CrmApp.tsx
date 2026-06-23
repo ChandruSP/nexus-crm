@@ -175,6 +175,7 @@ export function CrmApp() {
 
   function leaveDept() {
     setDepartment(null);
+    setSplash(true);
     window.history.pushState({}, '', '/');
   }
 
@@ -182,7 +183,7 @@ export function CrmApp() {
   useEffect(() => {
     function onPop() {
       const m = window.location.pathname.match(/^\/d\/(.+)/);
-      if (!m) setDepartment(null);
+      if (!m) { setDepartment(null); setSplash(true); }
     }
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
