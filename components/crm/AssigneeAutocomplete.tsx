@@ -3,13 +3,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Person { name: string; email: string }
-interface Props { value: string; onChange: (name: string) => void; style?: React.CSSProperties; }
+interface Props { value: string; onChange: (name: string) => void; style?: React.CSSProperties; placeholder?: string; }
 
 function initials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
-export function AssigneeAutocomplete({ value, onChange, style }: Props) {
+export function AssigneeAutocomplete({ value, onChange, style, placeholder }: Props) {
   const [query,   setQuery]   = useState(value);
   const [results, setResults] = useState<Person[]>([]);
   const [open,    setOpen]    = useState(false);
@@ -128,7 +128,7 @@ export function AssigneeAutocomplete({ value, onChange, style }: Props) {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search or type a name…"
+          placeholder={placeholder ?? "Search or type a name…"}
           value={query}
           style={{ ...inputStyle, paddingLeft: query ? 38 : 10 }}
           autoComplete="off"

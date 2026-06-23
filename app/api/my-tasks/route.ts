@@ -8,13 +8,17 @@ export async function GET(req: NextRequest) {
   const token = req.cookies.get('nexus-session')?.value;
   if (!token) return NextResponse.json({ error: 'no_session' }, { status: 401 });
 
-  let userName: string;
+  let sessionName: string;
   try {
     const { payload } = await jwtVerify(token, secret());
-    userName = payload.name as string;
+    sessionName = payload.name as string;
   } catch {
     return NextResponse.json({ error: 'invalid_session' }, { status: 401 });
   }
+
+  // Allow viewing another user's tasks via ?assignee= param
+  const assigneeParam = req.nextUrl.searchParams.get('assignee');
+  const userName = assigneeParam?.trim() || sessionName;
 
   const tasks = await prisma.task.findMany({
     where: { assignee: userName },

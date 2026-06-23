@@ -611,11 +611,13 @@ const ListIcon = () => (
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function MyTasksPage() {
-  const [tasks,     setTasks]     = useState<MyTask[]>([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState('');
-  const [userName,  setUserName]  = useState('');
-  const [view,      setView]      = useState<'list' | 'kanban'>('list');
+  const [tasks,        setTasks]        = useState<MyTask[]>([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState('');
+  const [sessionName,  setSessionName]  = useState('');
+  const [viewingUser,  setViewingUser]  = useState('');  // '' = self
+  const [userInput,    setUserInput]    = useState('');
+  const [view,         setView]         = useState<'list' | 'kanban'>('list');
 
   // Filters
   const [search,    setSearch]    = useState('');
@@ -629,12 +631,21 @@ export default function MyTasksPage() {
   const [deleteTask, setDeleteTask] = useState<MyTask | null>(null);
   const [drawerTask, setDrawerTask] = useState<MyTask | null>(null);
 
-  useEffect(() => {
-    fetch('/api/session').then(r => r.json()).then(d => setUserName(d.user?.name ?? '')).catch(() => {});
-    fetch('/api/my-tasks')
+  const userName = viewingUser || sessionName;
+
+  function loadTasks(assignee?: string) {
+    setLoading(true);
+    setError('');
+    const url = assignee ? `/api/my-tasks?assignee=${encodeURIComponent(assignee)}` : '/api/my-tasks';
+    fetch(url)
       .then(r => r.json())
       .then(d => { setTasks(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(() => { setError('Failed to load tasks'); setLoading(false); });
+  }
+
+  useEffect(() => {
+    fetch('/api/session').then(r => r.json()).then(d => setSessionName(d.user?.name ?? '')).catch(() => {});
+    loadTasks();
   }, []);
 
   const departments = useMemo(() => {
@@ -696,8 +707,30 @@ export default function MyTasksPage() {
       <div style={{ background: 'var(--bg2)', borderBottom: '1px solid var(--border)', padding: '0 28px', height: 52, display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text3)', fontSize: 12, textDecoration: 'none', border: '1px solid var(--border2)', borderRadius: 'var(--r-sm)', padding: '4px 10px' }}>← Home</a>
         <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.08em', fontFamily: 'Poppins, sans-serif' }}>NEXUS</span>
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>My Tasks</span>
-        {userName && <span style={{ fontSize: 12, color: 'var(--text3)' }}>— {userName}</span>}
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+          {viewingUser ? `${viewingUser}'s Tasks` : 'My Tasks'}
+        </span>
+        {viewingUser && (
+          <button onClick={() => { setViewingUser(''); setUserInput(''); loadTasks(); }}
+            style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: '1px solid var(--accent)', borderRadius: 'var(--r-sm)', padding: '3px 8px', cursor: 'pointer' }}>
+            ← Back to my tasks
+          </button>
+        )}
+        <div style={{ flex: 1 }} />
+        {/* AD user picker */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap' }}>View tasks for:</span>
+          <div style={{ width: 220 }}>
+            <AssigneeAutocomplete
+              value={userInput}
+              onChange={name => {
+                setUserInput(name);
+                if (name) { setViewingUser(name); loadTasks(name); }
+              }}
+              placeholder="Search AD user…"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Stats strip */}
